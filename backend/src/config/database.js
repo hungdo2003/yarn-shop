@@ -14,7 +14,7 @@ const sequelize = new Sequelize(
     define: { timestamps: true, underscored: false },
     // SSL required for Supabase; disabled for local
     ...(process.env.DB_SSL === 'true' && {
-      dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }
+      dialectOptions: { ssl: { require: true, rejectUnauthorized: false }, family: 4 }
     })
   }
 );
