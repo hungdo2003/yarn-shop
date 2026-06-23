@@ -1,0 +1,65 @@
+const { User, Role, Order } = require('../models');
+const { Op } = require('sequelize');
+const { paginate, paginateResult } = require('../utils/helpers');
+
+const getAll = async (req, res) => {
+  try {
+    const { page, limit, offset } = paginate(req.query);
+    const { search, roleId, isActive } = req.query;
+    const where = {};
+    if (search) where[Op.or] = [
+      { fullName: { [Op.like]: `%${search}%` } },
+      { email: { [Op.like]: `%${search}%` } }
+    ];
+    if (roleId) where.roleId = roleId;
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+    const { count, rows } = await User.findAndCountAll({
+      where, limit, offset, include: [Role],
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(paginateResult(count, rows, page, limit));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getById = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id, {
+      include: [Role], attributes: { exclude: ['password'] }
+    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const { fullName, phone, address } = req.body;
+    const updates = { fullName, phone, address };
+    if (req.file) updates.avatar = `/uploads/avatars/${req.file.filename}`;
+    await req.user.update(updates);
+    const { password: _, ...userData } = req.user.toJSON();
+    res.json(userData);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { fullName, phone, roleId, isActive } = req.body;
+    await user.update({ fullName, phone, roleId, isActive });
+    res.json(user);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    await user.update({ isActive: false });
+    res.json({ message: 'User deactivated' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getAll, getById, updateProfile, updateUser, deleteUser };
