@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import {
   formatCurrency, formatDate,
@@ -8,7 +8,7 @@ import {
 } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
 import Pagination from '../components/common/Pagination';
-import { FiPackage, FiScissors, FiCalendar, FiChevronLeft, FiX } from 'react-icons/fi';
+import { FiPackage, FiScissors, FiCalendar, FiX } from 'react-icons/fi';
 
 const REGULAR_STATUS_TABS = [
   { value: '', label: 'Tất cả' },
@@ -21,21 +21,33 @@ const REGULAR_STATUS_TABS = [
   { value: 'cancelled', label: '❌ Đã hủy' },
 ];
 
+const CUSTOM_STATUS_TABS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'submitted', label: '📝 Mới gửi' },
+  { value: 'reviewing', label: '🔍 Đang xét' },
+  { value: 'quoted', label: '⏳ Chờ TT' },
+  { value: 'deposit_paid', label: '✅ Đã TT' },
+  { value: 'in_production', label: '🧶 Đang làm' },
+  { value: 'completed', label: '✔️ Hoàn thành' },
+  { value: 'delivered', label: '🏠 Đã giao' },
+  { value: 'cancelled', label: '❌ Đã hủy' },
+];
+
 const PER_PAGE = 10;
 
 function DateFilter({ from, to, onFromChange, onToChange, onClear }) {
   const hasFilter = from || to;
   return (
-    <div className="flex items-center gap-2">
-      <FiCalendar size={14} className="text-gray-400 shrink-0" />
+    <div className="flex items-center gap-1">
+      <FiCalendar size={12} className="text-gray-300 shrink-0" />
       <input type="date" value={from} onChange={e => onFromChange(e.target.value)}
-        className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 focus:border-rose-300" />
-      <span className="text-gray-300 text-xs">—</span>
+        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-[11px] text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
+      <span className="text-gray-300 text-[11px]">—</span>
       <input type="date" value={to} onChange={e => onToChange(e.target.value)}
-        className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 focus:border-rose-300" />
+        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-[11px] text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
       {hasFilter && (
-        <button onClick={onClear} className="text-gray-400 hover:text-rose-500 transition">
-          <FiX size={14} />
+        <button onClick={onClear} className="text-gray-300 hover:text-rose-400 transition ml-0.5">
+          <FiX size={12} />
         </button>
       )}
     </div>
@@ -126,7 +138,6 @@ function CustomOrderCard({ order }) {
 }
 
 export default function Orders() {
-  const navigate = useNavigate();
   const [orderType, setOrderType] = useState('regular');
 
   // Regular orders
@@ -141,6 +152,7 @@ export default function Orders() {
   });
 
   // Custom orders
+  const [customStatus, setCustomStatus] = useState('');
   const [customPage, setCustomPage] = useState(1);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
@@ -148,6 +160,7 @@ export default function Orders() {
   const allCustom = customData?.items || customData || [];
 
   const filteredCustom = allCustom.filter(o => {
+    if (customStatus && o.status !== customStatus) return false;
     const d = new Date(o.createdAt);
     if (customFrom && d < new Date(customFrom)) return false;
     if (customTo && d > new Date(customTo + 'T23:59:59')) return false;
@@ -161,37 +174,31 @@ export default function Orders() {
   const switchType = (type) => {
     setOrderType(type);
     setStatus(''); setPage(1); setFromDate(''); setToDate('');
-    setCustomPage(1); setCustomFrom(''); setCustomTo('');
+    setCustomStatus(''); setCustomPage(1); setCustomFrom(''); setCustomTo('');
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
 
-      {/* Header row — changes based on active tab */}
-      {orderType === 'regular' ? (
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">Đơn Hàng Của Tôi</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Đơn Hàng Của Tôi</h1>
+        {orderType === 'regular' ? (
           <DateFilter
             from={fromDate} to={toDate}
             onFromChange={v => { setFromDate(v); setPage(1); }}
             onToChange={v => { setToDate(v); setPage(1); }}
             onClear={() => { setFromDate(''); setToDate(''); setPage(1); }}
           />
-        </div>
-      ) : (
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-rose-500 transition font-medium">
-            <FiChevronLeft size={16} /> Trở về trang trước
-          </button>
+        ) : (
           <DateFilter
             from={customFrom} to={customTo}
             onFromChange={v => { setCustomFrom(v); setCustomPage(1); }}
             onToChange={v => { setCustomTo(v); setCustomPage(1); }}
             onClear={() => { setCustomFrom(''); setCustomTo(''); setCustomPage(1); }}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Type tabs */}
       <div className="flex gap-2 mb-4">
@@ -206,17 +213,22 @@ export default function Orders() {
         ))}
       </div>
 
-      {/* Status tabs — regular orders only */}
-      {orderType === 'regular' && (
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {REGULAR_STATUS_TABS.map(tab => (
-            <button key={tab.value} onClick={() => { setStatus(tab.value); setPage(1); }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${status === tab.value ? 'bg-rose-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Status tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {(orderType === 'regular' ? REGULAR_STATUS_TABS : CUSTOM_STATUS_TABS).map(tab => (
+          <button key={tab.value}
+            onClick={() => orderType === 'regular'
+              ? (setStatus(tab.value), setPage(1))
+              : (setCustomStatus(tab.value), setCustomPage(1))}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+              (orderType === 'regular' ? status : customStatus) === tab.value
+                ? 'bg-rose-500 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* List */}
       {loading ? (
@@ -241,7 +253,7 @@ export default function Orders() {
           <div className="text-center py-20">
             <div className="text-5xl mb-4">✨</div>
             <p className="text-gray-500 text-lg mb-2">
-              {customFrom || customTo ? 'Không có đơn nào trong khoảng thời gian này' : 'Không có đơn tùy chỉnh nào'}
+              {customStatus || customFrom || customTo ? 'Không có đơn nào phù hợp' : 'Không có đơn tùy chỉnh nào'}
             </p>
             <Link to="/custom-order" className="text-rose-500 font-medium hover:underline">Đặt đơn tùy chỉnh ngay</Link>
           </div>

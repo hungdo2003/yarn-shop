@@ -40,6 +40,17 @@ const getMyOrders = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+const getMyOrderById = async (req, res) => {
+  try {
+    const order = await CustomOrder.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+      include: [CustomOrderImage],
+    });
+    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+    res.json(order);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
 const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
@@ -173,4 +184,4 @@ const payCustomOrder = async (req, res) => {
   }
 };
 
-module.exports = { submit, getMyOrders, getAll, getById, updateStatus, payCustomOrder };
+module.exports = { submit, getMyOrders, getMyOrderById, getAll, getById, updateStatus, payCustomOrder };
