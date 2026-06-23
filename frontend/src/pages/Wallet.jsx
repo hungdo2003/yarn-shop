@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import Pagination from '../components/common/Pagination';
+
+const PER_PAGE = 10;
 
 const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -19,6 +22,7 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('all');
+  const [page, setPage] = useState(1);
   const [topupAmount, setTopupAmount] = useState('');
   const [topping, setTopping] = useState(false);
 
@@ -50,6 +54,8 @@ export default function Wallet() {
   };
 
   const filtered = tab === 'all' ? transactions : transactions.filter(tx => tx.type === tab);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -118,7 +124,7 @@ export default function Wallet() {
             ].map(({ key, label }) => (
               <button
                 key={key}
-                onClick={() => setTab(key)}
+                onClick={() => { setTab(key); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
                   tab === key ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
@@ -138,7 +144,7 @@ export default function Wallet() {
           </div>
         ) : (
           <div className="divide-y">
-            {filtered.map(tx => {
+            {paginated.map(tx => {
               const cfg = TX_TYPE[tx.type] || TX_TYPE.admin_adjustment;
               const isCredit = tx.amount > 0;
               return (
@@ -162,6 +168,9 @@ export default function Wallet() {
             })}
           </div>
         )}
+        <div className="px-5 pb-4">
+          <Pagination pagination={{ page, totalPages }} onPageChange={setPage} />
+        </div>
       </div>
     </div>
   );

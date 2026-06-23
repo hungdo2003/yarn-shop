@@ -163,11 +163,11 @@ function ReviewForm({ productId, orderId, user, onSubmitted }) {
 }
 
 // ── Rating Summary Bar ────────────────────────────────────────────────────────
-function RatingSummary({ avg, total, distribution }) {
+function RatingSummary({ avg, total, distribution, activeFilter, onFilter }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex gap-6 items-center flex-wrap">
       <div className="text-center shrink-0">
-        <p className="text-6xl font-black text-gray-800 leading-none">{avg > 0 ? avg.toFixed(1) : '—'}</p>
+        <p className="text-5xl font-black text-gray-800 leading-none">{avg > 0 ? avg.toFixed(1) : '—'}</p>
         <Stars rating={avg} size={20} className="justify-center mt-2" />
         <p className="text-xs text-gray-400 mt-1.5">{total} đánh giá</p>
       </div>
@@ -175,17 +175,19 @@ function RatingSummary({ avg, total, distribution }) {
         {[5, 4, 3, 2, 1].map(star => {
           const count = distribution?.[star] || 0;
           const pct = total > 0 ? (count / total) * 100 : 0;
+          const active = activeFilter === star;
           return (
-            <div key={star} className="flex items-center gap-2">
+            <button key={star} onClick={() => onFilter(active ? 0 : star)}
+              className={`w-full flex items-center gap-2 rounded-lg px-1 py-0.5 transition-colors ${active ? 'bg-yellow-50' : 'hover:bg-gray-50'}`}>
               <span className="text-xs text-gray-500 w-3 shrink-0">{star}</span>
               <svg width={12} height={12} viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1.5" className="shrink-0">
                 <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
               </svg>
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                <div className={`h-full rounded-full transition-all duration-500 ${active ? 'bg-yellow-500' : 'bg-yellow-400'}`} style={{ width: `${pct}%` }} />
               </div>
               <span className="text-xs text-gray-400 w-6 text-right shrink-0">{count}</span>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -281,6 +283,7 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState([]);
   const [reviewMeta, setReviewMeta] = useState({ distribution: {}, averageRating: 0, total: 0, pagination: null });
   const [reviewPage, setReviewPage] = useState(1);
+  const [ratingFilter, setRatingFilter] = useState(0);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [canReview, setCanReview] = useState(false);
   const [reviewOrderId, setReviewOrderId] = useState(null);
@@ -296,19 +299,26 @@ export default function ProductDetail() {
   useEffect(() => {
     if (!product) return;
     setReviewsLoading(true);
-    api.get(`/reviews/product/${product.id}`, { params: { page: reviewPage, limit: 6 } })
+    const params = { page: reviewPage, limit: 6 };
+    if (ratingFilter) params.rating = ratingFilter;
+    api.get(`/reviews/product/${product.id}`, { params })
       .then(res => {
         setReviews(res.data.items || []);
-        setReviewMeta({
-          distribution: res.data.distribution || {},
-          averageRating: res.data.averageRating || 0,
+        setReviewMeta(prev => ({
+          distribution: res.data.distribution || prev.distribution,
+          averageRating: res.data.averageRating || prev.averageRating,
           total: res.data.total || 0,
           pagination: res.data.pagination,
-        });
+        }));
       })
       .catch(() => {})
       .finally(() => setReviewsLoading(false));
-  }, [product, reviewPage]);
+  }, [product, reviewPage, ratingFilter]);
+
+  const handleRatingFilter = (star) => {
+    setRatingFilter(star);
+    setReviewPage(1);
+  };
 
   useEffect(() => {
     if (!user || !isRole('customer') || !product) return;
@@ -366,7 +376,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-400 flex items-center gap-1.5">
         <Link to="/" className="hover:text-rose-500 transition-colors">Trang chủ</Link>
@@ -378,7 +388,7 @@ export default function ProductDetail() {
       </nav>
 
       {/* Product section */}
-      <div className="grid lg:grid-cols-[1fr_480px] gap-10">
+      <div className="grid lg:grid-cols-2 gap-8">
         {/* Gallery */}
         <div className="space-y-3">
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-gray-50 shadow-sm group">
@@ -415,7 +425,7 @@ export default function ProductDetail() {
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((img, i) => (
                 <button key={i} onClick={() => setActiveImage(i)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${activeImage === i ? 'border-rose-500 shadow-md shadow-rose-100 scale-105' : 'border-transparent hover:border-gray-300'}`}>
+                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeImage === i ? 'border-rose-500 shadow-md shadow-rose-100 scale-105' : 'border-transparent hover:border-gray-300'}`}>
                   {img.imageUrl
                     ? <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
                     : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-xl">🧶</div>}
@@ -433,7 +443,7 @@ export default function ProductDetail() {
               {product.Category.name}
             </Link>
           )}
-          <h1 className="text-2xl lg:text-3xl font-black text-gray-900 leading-tight">{product.name}</h1>
+          <h1 className="text-xl lg:text-2xl font-black text-gray-900 leading-tight">{product.name}</h1>
 
           {/* Rating summary inline */}
           <button className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -445,7 +455,7 @@ export default function ProductDetail() {
 
           {/* Price */}
           <div className="flex items-end gap-3">
-            <span className="text-4xl font-black text-rose-500">{formatCurrency(price)}</span>
+            <span className="text-3xl font-black text-rose-500">{formatCurrency(price)}</span>
             {hasDiscount && (
               <div className="flex flex-col">
                 <span className="text-sm text-gray-400 line-through">{formatCurrency(product.price)}</span>
@@ -536,8 +546,29 @@ export default function ProductDetail() {
         </div>
 
         {reviewMeta.total > 0 && (
-          <div className="mb-6">
-            <RatingSummary avg={reviewMeta.averageRating} total={reviewMeta.total} distribution={reviewMeta.distribution} />
+          <div className="mb-6 space-y-3">
+            <RatingSummary
+              avg={reviewMeta.averageRating}
+              total={reviewMeta.total}
+              distribution={reviewMeta.distribution}
+              activeFilter={ratingFilter}
+              onFilter={handleRatingFilter}
+            />
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => handleRatingFilter(0)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${ratingFilter === 0 ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                Tất cả
+              </button>
+              {[5, 4, 3, 2, 1].map(s => (
+                <button key={s} onClick={() => handleRatingFilter(ratingFilter === s ? 0 : s)}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition ${ratingFilter === s ? 'bg-yellow-400 text-white' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-700'}`}>
+                  {s} ★
+                </button>
+              ))}
+              {ratingFilter > 0 && (
+                <span className="text-xs text-gray-400 ml-1">{reviewMeta.total} kết quả</span>
+              )}
+            </div>
           </div>
         )}
 

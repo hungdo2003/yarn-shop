@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import Pagination from '../components/common/Pagination';
+
+const PER_PAGE = 10;
 
 const statusColor = { pending: 'bg-yellow-100 text-yellow-700', approved: 'bg-blue-100 text-blue-700', rejected: 'bg-red-100 text-red-700', completed: 'bg-green-100 text-green-700' };
 const statusLabel = { pending: 'Chờ xử lý', approved: 'Đã duyệt', rejected: 'Từ chối', completed: 'Hoàn thành' };
@@ -13,6 +16,7 @@ export default function Returns() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     api.get('/returns/my').then(r => setReturns(r.data)).finally(() => setLoading(false));
@@ -33,6 +37,8 @@ export default function Returns() {
   };
 
   const filtered = filter ? returns.filter(r => r.status === filter) : returns;
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -43,7 +49,7 @@ export default function Returns() {
 
       <div className="flex gap-2 mb-6">
         {['', 'pending', 'approved', 'rejected', 'completed'].map(s => (
-          <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${filter === s ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+          <button key={s} onClick={() => { setFilter(s); setPage(1); }} className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${filter === s ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {s ? statusLabel[s] : 'Tất cả'}
           </button>
         ))}
@@ -56,7 +62,7 @@ export default function Returns() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map(r => (
+          {paginated.map(r => (
             <div key={r.id} className="bg-white rounded-xl shadow p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -73,6 +79,7 @@ export default function Returns() {
               {r.staffNote && <p className="text-sm text-blue-700 bg-blue-50 rounded p-2 mt-2"><span className="font-medium">Phản hồi:</span> {r.staffNote}</p>}
             </div>
           ))}
+          <Pagination pagination={{ page, totalPages }} onPageChange={setPage} />
         </div>
       )}
 

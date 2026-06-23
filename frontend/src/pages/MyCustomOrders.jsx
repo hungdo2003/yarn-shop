@@ -4,9 +4,12 @@ import useFetch from '../hooks/useFetch';
 import api from '../services/api';
 import { formatCurrency, formatDate, CUSTOM_STATUS_LABEL, CUSTOM_STATUS_COLOR } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
+import Pagination from '../components/common/Pagination';
 import { FiPlus, FiEye, FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+
+const PER_PAGE = 10;
 
 const STEPS = [
   { key: 'submitted',    label: 'Đã gửi',     icon: '📝' },
@@ -194,8 +197,11 @@ export default function MyCustomOrders() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState('');
   const [selected, setSelected] = useState(null);
+  const [page, setPage] = useState(1);
   const { data, loading, refetch } = useFetch('/custom-orders/my', { status: statusFilter });
   const orders = data?.items || data || [];
+  const totalPages = Math.ceil(orders.length / PER_PAGE);
+  const paginatedOrders = orders.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const FILTER_TABS = [
     { value: '', label: 'Tất cả' },
@@ -222,7 +228,7 @@ export default function MyCustomOrders() {
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
         {FILTER_TABS.map(tab => (
-          <button key={tab.value} onClick={() => setStatusFilter(tab.value)}
+          <button key={tab.value} onClick={() => { setStatusFilter(tab.value); setPage(1); }}
             className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap font-medium transition ${statusFilter === tab.value ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {tab.label}
           </button>
@@ -238,7 +244,7 @@ export default function MyCustomOrders() {
         </div>
       ) : (
         <div className="space-y-3">
-          {orders.map(order => {
+          {paginatedOrders.map(order => {
             const curStep = stepIndex(order.status);
             const progress = order.status === 'cancelled' ? 0 : Math.round(((curStep + 1) / STEPS.length) * 100);
             const needsPayment = order.status === 'quoted';
@@ -288,6 +294,7 @@ export default function MyCustomOrders() {
               </div>
             );
           })}
+          <Pagination pagination={{ page, totalPages }} onPageChange={setPage} />
         </div>
       )}
 
