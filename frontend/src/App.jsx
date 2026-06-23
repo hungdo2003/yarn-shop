@@ -25,6 +25,7 @@ import Returns from './pages/Returns';
 import PaymentResult from './pages/PaymentResult';
 import PaymentSimulate from './pages/PaymentSimulate';
 import MyCustomOrders from './pages/MyCustomOrders';
+import CustomOrderDetail from './pages/CustomOrderDetail';
 import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
 
@@ -109,6 +110,7 @@ const App = () => (
         <Route path="/profile" element={<Profile />} />
         <Route path="/addresses" element={<Addresses />} />
         <Route path="/custom-orders/my" element={<MyCustomOrders />} />
+        <Route path="/custom-orders/:id" element={<CustomOrderDetail />} />
       </Route>
 
       <Route element={<PrivateRoute roles={['customer']} />}>
