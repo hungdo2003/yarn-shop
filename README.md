@@ -8,7 +8,7 @@ A full-stack web application for selling yarn, knitting accessories, and handmad
 |-------|-----------|
 | Frontend | React 18 + Vite + Tailwind CSS + React Router v6 |
 | Backend | Node.js + Express.js |
-| Database | MySQL + Sequelize ORM |
+| Database | PostgreSQL + Sequelize ORM |
 | Auth | JWT + bcryptjs |
 | File Upload | Multer |
 | Charts | Recharts |
@@ -40,9 +40,9 @@ yarn-shop/
 
 ## Quick Start
 
-### 1. Database Setup (MySQL)
+### 1. Database Setup (PostgreSQL)
 ```sql
-CREATE DATABASE yarn_shop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE yarn_shop;
 ```
 
 ### 2. Backend
@@ -57,8 +57,7 @@ npm run dev                  # Starts on :5000
 
 ### 3. Seed roles
 ```sql
-USE yarn_shop;
-INSERT INTO Roles (name, description, createdAt, updatedAt) VALUES
+INSERT INTO "Roles" (name, description, "createdAt", "updatedAt") VALUES
   ('admin', 'System Administrator', NOW(), NOW()),
   ('customer', 'Regular Customer', NOW(), NOW()),
   ('staff', 'Sales Staff', NOW(), NOW()),
