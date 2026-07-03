@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiX, FiSend, FiMinus, FiChevronRight } from 'react-icons/fi';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const QUICK = [
   'Có những sản phẩm len nào?',
@@ -17,6 +18,7 @@ const renderContent = (text) =>
 const fmtTime = (d) => new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
 export default function AIChatWidget({ onOpenLiveChat }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [messages, setMessages] = useState([
@@ -44,7 +46,7 @@ export default function AIChatWidget({ onOpenLiveChat }) {
     setText('');
     setTyping(true);
     try {
-      const r = await api.post('/chat/bot', { message: question.trim() });
+      const r = await api.post('/chat/bot', { message: question.trim(), userId: user?.id || null });
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', content: r.data.reply, createdAt: new Date() }]);
     } catch {
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', content: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại!', createdAt: new Date() }]);
