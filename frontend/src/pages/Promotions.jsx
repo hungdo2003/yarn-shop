@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -24,20 +25,36 @@ export default function Promotions() {
 
   const copy = (code) => { navigator.clipboard.writeText(code); toast.success(`Đã sao chép mã ${code}`); };
 
-  const typeLabel = { percentage: 'Giảm %', fixed: 'Giảm tiền', free_shipping: 'Miễn ship' };
-  const typeBg = { percentage: 'bg-rose-100 text-rose-700', fixed: 'bg-amber-100 text-amber-700', free_shipping: 'bg-green-100 text-green-700' };
+  const typeLabel = { percentage: 'Giảm %', fixed: 'Giảm tiền', free_shipping: 'Miễn ship', flash_sale: '⚡ Flash Sale' };
+  const typeBg = { percentage: 'bg-rose-100 text-rose-700', fixed: 'bg-amber-100 text-amber-700', free_shipping: 'bg-green-100 text-green-700', flash_sale: 'bg-orange-100 text-orange-700' };
+
+  const flashVouchers = vouchers.filter(v => v.type === 'flash_sale');
+  const normalVouchers = vouchers.filter(v => v.type !== 'flash_sale');
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <h1 className="text-3xl font-bold text-rose-600 mb-2">Khuyến Mãi & Voucher</h1>
       <p className="text-gray-500 mb-8">Các ưu đãi hiện có từ Yarn Shop</p>
 
+      {/* Flash Sale banner */}
+      {flashVouchers.length > 0 && (
+        <Link to="/flash-sale" className="block bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl p-5 mb-8 hover:opacity-95 transition">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-black text-xl flex items-center gap-2">⚡ Flash Sale Đang Diễn Ra!</p>
+              <p className="text-orange-100 text-sm mt-1">{flashVouchers.length} mã giảm giá đặc biệt — Số lượng có hạn</p>
+            </div>
+            <span className="bg-white text-orange-600 font-bold px-4 py-2 rounded-full text-sm hover:bg-orange-50 whitespace-nowrap">Xem ngay →</span>
+          </div>
+        </Link>
+      )}
+
       {loading ? <div className="text-center py-16 text-gray-400">Đang tải...</div> : (
-        vouchers.length === 0 ? (
+        normalVouchers.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow text-gray-400">Hiện chưa có voucher nào</div>
         ) : (
           <div className="grid md:grid-cols-2 gap-4 mb-12">
-            {vouchers.map(v => (
+            {normalVouchers.map(v => (
               <div key={v.id} className="bg-white rounded-xl shadow overflow-hidden border border-dashed border-rose-200">
                 <div className="bg-rose-50 px-6 py-4 flex items-center justify-between">
                   <div>
@@ -53,7 +70,6 @@ export default function Promotions() {
                     <code className="bg-gray-100 px-3 py-1 rounded font-mono font-bold text-rose-600 flex-1 text-center">{v.code}</code>
                     <button onClick={() => copy(v.code)} className="bg-rose-500 text-white px-3 py-1 rounded text-sm hover:bg-rose-600 transition">Sao chép</button>
                   </div>
-                  {v.description && <p className="text-sm text-gray-600 mb-2">{v.description}</p>}
                   {v.minOrderAmount > 0 && <p className="text-xs text-gray-500">Đơn tối thiểu: {parseInt(v.minOrderAmount).toLocaleString()}đ</p>}
                   {v.maxDiscountAmount && v.type === 'percentage' && <p className="text-xs text-gray-500">Giảm tối đa: {parseInt(v.maxDiscountAmount).toLocaleString()}đ</p>}
                   <p className="text-xs text-gray-400 mt-2">HSD: {new Date(v.endDate).toLocaleDateString('vi-VN')}</p>

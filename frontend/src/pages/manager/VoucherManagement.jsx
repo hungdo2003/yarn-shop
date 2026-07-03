@@ -119,7 +119,11 @@ const VoucherManagement = () => {
               {data?.items?.map(v => (
                 <tr key={v.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono font-bold text-primary">{v.code}</td>
-                  <td className="px-4 py-3 capitalize">{v.type.replace('_', ' ')}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${v.type === 'flash_sale' ? 'bg-orange-100 text-orange-700' : v.type === 'percentage' ? 'bg-rose-100 text-rose-700' : v.type === 'fixed' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                      {v.type === 'flash_sale' ? '⚡ Flash Sale' : v.type.replace('_', ' ')}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">{v.type === 'percentage' ? `${v.value}%` : formatCurrency(v.value)}</td>
                   <td className="px-4 py-3">{formatCurrency(v.minOrderAmount)}</td>
                   <td className="px-4 py-3">{v.usedCount}/{v.usageLimit || '∞'}</td>

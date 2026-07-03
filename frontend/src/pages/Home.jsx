@@ -4,6 +4,7 @@ import api from '../services/api';
 import ProductCard from '../components/common/ProductCard';
 import Spinner from '../components/common/Spinner';
 import toast from 'react-hot-toast';
+import { useCountdown } from '../hooks/useCountdown';
 
 /* ─────────── Hero slides ─────────── */
 const SLIDES = [
@@ -67,12 +68,25 @@ const BADGES = [
 /* ─────────── Stars ─────────── */
 const Stars = ({ n }) => <span className="text-amber-400">{'★'.repeat(n)}{'☆'.repeat(5 - n)}</span>;
 
+/* ─── Mini countdown for Home flash sale banner ─── */
+function MiniCountdown({ endDate }) {
+  const { days, hours, minutes, seconds, expired } = useCountdown(endDate);
+  if (expired) return null;
+  const pad = v => String(v).padStart(2, '0');
+  return (
+    <span className="font-mono font-black text-yellow-300 tabular-nums text-lg">
+      {days > 0 ? `${pad(days)}d ` : ''}{pad(hours)}:{pad(minutes)}:{pad(seconds)}
+    </span>
+  );
+}
+
 export default function Home() {
   const [slide, setSlide] = useState(0);
   const [featured, setFeatured] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
+  const [flashSale, setFlashSale] = useState(null);
   const navigate = useNavigate();
   const timerRef = useRef(null);
 
@@ -80,9 +94,12 @@ export default function Home() {
     Promise.all([
       api.get('/products/featured'),
       api.get('/products', { params: { isNew: 'true', limit: 8 } }),
-    ]).then(([f, n]) => {
+      api.get('/vouchers/flash-sale'),
+    ]).then(([f, n, fs]) => {
       setFeatured(f.data || []);
       setNewArrivals(n.data?.items || []);
+      const fsData = fs.data;
+      if (fsData.vouchers?.length > 0 || fsData.products?.length > 0) setFlashSale(fsData);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -151,6 +168,32 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ── FLASH SALE BANNER ── */}
+      {flashSale && (
+        <section className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-500 py-4 px-4">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-white">
+              <span className="text-2xl animate-bounce">⚡</span>
+              <div>
+                <p className="font-black text-lg leading-tight">FLASH SALE ĐANG DIỄN RA!</p>
+                <p className="text-orange-100 text-xs">Giảm đến {Math.max(...(flashSale.products?.map(p => Math.round((1 - p.salePrice/p.price)*100)) || [0]))}% — Số lượng có hạn</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {flashSale.endDate && (
+                <div className="text-center">
+                  <p className="text-orange-200 text-[10px] uppercase tracking-wider mb-0.5">Kết thúc sau</p>
+                  <MiniCountdown endDate={flashSale.endDate} />
+                </div>
+              )}
+              <Link to="/flash-sale" className="bg-white text-orange-600 font-bold px-5 py-2 rounded-full text-sm hover:bg-orange-50 transition shadow-sm whitespace-nowrap">
+                Mua ngay →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── CATEGORY SHOWCASE ── */}
       <section className="max-w-7xl mx-auto px-4 py-16">
