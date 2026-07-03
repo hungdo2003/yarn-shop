@@ -1,6 +1,7 @@
 const { sequelize, Order, OrderDetail, Payment, Shipment, Cart, CartItem, Product, Inventory, InventoryTransaction, Voucher, User, WalletTransaction } = require('../models');
 const { notify, notifyByRole } = require('../services/notificationService');
 const { generateCode, paginate, paginateResult } = require('../utils/helpers');
+const { calcPointsEarned, calcMaxRedeemable, calcPointsDiscount } = require('../utils/loyalty');
 const { Op } = require('sequelize');
 
 const SHIPPING_FEES = { standard: 30000, express: 50000, economy: 15000 };
@@ -24,7 +25,7 @@ const buildOrderItems = async (items, t) => {
 const placeOrder = async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { shippingAddress, shippingName, shippingPhone, shippingMethod = 'standard', paymentMethod, voucherCode, note, guestEmail, items: guestItems } = req.body;
+    const { shippingAddress, shippingName, shippingPhone, shippingMethod = 'standard', paymentMethod, voucherCode, note, guestEmail, items: guestItems, pointsToRedeem: rawPoints } = req.body;
     const isGuest = !req.user;
 
     let cartItems = [];
@@ -55,7 +56,17 @@ const placeOrder = async (req, res) => {
       else if (voucher.type === 'fixed') discount = Math.min(voucher.value, subtotal);
       else if (voucher.type === 'free_shipping') { discount = baseFee; baseFee = 0; }
     }
-    const total = subtotal + baseFee - discount;
+    let pointsUsed = 0;
+    let pointsDiscount = 0;
+    if (!isGuest && rawPoints && parseInt(rawPoints) > 0) {
+      const buyer = await User.findByPk(req.user.id, { transaction: t });
+      const maxRedeemable = calcMaxRedeemable(subtotal + baseFee - discount, buyer.loyaltyPoints || 0);
+      pointsUsed = Math.min(parseInt(rawPoints), maxRedeemable);
+      pointsDiscount = calcPointsDiscount(pointsUsed);
+    }
+
+    const total = subtotal + baseFee - discount - pointsDiscount;
+    const pointsEarned = !isGuest ? calcPointsEarned(total) : 0;
 
     // Validate stock before creating order
     for (const item of cartItems) {
@@ -81,6 +92,7 @@ const placeOrder = async (req, res) => {
       shippingAddress, shippingName, shippingPhone, shippingMethod,
       subtotal, shippingFee: baseFee, discount, total,
       voucherId: voucher?.id, note,
+      pointsUsed, pointsEarned,
       status: useWallet ? 'paid' : 'pending_payment',
     }, { transaction: t });
 
@@ -107,6 +119,9 @@ const placeOrder = async (req, res) => {
         description: `Thanh toán đơn hàng ${order.orderCode}`,
       }, { transaction: t });
       await Payment.create({ orderId: order.id, method: 'wallet', amount: total, status: 'paid', paidAt: new Date() }, { transaction: t });
+      // Deduct redeemed points and award earned points
+      if (pointsUsed > 0) await buyer.decrement('loyaltyPoints', { by: pointsUsed, transaction: t });
+      if (pointsEarned > 0) await buyer.increment('loyaltyPoints', { by: pointsEarned, transaction: t });
       // Decrement stock immediately
       for (const item of cartItems) {
         const product = item.Product;
@@ -118,9 +133,13 @@ const placeOrder = async (req, res) => {
           referenceId: order.id, referenceType: 'order', performedBy: req.user.id,
         }, { transaction: t });
       }
-      await buyer.increment('loyaltyPoints', { by: Math.floor(total / 10000), transaction: t });
     } else {
       await Payment.create({ orderId: order.id, method: 'payos', amount: total, status: 'unpaid' }, { transaction: t });
+      // Deduct redeemed points immediately (before payment) to prevent double-spend
+      if (!isGuest && pointsUsed > 0) {
+        const buyer = await User.findByPk(req.user.id, { transaction: t });
+        await buyer.decrement('loyaltyPoints', { by: pointsUsed, transaction: t });
+      }
     }
 
     await Shipment.create({ orderId: order.id }, { transaction: t });

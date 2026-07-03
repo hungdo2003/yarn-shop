@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw } from 'react-icons/fi';
+import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw, FiGift, FiTrendingUp } from 'react-icons/fi';
 
 const roleLabel = { admin: 'Quản trị viên', manager: 'Quản lý', staff: 'Nhân viên', customer: 'Khách hàng' };
 const roleBg = { admin: 'bg-red-100 text-red-700', manager: 'bg-purple-100 text-purple-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
@@ -85,20 +85,54 @@ const Profile = () => {
 
       {/* Quick links for customer */}
       {role === 'customer' && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <Link to="/orders" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
-            <div className="text-2xl mb-1">📦</div>
-            <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đơn hàng</p>
-          </Link>
-          <Link to="/addresses" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
-            <FiMapPin className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
-            <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Địa chỉ</p>
-          </Link>
-          <Link to="/returns" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
-            <FiRefreshCw className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
-            <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đổi trả</p>
-          </Link>
-        </div>
+        <>
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            <Link to="/orders" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+              <div className="text-2xl mb-1">📦</div>
+              <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đơn hàng</p>
+            </Link>
+            <Link to="/wishlist" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+              <div className="text-2xl mb-1">❤️</div>
+              <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Yêu thích</p>
+            </Link>
+            <Link to="/addresses" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+              <FiMapPin className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
+              <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Địa chỉ</p>
+            </Link>
+            <Link to="/returns" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+              <FiRefreshCw className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
+              <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đổi trả</p>
+            </Link>
+          </div>
+
+          {/* Loyalty Points Card */}
+          <div className="bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-5 text-white mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <FiGift size={18} />
+                <span className="font-bold text-base">Điểm Tích Lũy</span>
+              </div>
+              <span className="text-3xl font-black">{(user?.loyaltyPoints || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-xs text-amber-100 mb-4">
+              <span>Chi tiêu 1.000đ = 1 điểm</span>
+              <span>1 điểm = 100đ giảm giá</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="bg-white/20 rounded-xl py-2">
+                <p className="text-lg font-bold">{(user?.loyaltyPoints || 0).toLocaleString()}</p>
+                <p className="text-xs text-amber-100">Điểm hiện có</p>
+              </div>
+              <div className="bg-white/20 rounded-xl py-2">
+                <p className="text-lg font-bold">{((user?.loyaltyPoints || 0) * 100).toLocaleString()}đ</p>
+                <p className="text-xs text-amber-100">Giá trị quy đổi</p>
+              </div>
+            </div>
+            <p className="text-xs text-amber-100 mt-3 text-center">
+              Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng
+            </p>
+          </div>
+        </>
       )}
 
       {/* Tabs */}

@@ -211,10 +211,19 @@ export default function OrderDetail() {
             <span>{parseFloat(order.shippingFee) === 0 ? <span className="text-green-600">Miễn phí</span> : formatCurrency(order.shippingFee)}</span>
           </div>
           {parseFloat(order.discount) > 0 && (
-            <div className="flex justify-between text-green-600"><span>Giảm giá</span><span>-{formatCurrency(order.discount)}</span></div>
+            <div className="flex justify-between text-green-600"><span>Voucher</span><span>-{formatCurrency(order.discount)}</span></div>
+          )}
+          {order.pointsUsed > 0 && (
+            <div className="flex justify-between text-amber-600"><span>Điểm tích lũy ({order.pointsUsed.toLocaleString()} đ.)</span><span>-{formatCurrency(order.pointsUsed * 100)}</span></div>
           )}
           <hr className="border-gray-100" />
           <div className="flex justify-between font-bold text-base"><span>Tổng cộng</span><span className="text-rose-500">{formatCurrency(order.total)}</span></div>
+          {order.pointsEarned > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mt-1">
+              <span>🎁</span>
+              <span>Đơn hàng này tích được <b>{order.pointsEarned.toLocaleString()} điểm</b></span>
+            </div>
+          )}
         </div>
       </div>
 

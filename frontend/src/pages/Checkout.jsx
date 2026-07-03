@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { FiGift } from 'react-icons/fi';
 
 const fmt = (n) => Number(n).toLocaleString('vi-VN') + 'đ';
 
@@ -27,6 +28,9 @@ const Checkout = ({ guest }) => {
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('payos');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [usePoints, setUsePoints] = useState(false);
   const [form, setForm] = useState({
     shippingName: user?.fullName || '',
     shippingPhone: user?.phone || '',
@@ -43,6 +47,7 @@ const Checkout = ({ guest }) => {
         if (def) setForm(f => ({ ...f, shippingName: def.fullName, shippingPhone: def.phone, shippingAddress: [def.address, def.ward, def.district, def.province].filter(Boolean).join(', ') }));
       }).catch(() => {});
       api.get('/wallet').then(r => setWalletBalance(r.data.balance)).catch(() => {});
+      api.get('/loyalty/info').then(r => setLoyaltyPoints(r.data.points || 0)).catch(() => {});
     }
   }, [user]);
 
@@ -73,7 +78,13 @@ const Checkout = ({ guest }) => {
   };
 
   const discountAmt = voucher?.type === 'free_shipping' ? shippingFee : discount;
-  const total = subtotal + shippingFee - discountAmt;
+  const baseTotal = subtotal + shippingFee - discountAmt;
+  // Loyalty points: 1 point = 100đ, max 20% of baseTotal
+  const REDEEM_RATE = 100;
+  const maxRedeemable = Math.min(loyaltyPoints, Math.floor((baseTotal * 20) / (100 * REDEEM_RATE)));
+  const pointsDiscount = usePoints ? pointsToRedeem * REDEEM_RATE : 0;
+  const total = baseTotal - pointsDiscount;
+  const pointsEarnPreview = Math.floor(total / 1000);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +103,7 @@ const Checkout = ({ guest }) => {
     try {
       const payload = { ...form, shippingMethod, voucherCode: voucher?.code }; // kept for guest path
 
-      const payload2 = { ...form, shippingMethod, voucherCode: voucher?.code, paymentMethod };
+      const payload2 = { ...form, shippingMethod, voucherCode: voucher?.code, paymentMethod, pointsToRedeem: usePoints ? pointsToRedeem : 0 };
       if (guest) {
         payload2.items = cartItems.map(i => ({ productId: i.productId, quantity: i.quantity }));
         const res = await api.post('/orders/guest', payload2);
@@ -298,13 +309,72 @@ const Checkout = ({ guest }) => {
               {voucher && <p className="text-green-600 text-xs">✓ Giảm: -{fmt(discountAmt)}</p>}
             </div>
 
+            {/* Loyalty Points Section */}
+            {!guest && loyaltyPoints > 0 && (
+              <div className="bg-white rounded-xl shadow p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <FiGift size={16} className="text-amber-500" />
+                    <h3 className="font-semibold text-sm">Dùng điểm tích lũy</h3>
+                  </div>
+                  <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{loyaltyPoints.toLocaleString()} điểm</span>
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer mb-3">
+                  <div
+                    onClick={() => { setUsePoints(p => !p); if (!usePoints) setPointsToRedeem(maxRedeemable); else setPointsToRedeem(0); }}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${usePoints ? 'bg-amber-500' : 'bg-gray-200'}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${usePoints ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <span className="text-sm text-gray-700">Sử dụng điểm để giảm giá</span>
+                </label>
+                {usePoints && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min={0}
+                        max={maxRedeemable}
+                        value={pointsToRedeem}
+                        onChange={e => setPointsToRedeem(Number(e.target.value))}
+                        className="flex-1 accent-amber-500"
+                      />
+                      <div className="flex items-center gap-1 border rounded-lg px-2 py-1">
+                        <input
+                          type="number"
+                          min={0}
+                          max={maxRedeemable}
+                          value={pointsToRedeem}
+                          onChange={e => setPointsToRedeem(Math.min(Number(e.target.value), maxRedeemable))}
+                          className="w-16 text-sm text-center focus:outline-none"
+                        />
+                        <span className="text-xs text-gray-400">đ/20%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Có thể dùng tối đa: <b className="text-amber-600">{maxRedeemable.toLocaleString()} điểm</b></span>
+                      <span>Giảm: <b className="text-green-600">-{fmt(pointsToRedeem * REDEEM_RATE)}</b></span>
+                    </div>
+                    <p className="text-xs text-gray-400">1 điểm = 100đ giảm giá • Tối đa 20% giá trị đơn</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow p-5">
               <div className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between text-gray-600"><span>Tạm tính</span><span>{fmt(subtotal)}</span></div>
                 <div className="flex justify-between text-gray-600"><span>Phí vận chuyển</span><span className={shippingFee === 0 ? 'text-green-600' : ''}>{shippingFee === 0 ? 'Miễn phí' : fmt(shippingFee)}</span></div>
-                {discountAmt > 0 && <div className="flex justify-between text-green-600"><span>Giảm giá</span><span>-{fmt(discountAmt)}</span></div>}
+                {discountAmt > 0 && <div className="flex justify-between text-green-600"><span>Voucher</span><span>-{fmt(discountAmt)}</span></div>}
+                {usePoints && pointsToRedeem > 0 && <div className="flex justify-between text-amber-600"><span>Điểm tích lũy ({pointsToRedeem.toLocaleString()} đ.)</span><span>-{fmt(pointsDiscount)}</span></div>}
                 <hr />
                 <div className="flex justify-between font-bold text-base"><span>Tổng cộng</span><span className="text-rose-600">{fmt(total)}</span></div>
+                {pointsEarnPreview > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mt-1">
+                    <FiGift size={13} />
+                    <span>Đơn này bạn sẽ nhận <b>{pointsEarnPreview.toLocaleString()} điểm</b> tích lũy</span>
+                  </div>
+                )}
               </div>
               <button
                 type="submit"
@@ -312,8 +382,8 @@ const Checkout = ({ guest }) => {
                 className="w-full bg-rose-500 text-white py-3.5 rounded-xl font-bold hover:bg-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? '⏳ Đang xử lý...' : paymentMethod === 'wallet'
-                  ? <><span>💰</span> Đặt hàng & Thanh toán bằng ví</>
-                  : <><span>💳</span> Đặt hàng & Thanh toán PayOS</>}
+                  ? <><span>💰</span> Đặt hàng & Thanh toán bằng ví ({fmt(total)})</>
+                  : <><span>💳</span> Đặt hàng & Thanh toán PayOS ({fmt(total)})</>}
               </button>
               <p className="text-xs text-gray-400 text-center mt-2">
                 {paymentMethod === 'wallet' ? 'Tiền sẽ được trừ ngay từ ví của bạn' : 'Bạn sẽ được chuyển đến trang thanh toán PayOS an toàn'}

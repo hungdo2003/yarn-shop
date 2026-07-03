@@ -25,7 +25,9 @@ const Order = sequelize.define('Order', {
   confirmedAt: { type: DataTypes.DATE },
   cancelledReason: { type: DataTypes.TEXT },
   callConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
-  callNote: { type: DataTypes.TEXT }
+  callNote: { type: DataTypes.TEXT },
+  pointsUsed: { type: DataTypes.INTEGER, defaultValue: 0 },
+  pointsEarned: { type: DataTypes.INTEGER, defaultValue: 0 }
 });
 
 module.exports = Order;

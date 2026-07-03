@@ -2,6 +2,7 @@ const payos = require('../config/payos');
 const { Order, OrderDetail, Payment, Product, InventoryTransaction, User, WalletTopup, sequelize } = require('../models');
 const { creditWalletFromTopup } = require('./wallet.controller');
 const { notify, notifyByRole } = require('../services/notificationService');
+const { calcPointsEarned } = require('../utils/loyalty');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -25,8 +26,11 @@ async function confirmPayment(orderId, transactionId = null) {
       }
     }
     if (order.userId) {
-      const user = await User.findByPk(order.userId, { transaction: t });
-      if (user) await user.increment('loyaltyPoints', { by: Math.floor(parseFloat(order.total) / 10000), transaction: t });
+      const earned = order.pointsEarned ?? calcPointsEarned(parseFloat(order.total));
+      if (earned > 0) {
+        const user = await User.findByPk(order.userId, { transaction: t });
+        if (user) await user.increment('loyaltyPoints', { by: earned, transaction: t });
+      }
     }
     await order.update({ status: 'paid' }, { transaction: t });
     await Payment.update(
