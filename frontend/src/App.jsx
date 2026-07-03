@@ -28,6 +28,8 @@ import MyCustomOrders from './pages/MyCustomOrders';
 import CustomOrderDetail from './pages/CustomOrderDetail';
 import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
+import Wishlist from './pages/Wishlist';
+import FlashSale from './pages/FlashSale';
 
 import ManagerDashboard from './pages/manager/Dashboard';
 import ProductManagement from './pages/manager/ProductManagement';
@@ -92,6 +94,7 @@ const App = () => (
       <Route path="/how-to-buy" element={<HowToBuy />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/promotions" element={<Promotions />} />
+      <Route path="/flash-sale" element={<FlashSale />} />
       <Route path="/checkout/guest" element={<Checkout guest />} />
       <Route path="/payment/result" element={<PaymentResult />} />
       <Route path="/payment/simulate" element={<PaymentSimulate />} />
@@ -102,6 +105,7 @@ const App = () => (
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
         <Route path="/returns" element={<Returns />} />
+        <Route path="/wishlist" element={<Wishlist />} />
       </Route>
 
       <Route path="/wallet/topup/result" element={<WalletTopupResult />} />

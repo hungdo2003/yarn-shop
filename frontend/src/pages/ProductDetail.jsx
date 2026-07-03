@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
 import toast from 'react-hot-toast';
@@ -274,6 +275,7 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
+  const { toggle, isWishlisted } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -346,6 +348,15 @@ export default function ProductDetail() {
   const hasDiscount = product.salePrice && product.salePrice < product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.salePrice / product.price) * 100) : 0;
   const stockLow = product.stock > 0 && product.stock <= 10;
+
+  const wishlisted = product ? isWishlisted(product.id) : false;
+
+  const handleWishlist = async () => {
+    if (!user) return toast.error('Vui lòng đăng nhập để lưu yêu thích');
+    if (!isRole('customer')) return;
+    const res = await toggle(product.id);
+    if (res) toast.success(res.message);
+  };
 
   const handleAddToCart = async () => {
     if (!user) { toast.error('Vui lòng đăng nhập để mua hàng', { icon: '🔒' }); return; }
@@ -494,7 +505,7 @@ export default function ProductDetail() {
           )}
 
           {/* Add to cart */}
-          {product.stock > 0 && (
+          {product.stock > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 border-2 border-gray-200 rounded-xl overflow-hidden">
@@ -511,12 +522,24 @@ export default function ProductDetail() {
                   <FiShoppingCart size={17} />
                   {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
                 </button>
+                <button onClick={handleWishlist}
+                  className={`p-3 rounded-xl border-2 transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'}`}
+                  title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+                >
+                  <FiHeart size={20} className={wishlisted ? 'fill-rose-500' : ''} />
+                </button>
               </div>
               <Link to="/custom-order"
                 className="flex items-center justify-center gap-2 border-2 border-rose-200 text-rose-600 font-semibold py-2.5 rounded-xl hover:bg-rose-50 transition-colors text-sm">
                 ✨ Đặt hàng theo thiết kế riêng
               </Link>
             </div>
+          ) : (
+            <button onClick={handleWishlist}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-400'}`}>
+              <FiHeart size={18} className={wishlisted ? 'fill-rose-500' : ''} />
+              {wishlisted ? 'Đã lưu vào yêu thích' : 'Lưu vào yêu thích'}
+            </button>
           )}
 
           {/* Trust badges */}

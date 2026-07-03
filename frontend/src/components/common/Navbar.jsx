@@ -1,14 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { FiShoppingCart, FiUser, FiMenu, FiX, FiSearch, FiLogOut, FiPackage, FiSettings, FiTag, FiPhone } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiMenu, FiX, FiSearch, FiLogOut, FiPackage, FiSettings, FiTag, FiPhone, FiHeart } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import NotificationBell from './NotificationBell';
 import api from '../../services/api';
 
 const Navbar = () => {
   const { user, logout, isRole } = useAuth();
   const { itemCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -41,6 +43,10 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-5 text-sm">
             <Link to="/products" className="text-gray-600 hover:text-rose-600 transition-colors font-medium">Shop</Link>
+            <Link to="/flash-sale" className="flex items-center gap-1 font-bold text-orange-500 hover:text-orange-600 transition-colors relative">
+              <span className="animate-pulse">⚡</span> Flash Sale
+              <span className="absolute -top-1.5 -right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            </Link>
             <Link to="/promotions" className="text-gray-600 hover:text-rose-600 transition-colors flex items-center gap-1">
               <FiTag size={14} /> Khuyến mãi
             </Link>
@@ -77,6 +83,16 @@ const Navbar = () => {
 
           <div className="flex items-center gap-3">
             {user && isRole('customer') && <NotificationBell />}
+            {user && isRole('customer') && (
+              <Link to="/wishlist" className="relative p-2 text-gray-600 hover:text-rose-600" title="Danh sách yêu thích">
+                <FiHeart size={22} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <Link to={user && isRole('customer') ? '/cart' : '/login'} className="relative p-2 text-gray-600 hover:text-rose-600">
               <FiShoppingCart size={22} />
               {itemCount > 0 && (
@@ -108,6 +124,10 @@ const Navbar = () => {
                       <FiSettings size={16} /> Dashboard
                     </Link>
                     {isRole('customer') && <>
+                      <Link to="/wishlist" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-rose-50">
+                        <span className="flex items-center gap-2"><FiHeart size={15} className="text-rose-400" /> Yêu thích của tôi</span>
+                        {wishlistCount > 0 && <span className="text-xs font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">{wishlistCount}</span>}
+                      </Link>
                       <Link to="/wallet" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-green-50 group">
                         <span className="flex items-center gap-2">💰 Ví của tôi</span>
                         {walletBalance !== null && (
@@ -156,7 +176,7 @@ const Navbar = () => {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm kiếm..." className="border rounded-l-lg px-3 py-2 text-sm flex-1 focus:outline-none" />
             <button type="submit" className="bg-rose-500 text-white px-3 rounded-r-lg"><FiSearch /></button>
           </form>
-          {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/promotions', 'Khuyến mãi'], ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
+          {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/flash-sale', '⚡ Flash Sale'], ['/promotions', 'Khuyến mãi'], ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
             <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="block py-2 text-gray-600 hover:text-rose-600 border-b border-gray-50 text-sm">{label}</Link>
           ))}
         </div>

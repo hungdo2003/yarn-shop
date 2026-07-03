@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiStar } from 'react-icons/fi';
+import { FiShoppingCart, FiStar, FiHeart } from 'react-icons/fi';
 import { formatCurrency } from '../../utils/formatters';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 import toast from 'react-hot-toast';
 
 const Stars = ({ rating, count }) => (
@@ -20,6 +21,8 @@ const Stars = ({ rating, count }) => (
 const ProductCard = ({ product }) => {
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
+  const { toggle, isWishlisted } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -29,6 +32,14 @@ const ProductCard = ({ product }) => {
       await addItem(product.id);
       toast.success('Đã thêm vào giỏ hàng!');
     } catch {}
+  };
+
+  const handleWishlist = async (e) => {
+    e.preventDefault();
+    if (!user) return toast.error('Vui lòng đăng nhập để lưu yêu thích');
+    if (!isRole('customer')) return;
+    const res = await toggle(product.id);
+    if (res) toast.success(res.message);
   };
 
   const image = product.thumbnailImage || product.ProductImages?.[0]?.imageUrl;
@@ -53,6 +64,13 @@ const ProductCard = ({ product }) => {
             <span className="text-white font-semibold text-sm">Hết hàng</span>
           </div>
         )}
+        <button
+          onClick={handleWishlist}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-all"
+          title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+        >
+          <FiHeart size={15} className={wishlisted ? 'text-rose-500 fill-rose-500' : 'text-gray-400'} />
+        </button>
       </div>
       <div className="p-3">
         <p className="text-xs text-gray-500 mb-1">{product.Category?.name}</p>
