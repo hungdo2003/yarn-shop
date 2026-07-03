@@ -30,6 +30,7 @@ import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
 import Wishlist from './pages/Wishlist';
 import FlashSale from './pages/FlashSale';
+import CampaignPage from './pages/CampaignPage';
 
 import ManagerDashboard from './pages/manager/Dashboard';
 import ProductManagement from './pages/manager/ProductManagement';
@@ -38,6 +39,7 @@ import InventoryManagement from './pages/manager/InventoryManagement';
 import VoucherManagement from './pages/manager/VoucherManagement';
 import Reports from './pages/manager/Reports';
 import CategoryManagement from './pages/manager/CategoryManagement';
+import CampaignManagement from './pages/manager/CampaignManagement';
 
 import CustomOrderManagement from './pages/staff/CustomOrderManagement';
 import StaffOrderManagement from './pages/staff/OrderManagement';
@@ -95,6 +97,7 @@ const App = () => (
       <Route path="/contact" element={<Contact />} />
       <Route path="/promotions" element={<Promotions />} />
       <Route path="/flash-sale" element={<FlashSale />} />
+      <Route path="/campaigns/:slug" element={<CampaignPage />} />
       <Route path="/checkout/guest" element={<Checkout guest />} />
       <Route path="/payment/result" element={<PaymentResult />} />
       <Route path="/payment/simulate" element={<PaymentSimulate />} />
@@ -133,6 +136,7 @@ const App = () => (
         <Route path="/manager/reports" element={<Reports />} />
         <Route path="/manager/custom-orders" element={<CustomOrderManagement />} />
         <Route path="/manager/categories" element={<CategoryManagement />} />
+        <Route path="/manager/campaigns" element={<CampaignManagement />} />
       </Route>
 
       {/* ── STAFF DASHBOARD ── */}

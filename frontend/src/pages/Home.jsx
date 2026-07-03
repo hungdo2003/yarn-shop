@@ -68,6 +68,19 @@ const BADGES = [
 /* ─────────── Stars ─────────── */
 const Stars = ({ n }) => <span className="text-amber-400">{'★'.repeat(n)}{'☆'.repeat(5 - n)}</span>;
 
+/* ─── Campaign theme helper ─── */
+const CAMPAIGN_GRADIENTS = {
+  tet:    '#c0392b, #f39c12',
+  noel:   '#27ae60, #e74c3c',
+  rose:   '#e11d48, #ec4899',
+  violet: '#7c3aed, #ec4899',
+  blue:   '#1d4ed8, #06b6d4',
+  amber:  '#d97706, #f59e0b',
+};
+function getThemeGradient(theme) {
+  return CAMPAIGN_GRADIENTS[theme] || CAMPAIGN_GRADIENTS.rose;
+}
+
 /* ─── Mini countdown for Home flash sale banner ─── */
 function MiniCountdown({ endDate }) {
   const { days, hours, minutes, seconds, expired } = useCountdown(endDate);
@@ -87,6 +100,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [flashSale, setFlashSale] = useState(null);
+  const [campaigns, setCampaigns] = useState([]);
   const navigate = useNavigate();
   const timerRef = useRef(null);
 
@@ -95,11 +109,13 @@ export default function Home() {
       api.get('/products/featured'),
       api.get('/products', { params: { isNew: 'true', limit: 8 } }),
       api.get('/vouchers/flash-sale'),
-    ]).then(([f, n, fs]) => {
+      api.get('/campaigns/active'),
+    ]).then(([f, n, fs, camp]) => {
       setFeatured(f.data || []);
       setNewArrivals(n.data?.items || []);
       const fsData = fs.data;
       if (fsData.vouchers?.length > 0 || fsData.products?.length > 0) setFlashSale(fsData);
+      setCampaigns(camp.data || []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -191,6 +207,37 @@ export default function Home() {
                 Mua ngay →
               </Link>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── CAMPAIGNS SECTION ── */}
+      {campaigns.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-10">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">🎉 Sự Kiện Đang Diễn Ra</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Ưu đãi đặc biệt theo từng dịp</p>
+            </div>
+          </div>
+          <div className={`grid gap-4 ${campaigns.length === 1 ? '' : 'sm:grid-cols-2'}`}>
+            {campaigns.map(c => (
+              <Link key={c.id} to={`/campaigns/${c.slug}`}
+                className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+                style={{ background: `linear-gradient(135deg, ${getThemeGradient(c.theme)})` }}>
+                <div className="relative p-8 text-white">
+                  <p className="text-5xl mb-3">{c.emoji}</p>
+                  <h3 className="text-2xl font-black mb-1">{c.name}</h3>
+                  {c.description && <p className="text-white/80 text-sm mb-4 line-clamp-2">{c.description}</p>}
+                  <span className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-bold transition">
+                    Khám phá ngay →
+                  </span>
+                  <p className="text-xs text-white/60 mt-3">
+                    Đến {new Date(c.endDate).toLocaleDateString('vi-VN')}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       )}

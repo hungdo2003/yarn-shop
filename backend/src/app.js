@@ -36,6 +36,7 @@ app.use('/api/notifications', require('./routes/notification.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/wishlist', require('./routes/wishlist.routes'));
 app.use('/api/loyalty', require('./routes/loyalty.routes'));
+app.use('/api/campaigns', require('./routes/campaign.routes'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
