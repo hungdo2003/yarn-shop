@@ -79,6 +79,9 @@ export default function Reports() {
   const [bestSelling, setBestSelling] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [slowSelling, setSlowSelling] = useState([]);
+  const [profit, setProfit] = useState(null);
+  const [slowDays, setSlowDays] = useState(30);
 
   useEffect(() => {
     setLoading(true);
@@ -89,9 +92,9 @@ export default function Reports() {
       api.get('/reports/category-breakdown', { params: { year: selYear } }),
       api.get('/reports/best-selling', { params: { year: selYear, limit: 8 } }),
       api.get('/reports/loyal-customers', { params: { year: selYear, limit: 8 } }),
-    ]).then(([s, r, os, cat, bs, lc]) => {
+      api.get('/reports/profit', { params: { year: selYear } }),
+    ]).then(([s, r, os, cat, bs, lc, pf]) => {
       setSummary(s.data);
-      // Fill all 12 months
       const byPeriod = {};
       (r.data || []).forEach(d => { byPeriod[d.period] = d; });
       setRevenue(MONTH_NAMES.map((name, i) => {
@@ -102,15 +105,25 @@ export default function Reports() {
       setCategories(cat.data || []);
       setBestSelling(bs.data || []);
       setTopCustomers(lc.data || []);
+      setProfit(pf.data);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [selYear]);
+
+  useEffect(() => {
+    if (tab === 'slow') {
+      api.get('/reports/slow-selling', { params: { days: slowDays, limit: 20 } })
+        .then(r => setSlowSelling(r.data || [])).catch(() => {});
+    }
+  }, [tab, slowDays]);
 
   const totalRevCat = categories.reduce((s, c) => s + c.revenue, 0);
 
   const TABS = [
-    { id: 'overview', label: 'Tổng quan' },
-    { id: 'revenue', label: 'Doanh thu' },
-    { id: 'products', label: 'Sản phẩm' },
+    { id: 'overview',  label: 'Tổng quan' },
+    { id: 'revenue',   label: 'Doanh thu' },
+    { id: 'profit',    label: '💰 Lợi nhuận' },
+    { id: 'products',  label: 'Sản phẩm' },
+    { id: 'slow',      label: '🐢 Bán chậm' },
     { id: 'customers', label: 'Khách hàng' },
   ];
 
@@ -383,6 +396,164 @@ export default function Reports() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : <p className="text-sm text-gray-400 py-6 text-center">Chưa có dữ liệu</p>}
+              </div>
+            </div>
+          )}
+
+          {/* ── PROFIT TAB ── */}
+          {tab === 'profit' && profit && (
+            <div className="space-y-5">
+              {/* KPI totals */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Tổng doanh thu</p>
+                  <p className="text-xl font-bold text-gray-800">{fmtM(profit.totals.revenue)}đ</p>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Ước tính chi phí (60%)</p>
+                  <p className="text-xl font-bold text-red-500">{fmtM(profit.totals.cogs)}đ</p>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Lợi nhuận gộp</p>
+                  <p className={`text-xl font-bold ${profit.totals.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{fmtM(profit.totals.profit)}đ</p>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Biên lợi nhuận</p>
+                  <p className={`text-xl font-bold ${profit.totals.margin >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{profit.totals.margin}%</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 -mt-2">* Chi phí ước tính 60% giá gốc sản phẩm (COGS). Cập nhật tỷ lệ thực tế cho chính xác hơn.</p>
+
+              {/* Profit bar chart */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <h2 className="font-bold text-gray-800 mb-4">Doanh thu & Lợi nhuận theo tháng — {selYear}</h2>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={profit.monthly.map((m, i) => ({ ...m, name: MONTH_NAMES[i] }))} margin={{ left: 0, right: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={56} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="revenue" name="Doanh thu" fill="#f43f5e" radius={[4,4,0,0]} />
+                    <Bar dataKey="cogs" name="Chi phí (ước)" fill="#fca5a5" radius={[4,4,0,0]} />
+                    <Bar dataKey="profit" name="Lợi nhuận" fill="#10b981" radius={[4,4,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Monthly profit table */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                        <th className="px-5 py-3 text-left">Tháng</th>
+                        <th className="px-5 py-3 text-right">Doanh thu</th>
+                        <th className="px-5 py-3 text-right">Chi phí</th>
+                        <th className="px-5 py-3 text-right">Lợi nhuận</th>
+                        <th className="px-5 py-3 text-right">Biên LN</th>
+                        <th className="px-5 py-3 text-right">Số đơn</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {profit.monthly.map((r, i) => (
+                        <tr key={i} className={`hover:bg-gray-50 transition ${r.revenue === 0 ? 'opacity-40' : ''}`}>
+                          <td className="px-5 py-3 font-medium text-gray-700">{MONTH_NAMES[i]}/{selYear}</td>
+                          <td className="px-5 py-3 text-right text-rose-600 font-semibold">{fmt(r.revenue)}</td>
+                          <td className="px-5 py-3 text-right text-red-400">{fmt(r.cogs)}</td>
+                          <td className={`px-5 py-3 text-right font-bold ${r.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{fmt(r.profit)}</td>
+                          <td className={`px-5 py-3 text-right font-semibold ${r.margin >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>{r.margin}%</td>
+                          <td className="px-5 py-3 text-right text-gray-500">{r.orders}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── SLOW SELLING TAB ── */}
+          {tab === 'slow' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600 font-medium">Xem trong</span>
+                {[7, 14, 30, 60, 90].map(d => (
+                  <button key={d} onClick={() => setSlowDays(d)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${slowDays === d ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {d} ngày
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b flex items-center justify-between">
+                  <h2 className="font-bold text-gray-800">Sản phẩm bán chậm ({slowDays} ngày qua)</h2>
+                  <span className="text-xs text-gray-400">Sắp xếp theo số bán ít nhất</span>
+                </div>
+                {slowSelling.length === 0 ? (
+                  <div className="py-12 text-center text-gray-400">Đang tải...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                          <th className="px-5 py-3 text-left">Sản phẩm</th>
+                          <th className="px-5 py-3 text-right">Bán trong kỳ</th>
+                          <th className="px-5 py-3 text-right">Tổng bán</th>
+                          <th className="px-5 py-3 text-right">Tồn kho</th>
+                          <th className="px-5 py-3 text-right">Giá</th>
+                          <th className="px-5 py-3 text-left">Danh mục</th>
+                          <th className="px-5 py-3 text-right">Tuổi SP</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {slowSelling.map(p => (
+                          <tr key={p.id} className="hover:bg-gray-50 transition">
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                                  {p.thumbnailImage
+                                    ? <img src={p.thumbnailImage} alt="" className="w-full h-full object-cover" />
+                                    : <div className="w-full h-full flex items-center justify-center text-lg">🧶</div>}
+                                </div>
+                                <p className="font-medium text-gray-800 line-clamp-1 max-w-[180px]">{p.name}</p>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <span className={`font-bold ${p.soldInPeriod === 0 ? 'text-red-500' : p.soldInPeriod < 3 ? 'text-orange-500' : 'text-gray-700'}`}>
+                                {p.soldInPeriod}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right text-gray-500">{p.totalSold}</td>
+                            <td className="px-5 py-3 text-right">
+                              <span className={`font-medium ${p.stock === 0 ? 'text-red-400' : p.stock <= 5 ? 'text-orange-400' : 'text-gray-600'}`}>{p.stock}</span>
+                            </td>
+                            <td className="px-5 py-3 text-right text-gray-600">{fmt(p.price)}</td>
+                            <td className="px-5 py-3 text-gray-500 text-xs">{p.category || '—'}</td>
+                            <td className="px-5 py-3 text-right text-gray-400 text-xs">{p.daysOld} ngày</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-4 text-center text-sm">
+                <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+                  <p className="text-2xl font-bold text-red-600">{slowSelling.filter(p => p.soldInPeriod === 0).length}</p>
+                  <p className="text-red-500 mt-1">Sản phẩm chưa bán được</p>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                  <p className="text-2xl font-bold text-orange-500">{slowSelling.filter(p => p.soldInPeriod > 0 && p.soldInPeriod < 3).length}</p>
+                  <p className="text-orange-400 mt-1">Bán rất ít (1-2 sp)</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-2xl font-bold text-gray-500">{slowSelling.filter(p => p.stock > 20 && p.soldInPeriod === 0).length}</p>
+                  <p className="text-gray-400 mt-1">Tồn kho cao, chưa bán</p>
+                </div>
               </div>
             </div>
           )}

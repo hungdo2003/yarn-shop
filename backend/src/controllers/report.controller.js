@@ -280,4 +280,114 @@ const loyalCustomers = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { summary, revenueReport, orderStats, categoryBreakdown, bestSellingProducts, loyalCustomers };
+// ── Slow-selling products ─────────────────────────────────────────────────────
+const slowSellingProducts = async (req, res) => {
+  try {
+    const { days = 30, limit = 20 } = req.query;
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(days));
+
+    const products = await Product.findAll({
+      where: { status: 'active' },
+      include: [{ model: Category, attributes: ['name'] }],
+      attributes: ['id', 'name', 'thumbnailImage', 'price', 'salePrice', 'stock', 'sold', 'createdAt'],
+    });
+
+    const soldInPeriod = await OrderDetail.findAll({
+      attributes: ['productId', [sequelize.fn('SUM', sequelize.col('"OrderDetail"."quantity"')), 'qty']],
+      include: [{
+        model: Order,
+        attributes: [],
+        where: { status: { [Op.in]: DONE_STATUSES }, createdAt: { [Op.gte]: since } },
+      }],
+      group: ['"OrderDetail"."productId"'],
+      raw: true,
+    });
+    const soldMap = {};
+    soldInPeriod.forEach(r => { soldMap[r.productId] = parseInt(r.qty) || 0; });
+
+    const result = products
+      .map(p => ({
+        id: p.id, name: p.name,
+        thumbnailImage: p.thumbnailImage,
+        price: p.salePrice || p.price,
+        stock: p.stock,
+        totalSold: p.sold || 0,
+        soldInPeriod: soldMap[p.id] || 0,
+        category: p.Category?.name,
+        daysOld: Math.floor((Date.now() - new Date(p.createdAt)) / 86400000),
+      }))
+      .sort((a, b) => a.soldInPeriod - b.soldInPeriod)
+      .slice(0, parseInt(limit));
+
+    res.json(result);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+// ── Profit report ─────────────────────────────────────────────────────────────
+const profitReport = async (req, res) => {
+  try {
+    const { year = new Date().getFullYear() } = req.query;
+
+    const orders = await Order.findAll({
+      where: {
+        status: { [Op.in]: DONE_STATUSES },
+        createdAt: {
+          [Op.gte]: new Date(`${year}-01-01`),
+          [Op.lte]: new Date(`${year}-12-31T23:59:59`),
+        },
+      },
+      include: [{
+        model: OrderDetail,
+        include: [{ model: Product, attributes: ['price'] }],
+      }],
+      attributes: ['id', 'total', 'discount', 'shippingFee', 'createdAt'],
+    });
+
+    const monthlyMap = {};
+    for (let m = 1; m <= 12; m++) {
+      monthlyMap[String(m).padStart(2, '0')] = { revenue: 0, cogs: 0, shipping: 0, discounts: 0, profit: 0, orders: 0 };
+    }
+
+    orders.forEach(order => {
+      const month = String(new Date(order.createdAt).getMonth() + 1).padStart(2, '0');
+      const m = monthlyMap[month];
+      const revenue = parseFloat(order.total) || 0;
+      const shipping = parseFloat(order.shippingFee) || 0;
+      const discount = parseFloat(order.discount) || 0;
+      // Estimate COGS as 60% of product base price
+      const cogs = (order.OrderDetails || []).reduce((sum, od) => {
+        const basePrice = parseFloat(od.Product?.price || 0);
+        return sum + basePrice * 0.6 * od.quantity;
+      }, 0);
+
+      m.revenue += revenue;
+      m.shipping += shipping;
+      m.discounts += discount;
+      m.cogs += cogs;
+      m.profit += (revenue - cogs);
+      m.orders += 1;
+    });
+
+    const result = Object.entries(monthlyMap).map(([month, data]) => ({
+      period: `${year}-${month}`,
+      revenue: Math.round(data.revenue),
+      cogs: Math.round(data.cogs),
+      discounts: Math.round(data.discounts),
+      profit: Math.round(data.profit),
+      margin: data.revenue > 0 ? parseFloat(((data.profit / data.revenue) * 100).toFixed(1)) : 0,
+      orders: data.orders,
+    }));
+
+    const totals = result.reduce((acc, r) => ({
+      revenue: acc.revenue + r.revenue,
+      cogs: acc.cogs + r.cogs,
+      profit: acc.profit + r.profit,
+      orders: acc.orders + r.orders,
+    }), { revenue: 0, cogs: 0, profit: 0, orders: 0 });
+
+    res.json({ monthly: result, totals: { ...totals, margin: totals.revenue > 0 ? parseFloat(((totals.profit / totals.revenue) * 100).toFixed(1)) : 0 } });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { summary, revenueReport, orderStats, categoryBreakdown, bestSellingProducts, loyalCustomers, slowSellingProducts, profitReport };

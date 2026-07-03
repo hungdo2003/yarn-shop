@@ -10,5 +10,7 @@ router.get('/order-stats', ctrl.orderStats);
 router.get('/category-breakdown', ctrl.categoryBreakdown);
 router.get('/best-selling', ctrl.bestSellingProducts);
 router.get('/loyal-customers', ctrl.loyalCustomers);
+router.get('/slow-selling', ctrl.slowSellingProducts);
+router.get('/profit', ctrl.profitReport);
 
 module.exports = router;
