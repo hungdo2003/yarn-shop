@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
+import ProductCard from '../components/common/ProductCard';
 import toast from 'react-hot-toast';
 import {
   FiShoppingCart, FiMinus, FiPlus, FiStar, FiHeart,
@@ -290,6 +291,7 @@ export default function ProductDetail() {
   const [canReview, setCanReview] = useState(false);
   const [reviewOrderId, setReviewOrderId] = useState(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [related, setRelated] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -297,6 +299,12 @@ export default function ProductDetail() {
       .then(res => setProduct(res.data))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (product?.id) {
+      api.get(`/products/${product.id}/related`).then(r => setRelated(r.data || [])).catch(() => {});
+    }
+  }, [product?.id]);
 
   useEffect(() => {
     if (!product) return;
@@ -657,6 +665,21 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Related Products */}
+      {related.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl font-bold text-gray-800">Sản phẩm liên quan</h2>
+            <Link to={`/products?categoryId=${product.categoryId}`} className="text-sm text-rose-500 hover:text-rose-600 font-medium transition-colors">
+              Xem thêm →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {related.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

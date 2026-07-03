@@ -111,4 +111,39 @@ const getFeatured = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getAll, getBySlug, create, update, remove, getFeatured };
+const getRelated = async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id, { attributes: ['id', 'categoryId'] });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Priority 1: same category
+    let related = await Product.findAll({
+      where: { status: 'active', categoryId: product.categoryId, id: { [Op.ne]: product.id } },
+      include: [
+        { model: ProductImage, limit: 1 },
+        { model: Category, attributes: ['name'] }
+      ],
+      order: [['sold', 'DESC'], ['averageRating', 'DESC']],
+      limit: 8
+    });
+
+    // Priority 2: fill with best-sellers if not enough
+    if (related.length < 4) {
+      const ids = [product.id, ...related.map(p => p.id)];
+      const extras = await Product.findAll({
+        where: { status: 'active', id: { [Op.notIn]: ids } },
+        include: [
+          { model: ProductImage, limit: 1 },
+          { model: Category, attributes: ['name'] }
+        ],
+        order: [['sold', 'DESC']],
+        limit: 8 - related.length
+      });
+      related = [...related, ...extras];
+    }
+
+    res.json(related);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getAll, getBySlug, create, update, remove, getFeatured, getRelated };
