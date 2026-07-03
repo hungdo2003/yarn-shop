@@ -1,6 +1,22 @@
-const { sequelize, Product, Inventory, InventoryTransaction, Material, MaterialUsage } = require('../models');
+const { sequelize, Product, Inventory, InventoryTransaction, Material, MaterialUsage, User, Role, Notification } = require('../models');
 const { paginate, paginateResult } = require('../utils/helpers');
 const { Op } = require('sequelize');
+
+async function notifyManagersLowStock(productName, currentQty, minLevel) {
+  try {
+    const managers = await User.findAll({
+      include: [{ model: Role, where: { name: { [Op.in]: ['manager', 'admin'] } } }],
+      attributes: ['id'],
+    });
+    await Notification.bulkCreate(managers.map(m => ({
+      userId: m.id,
+      type: 'system',
+      title: '⚠️ Cảnh báo tồn kho thấp',
+      message: `Sản phẩm "${productName}" còn ${currentQty} (ngưỡng tối thiểu: ${minLevel})`,
+      data: { productName, currentQty, minLevel },
+    })));
+  } catch (e) { /* non-fatal */ }
+}
 
 const getInventory = async (req, res) => {
   try {
@@ -43,7 +59,11 @@ const importStock = async (req, res) => {
       quantityBefore: before, quantityAfter: after,
       note, performedBy: req.user.id
     });
-    res.json({ message: `Imported ${quantity} units`, newQuantity: after });
+    if (after <= inv.minStockLevel) {
+      const product = await Product.findByPk(productId, { attributes: ['name'] });
+      await notifyManagersLowStock(product?.name, after, inv.minStockLevel);
+    }
+    res.json({ message: `Imported ${quantity} units`, newQuantity: after, lowStock: after <= inv.minStockLevel });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -62,7 +82,11 @@ const adjustStock = async (req, res) => {
       quantityBefore: before, quantityAfter: qty,
       note, performedBy: req.user.id
     });
-    res.json({ message: 'Stock adjusted', newQuantity: qty });
+    if (qty <= inv.minStockLevel) {
+      const product = await Product.findByPk(productId, { attributes: ['name'] });
+      await notifyManagersLowStock(product?.name, qty, inv.minStockLevel);
+    }
+    res.json({ message: 'Stock adjusted', newQuantity: qty, lowStock: qty <= inv.minStockLevel });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -104,4 +128,22 @@ const updateMaterial = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getInventory, importStock, adjustStock, getTransactions, getMaterials, createMaterial, updateMaterial };
+const getLowStockCount = async (req, res) => {
+  try {
+    const count = await Product.count({
+      include: [{
+        model: Inventory,
+        where: sequelize.where(
+          sequelize.col('Inventory.quantity'),
+          Op.lte,
+          sequelize.col('Inventory.minStockLevel')
+        ),
+        required: true,
+      }],
+      where: { status: 'active' },
+    });
+    res.json({ count });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getInventory, importStock, adjustStock, getTransactions, getMaterials, createMaterial, updateMaterial, getLowStockCount };

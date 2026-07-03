@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
@@ -7,6 +8,7 @@ import {
   FiMessageSquare, FiImage, FiActivity, FiLogOut, FiRefreshCw, FiMessageCircle
 } from 'react-icons/fi';
 import NotificationBell from '../common/NotificationBell';
+import api from '../../services/api';
 
 const MENUS = {
   admin: [
@@ -39,6 +41,7 @@ const MENUS = {
         { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
         { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
         { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
+        { label: 'Campaign sự kiện', icon: FiImage, to: '/manager/campaigns' },
       ]
     },
     {
@@ -106,6 +109,13 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const role = user?.Role?.name;
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  useEffect(() => {
+    if (role === 'manager' || role === 'admin') {
+      api.get('/inventory/low-stock-count').then(r => setLowStockCount(r.data.count || 0)).catch(() => {});
+    }
+  }, [role]);
   const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.admin;
   const sections = MENUS[role] || [];
   const initials = user?.fullName
@@ -184,7 +194,12 @@ const Sidebar = () => {
                           isActive ? cfg.activeText : 'text-gray-400 group-hover:text-gray-600'
                         }`}
                       />
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate flex-1">{item.label}</span>
+                      {item.to === '/manager/inventory' && lowStockCount > 0 && (
+                        <span className="ml-auto text-[10px] font-bold bg-orange-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+                          {lowStockCount > 9 ? '9+' : lowStockCount}
+                        </span>
+                      )}
                     </>
                   )}
                 </NavLink>

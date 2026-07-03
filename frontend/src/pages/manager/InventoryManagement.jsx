@@ -4,15 +4,18 @@ import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
-import { FiArrowUp, FiSettings } from 'react-icons/fi';
+import { FiArrowUp, FiSettings, FiAlertTriangle, FiSearch } from 'react-icons/fi';
 
 const InventoryManagement = () => {
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState('products');
   const [importModal, setImportModal] = useState(null);
   const [adjustModal, setAdjustModal] = useState(null);
-  const { data, loading, refetch } = useFetch('/inventory', { page });
+  const [filterLow, setFilterLow] = useState(false);
+  const [search, setSearch] = useState('');
+  const { data, loading, refetch } = useFetch('/inventory', { page, lowStock: filterLow || undefined, search: search || undefined });
   const { data: materials, refetch: refetchMaterials } = useFetch('/inventory/materials');
+  const { data: lowStockData } = useFetch('/inventory/low-stock-count');
 
   const handleImport = async (e) => {
     e.preventDefault();
@@ -32,16 +35,42 @@ const InventoryManagement = () => {
     refetch();
   };
 
+  const lowCount = lowStockData?.count || 0;
+
   return (
     <div className="p-6">
-      <h1 className="mb-6">Inventory Management</h1>
-      <div className="flex gap-3 mb-6">
-        {[['products', 'Products Stock'], ['materials', 'Raw Materials']].map(([t, l]) => (
+      <div className="flex items-center justify-between mb-4">
+        <h1>Quản lý Kho hàng</h1>
+        {lowCount > 0 && (
+          <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-2 rounded-xl text-sm font-semibold">
+            <FiAlertTriangle size={15} />
+            {lowCount} sản phẩm sắp hết hàng
+            <button onClick={() => { setFilterLow(true); setTab('products'); }}
+              className="ml-1 text-orange-800 underline text-xs">Xem ngay</button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
+        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô']].map(([t, l]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
             {l}
           </button>
         ))}
+        {tab === 'products' && (
+          <>
+            <button onClick={() => { setFilterLow(!filterLow); setPage(1); }}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium ${filterLow ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
+              <FiAlertTriangle size={14} /> Sắp hết hàng {lowCount > 0 && `(${lowCount})`}
+            </button>
+            <div className="relative ml-auto">
+              <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+            </div>
+          </>
+        )}
       </div>
 
       {tab === 'products' && (
