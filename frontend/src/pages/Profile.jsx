@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw, FiGift, FiTrendingUp } from 'react-icons/fi';
+import TierBadge from '../components/common/TierBadge';
 
 const roleLabel = { admin: 'Quản trị viên', manager: 'Quản lý', staff: 'Nhân viên', customer: 'Khách hàng' };
 const roleBg = { admin: 'bg-red-100 text-red-700', manager: 'bg-purple-100 text-purple-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
@@ -14,6 +15,15 @@ const Profile = () => {
   const [profileForm, setProfileForm] = useState({ fullName: user?.fullName || '', phone: user?.phone || '', address: user?.address || '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
+  const [membership, setMembership] = useState(null);
+
+  const role = user?.Role?.name;
+
+  useEffect(() => {
+    if (role === 'customer') {
+      api.get('/users/membership').then(r => setMembership(r.data)).catch(() => {});
+    }
+  }, [role]);
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -58,8 +68,6 @@ const Profile = () => {
     { id: 'password', icon: FiLock, label: 'Mật khẩu' },
   ];
 
-  const role = user?.Role?.name;
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Tài Khoản Của Tôi</h1>
@@ -72,8 +80,11 @@ const Profile = () => {
         <div className="flex-1 min-w-0">
           <p className="text-xl font-bold truncate">{user?.fullName}</p>
           <p className="text-rose-100 text-sm">{user?.email}</p>
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white`}>{roleLabel[role] || role}</span>
+            {role === 'customer' && membership?.tier && (
+              <TierBadge tier={membership.tier} size="sm" />
+            )}
             {role === 'customer' && user?.loyaltyPoints > 0 && (
               <span className="flex items-center gap-1 text-xs text-amber-200">
                 <FiStar size={12} /> {user.loyaltyPoints} điểm tích lũy
@@ -106,7 +117,7 @@ const Profile = () => {
           </div>
 
           {/* Loyalty Points Card */}
-          <div className="bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-5 text-white mb-6">
+          <div className="bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-5 text-white mb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <FiGift size={18} />
@@ -132,6 +143,48 @@ const Profile = () => {
               Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng
             </p>
           </div>
+
+          {/* Membership Tier Card */}
+          {membership && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FiTrendingUp size={18} className="text-purple-500" />
+                  <span className="font-bold text-base text-gray-800">Hạng Thành Viên</span>
+                </div>
+                <TierBadge tier={membership.tier} size="md" />
+              </div>
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Tổng chi tiêu: <b>{membership.totalSpent.toLocaleString('vi-VN')}đ</b></span>
+                  {membership.nextTier && (
+                    <span>Còn <b>{membership.remaining.toLocaleString('vi-VN')}đ</b> lên hạng {membership.nextTier.emoji || ''} {membership.nextTier.label}</span>
+                  )}
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="h-2.5 rounded-full transition-all duration-500"
+                    style={{ width: `${membership.progress}%`, backgroundColor: membership.tier.color }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                {[
+                  { name: 'bronze', emoji: '🥉', label: 'Đồng', min: '0đ' },
+                  { name: 'silver', emoji: '🥈', label: 'Bạc',  min: '1M' },
+                  { name: 'gold',   emoji: '🥇', label: 'Vàng', min: '5M' },
+                  { name: 'VIP',    emoji: '💎', label: 'VIP',  min: '20M' },
+                ].map(t => (
+                  <div key={t.name} className={`rounded-xl py-2 ${membership.tier.name === t.name ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
+                    <p className="text-base">{t.emoji}</p>
+                    <p className={`font-semibold ${membership.tier.name === t.name ? 'text-purple-700' : 'text-gray-500'}`}>{t.label}</p>
+                    <p className="text-gray-400">{t.min}</p>
+                  </div>
+                ))}
+              </div>
+              {!membership.nextTier && (
+                <p className="text-center text-xs text-purple-600 font-semibold mt-3">🎉 Bạn đã đạt hạng cao nhất!</p>
+              )}
+            </div>
+          )}
         </>
       )}
 

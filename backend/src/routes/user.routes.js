@@ -1,9 +1,10 @@
 const router = require('express').Router();
-const { getAll, getById, updateProfile, updateUser, deleteUser } = require('../controllers/user.controller');
+const { getAll, getById, updateProfile, updateUser, deleteUser, getMembership } = require('../controllers/user.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 const { uploadAvatar } = require('../middleware/upload.middleware');
 
+router.get('/membership', authenticate, getMembership);
 router.get('/', authenticate, authorize('admin', 'manager'), getAll);
 router.get('/:id', authenticate, authorize('admin', 'manager'), getById);
 router.put('/profile', authenticate, uploadAvatar.single('avatar'), updateProfile);

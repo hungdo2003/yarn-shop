@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import NotificationBell from './NotificationBell';
+import TierBadge from './TierBadge';
 import api from '../../services/api';
 
 const Navbar = () => {
@@ -16,11 +17,15 @@ const Navbar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [walletBalance, setWalletBalance] = useState(null);
+  const [tier, setTier] = useState(null);
+  const [activeCampaigns, setActiveCampaigns] = useState([]);
 
   useEffect(() => {
     if (user && isRole('customer')) {
       api.get('/wallet').then(r => setWalletBalance(r.data.balance)).catch(() => {});
+      api.get('/users/membership').then(r => setTier(r.data.tier)).catch(() => {});
     }
+    api.get('/campaigns/active').then(r => setActiveCampaigns(r.data || [])).catch(() => {});
   }, [user]);
 
   const handleSearch = (e) => {
@@ -47,6 +52,21 @@ const Navbar = () => {
               <span className="animate-pulse">⚡</span> Flash Sale
               <span className="absolute -top-1.5 -right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
             </Link>
+            {activeCampaigns.length > 0 && (
+              <div className="relative group">
+                <button className="flex items-center gap-1 font-bold text-violet-600 hover:text-violet-700 transition-colors">
+                  🎉 Sự kiện ▾
+                </button>
+                <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  {activeCampaigns.map(c => (
+                    <Link key={c.id} to={`/campaigns/${c.slug}`}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-violet-50">
+                      <span>{c.emoji}</span> {c.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
             <Link to="/promotions" className="text-gray-600 hover:text-rose-600 transition-colors flex items-center gap-1">
               <FiTag size={14} /> Khuyến mãi
             </Link>
@@ -118,7 +138,10 @@ const Navbar = () => {
                   <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
                     <div className="px-4 py-2 border-b">
                       <p className="text-xs text-gray-400">Đăng nhập với vai trò</p>
-                      <p className="text-sm font-semibold text-rose-600 capitalize">{user.Role?.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-sm font-semibold text-rose-600 capitalize">{user.Role?.name}</p>
+                        {tier && <TierBadge tier={tier} size="sm" />}
+                      </div>
                     </div>
                     <Link to={dashboardLink} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                       <FiSettings size={16} /> Dashboard
@@ -176,7 +199,7 @@ const Navbar = () => {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm kiếm..." className="border rounded-l-lg px-3 py-2 text-sm flex-1 focus:outline-none" />
             <button type="submit" className="bg-rose-500 text-white px-3 rounded-r-lg"><FiSearch /></button>
           </form>
-          {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/flash-sale', '⚡ Flash Sale'], ['/promotions', 'Khuyến mãi'], ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
+          {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/flash-sale', '⚡ Flash Sale'], ['/promotions', 'Khuyến mãi'], ...activeCampaigns.map(c => [`/campaigns/${c.slug}`, `${c.emoji} ${c.name}`]), ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
             <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="block py-2 text-gray-600 hover:text-rose-600 border-b border-gray-50 text-sm">{label}</Link>
           ))}
         </div>

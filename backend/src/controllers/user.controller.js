@@ -1,6 +1,7 @@
 const { User, Role, Order } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult } = require('../utils/helpers');
+const { getTier, NEXT_TIER } = require('../utils/membership');
 
 const getAll = async (req, res) => {
   try {
@@ -62,4 +63,27 @@ const deleteUser = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getAll, getById, updateProfile, updateUser, deleteUser };
+const getMembership = async (req, res) => {
+  try {
+    const DONE = ['delivered', 'completed'];
+    const total = await Order.sum('total', {
+      where: { userId: req.user.id, status: { [Op.in]: DONE } }
+    }) || 0;
+
+    const tier = getTier(total);
+    const next = NEXT_TIER[tier.name];
+    const progress = next
+      ? Math.min(100, Math.round(((total - tier.minSpent) / (next.minSpent - tier.minSpent)) * 100))
+      : 100;
+
+    res.json({
+      totalSpent: total,
+      tier: { name: tier.name, label: tier.label, color: tier.color, emoji: tier.emoji, minSpent: tier.minSpent },
+      nextTier: next ? { name: next.name, label: next.label, minSpent: next.minSpent } : null,
+      progress,
+      remaining: next ? Math.max(0, next.minSpent - total) : 0,
+    });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getAll, getById, updateProfile, updateUser, deleteUser, getMembership };
