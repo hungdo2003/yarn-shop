@@ -1,6 +1,7 @@
 const { Voucher } = require('../models');
 const { paginate, paginateResult } = require('../utils/helpers');
 const { Op } = require('sequelize');
+const { log } = require('./log.controller');
 
 const getAll = async (req, res) => {
   try {
@@ -30,6 +31,7 @@ const validate = async (req, res) => {
 const create = async (req, res) => {
   try {
     const voucher = await Voucher.create({ ...req.body, createdBy: req.user.id });
+    await log(req.user?.id, req.user?.email, 'CREATE_VOUCHER', 'Voucher', voucher.id, { code: voucher.code, type: voucher.type, value: voucher.value }, req);
     res.status(201).json(voucher);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -39,6 +41,7 @@ const update = async (req, res) => {
     const v = await Voucher.findByPk(req.params.id);
     if (!v) return res.status(404).json({ message: 'Voucher not found' });
     await v.update(req.body);
+    await log(req.user?.id, req.user?.email, 'UPDATE_VOUCHER', 'Voucher', v.id, { code: v.code }, req);
     res.json(v);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -47,6 +50,7 @@ const remove = async (req, res) => {
   try {
     const v = await Voucher.findByPk(req.params.id);
     if (!v) return res.status(404).json({ message: 'Voucher not found' });
+    await log(req.user?.id, req.user?.email, 'DELETE_VOUCHER', 'Voucher', v.id, { code: v.code }, req);
     await v.destroy();
     res.json({ message: 'Voucher deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }

@@ -2,6 +2,7 @@ const { Product, ProductImage, Category, Inventory, Review, User } = require('..
 const { Op } = require('sequelize');
 const { paginate, paginateResult, generateCode, slugify } = require('../utils/helpers');
 const { fileUrl } = require('../middleware/upload.middleware');
+const { log } = require('./log.controller');
 
 const getAll = async (req, res) => {
   try {
@@ -47,7 +48,14 @@ const getBySlug = async (req, res) => {
       ]
     });
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+
+    const colorVariants = await Product.findAll({
+      where: { name: product.name, categoryId: product.categoryId, status: 'active' },
+      attributes: ['id', 'slug', 'color', 'stock', 'thumbnailImage'],
+      order: [['color', 'ASC']],
+    });
+
+    res.json({ ...product.toJSON(), colorVariants });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -66,6 +74,7 @@ const create = async (req, res) => {
       await ProductImage.bulkCreate(images);
       await product.update({ thumbnailImage: images[0].imageUrl });
     }
+    await log(req.user?.id, req.user?.email, 'CREATE_PRODUCT', 'Product', product.id, { name, categoryId, price }, req);
     res.status(201).json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -86,6 +95,7 @@ const update = async (req, res) => {
       if (!product.thumbnailImage) updates.thumbnailImage = images[0].imageUrl;
     }
     await product.update(updates);
+    await log(req.user?.id, req.user?.email, 'UPDATE_PRODUCT', 'Product', product.id, { updatedFields: Object.keys(updates) }, req);
     res.json(product);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -95,6 +105,7 @@ const remove = async (req, res) => {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
     await product.update({ status: 'inactive' });
+    await log(req.user?.id, req.user?.email, 'DELETE_PRODUCT', 'Product', product.id, { name: product.name }, req);
     res.json({ message: 'Product deactivated' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };

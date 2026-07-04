@@ -3,6 +3,7 @@ const { notify, notifyByRole } = require('../services/notificationService');
 const { generateCode, paginate, paginateResult } = require('../utils/helpers');
 const { calcPointsEarned, calcMaxRedeemable, calcPointsDiscount } = require('../utils/loyalty');
 const { Op } = require('sequelize');
+const { log } = require('./log.controller');
 
 const SHIPPING_FEES = { standard: 30000, express: 50000, economy: 15000 };
 const FREE_SHIP_THRESHOLD = 500000;
@@ -29,17 +30,24 @@ const placeOrder = async (req, res) => {
     const isGuest = !req.user;
 
     let cartItems = [];
-    if (!isGuest) {
+    let clearAllCart = false;
+    let directOrderProductIds = [];
+
+    if (!isGuest && !guestItems?.length) {
+      // Normal authenticated checkout: read entire cart
       const cart = await Cart.findOne({ where: { userId: req.user.id }, include: [{ model: CartItem, include: [Product] }], transaction: t });
       if (!cart?.CartItems?.length) { await t.rollback(); return res.status(400).json({ message: 'Cart is empty' }); }
       cartItems = cart.CartItems.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, Product: i.Product, cartItemId: i.id, cartId: cart.id }));
+      clearAllCart = true;
     } else {
+      // Buy Now / Selected items (auth or guest): items provided directly
       if (!guestItems?.length) { await t.rollback(); return res.status(400).json({ message: 'No items provided' }); }
       for (const gi of guestItems) {
         const p = await Product.findByPk(gi.productId, { transaction: t });
         if (!p) { await t.rollback(); return res.status(400).json({ message: `Product ${gi.productId} not found` }); }
         cartItems.push({ productId: p.id, quantity: gi.quantity, price: p.salePrice || p.price, Product: p });
       }
+      if (!isGuest) directOrderProductIds = guestItems.map(i => i.productId);
     }
 
     const subtotal = cartItems.reduce((s, i) => s + i.quantity * parseFloat(i.price), 0);
@@ -146,7 +154,13 @@ const placeOrder = async (req, res) => {
     if (voucher) await voucher.increment('usedCount', { transaction: t });
     if (!isGuest) {
       const cart = await Cart.findOne({ where: { userId: req.user.id }, transaction: t });
-      if (cart) await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
+      if (cart) {
+        if (clearAllCart) {
+          await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
+        } else if (directOrderProductIds.length > 0) {
+          await CartItem.destroy({ where: { cartId: cart.id, productId: directOrderProductIds }, transaction: t });
+        }
+      }
     }
     await t.commit();
 
@@ -163,6 +177,7 @@ const placeOrder = async (req, res) => {
       );
     }
 
+    await log(req.user?.id, req.user?.email || guestEmail, 'PLACE_ORDER', 'Order', order.id, { orderCode: order.orderCode, total, paymentMethod }, req);
     res.status(201).json({
       message: useWallet ? 'Đặt hàng thành công, đã thanh toán qua ví' : 'Đơn hàng đã được tạo, vui lòng thanh toán',
       orderCode: order.orderCode, orderId: order.id, paidByWallet: useWallet,
@@ -189,7 +204,7 @@ const getMyOrders = async (req, res) => {
 const getOrderDetail = async (req, res) => {
   try {
     const where = { id: req.params.id };
-    if (req.user && !['admin', 'manager', 'staff'].includes(req.user.Role?.name)) where.userId = req.user.id;
+    if (req.user && !['admin', 'staff'].includes(req.user.Role?.name)) where.userId = req.user.id;
     const order = await Order.findOne({
       where,
       include: [
@@ -264,6 +279,7 @@ const updateStatus = async (req, res) => {
     if (callConfirmed !== undefined) updates.callConfirmed = callConfirmed;
     if (callNote !== undefined) updates.callNote = callNote;
     await order.update(updates);
+    await log(req.user?.id, req.user?.email, 'UPDATE_ORDER_STATUS', 'Order', order.id, { orderCode: order.orderCode, status, callConfirmed }, req);
 
     // Notify customer of status change
     if (status && order.userId) {
@@ -317,6 +333,7 @@ const cancelOrder = async (req, res) => {
     }
 
     await t.commit();
+    await log(req.user?.id, req.user?.email, 'CANCEL_ORDER', 'Order', order.id, { orderCode: order.orderCode, refunded: wasAlreadyPaid, reason: req.body.reason }, req);
 
     if (order.userId) {
       if (wasAlreadyPaid) {

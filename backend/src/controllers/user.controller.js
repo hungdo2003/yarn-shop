@@ -2,6 +2,7 @@ const { User, Role, Order } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult } = require('../utils/helpers');
 const { getTier, NEXT_TIER } = require('../utils/membership');
+const { log } = require('./log.controller');
 
 const getAll = async (req, res) => {
   try {
@@ -50,6 +51,7 @@ const updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     const { fullName, phone, roleId, isActive } = req.body;
     await user.update({ fullName, phone, roleId, isActive });
+    await log(req.user?.id, req.user?.email, 'UPDATE_USER', 'User', user.id, { targetEmail: user.email, roleId, isActive }, req);
     res.json(user);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -59,6 +61,7 @@ const deleteUser = async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     await user.update({ isActive: false });
+    await log(req.user?.id, req.user?.email, 'DEACTIVATE_USER', 'User', user.id, { targetEmail: user.email }, req);
     res.json({ message: 'User deactivated' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
