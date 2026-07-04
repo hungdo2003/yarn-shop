@@ -7,8 +7,13 @@ import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
 
+const fmt = n => n ? Number(n).toLocaleString('vi-VN') + 'đ' : '';
+
 const ProductModal = ({ product, categories, onClose, onSave }) => {
   const isEdit = !!product?.id;
+  const initDiscount = product?.price && product?.salePrice
+    ? Math.round((1 - parseFloat(product.salePrice) / parseFloat(product.price)) * 100)
+    : '';
   const [form, setForm] = useState({
     name: product?.name || '',
     categoryId: product?.categoryId || '',
@@ -22,10 +27,38 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
     status: product?.status || 'active',
     isCustomizable: product?.isCustomizable || false
   });
+  const [discountPct, setDiscountPct] = useState(initDiscount);
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handlePriceChange = (val) => {
+    const newForm = { ...form, price: val };
+    if (discountPct && val) {
+      newForm.salePrice = Math.round(parseFloat(val) * (1 - discountPct / 100));
+    }
+    setForm(newForm);
+  };
+
+  const handleDiscountChange = (pct) => {
+    const p = pct === '' ? '' : Math.min(99, Math.max(0, parseInt(pct) || 0));
+    setDiscountPct(p);
+    if (p !== '' && form.price) {
+      setForm(f => ({ ...f, salePrice: Math.round(parseFloat(form.price) * (1 - p / 100)) }));
+    }
+  };
+
+  const handleSalePriceChange = (val) => {
+    setForm(f => ({ ...f, salePrice: val }));
+    if (val && form.price && parseFloat(form.price) > 0) {
+      setDiscountPct(Math.round((1 - parseFloat(val) / parseFloat(form.price)) * 100));
+    } else {
+      setDiscountPct('');
+    }
+  };
+
+  const showPreview = form.price && form.salePrice && parseFloat(form.salePrice) < parseFloat(form.price);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,13 +99,33 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Price (VND) *</label>
-              <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required className="input mt-1" />
+              <label className="text-sm font-medium">Giá gốc (VND) *</label>
+              <input type="number" value={form.price} onChange={e => handlePriceChange(e.target.value)} required className="input mt-1" />
             </div>
             <div>
-              <label className="text-sm font-medium">Sale Price</label>
-              <input type="number" value={form.salePrice} onChange={e => setForm(f => ({ ...f, salePrice: e.target.value }))} className="input mt-1" />
+              <label className="text-sm font-medium">% Giảm giá</label>
+              <div className="relative mt-1">
+                <input
+                  type="number" min="0" max="99" value={discountPct}
+                  onChange={e => handleDiscountChange(e.target.value)}
+                  placeholder="0"
+                  className="input pr-7"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
+              </div>
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium">Giá khuyến mãi (VND)</label>
+              <input type="number" value={form.salePrice} onChange={e => handleSalePriceChange(e.target.value)} className="input mt-1" placeholder="Để trống nếu không giảm giá" />
+            </div>
+            {showPreview && (
+              <div className="sm:col-span-2 flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl px-4 py-3">
+                <span className="text-gray-400 line-through text-sm">{fmt(form.price)}</span>
+                <span className="text-gray-400">→</span>
+                <span className="text-rose-600 font-bold text-base">{fmt(form.salePrice)}</span>
+                <span className="ml-auto bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">-{discountPct}%</span>
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium">Color</label>
               <input value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="input mt-1" />
@@ -179,7 +232,7 @@ const ProductManagement = () => {
         <div className="card overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
-              <tr>{['Product', 'Category', 'Price', 'Stock', 'Status', 'Actions'].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
+              <tr>{['Sản phẩm', 'Danh mục', 'Giá', 'Tồn kho', 'Trạng thái', ''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y">
               {data?.items?.map(p => (
@@ -195,8 +248,18 @@ const ProductManagement = () => {
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.Category?.name}</td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-primary">{formatCurrency(p.salePrice || p.price)}</p>
-                    {p.salePrice && <p className="text-xs text-gray-400 line-through">{formatCurrency(p.price)}</p>}
+                    {p.salePrice && parseFloat(p.salePrice) < parseFloat(p.price) ? (() => {
+                      const pct = Math.round((1 - parseFloat(p.salePrice) / parseFloat(p.price)) * 100);
+                      return (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-rose-600">{formatCurrency(p.salePrice)}</p>
+                            <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">-{pct}%</span>
+                          </div>
+                          <p className="text-xs text-gray-400 line-through">{formatCurrency(p.price)}</p>
+                        </div>
+                      );
+                    })() : <p className="font-medium text-gray-800">{formatCurrency(p.price)}</p>}
                   </td>
                   <td className="px-4 py-3"><span className={`font-medium ${p.stock < 5 ? 'text-red-600' : 'text-gray-900'}`}>{p.stock}</span></td>
                   <td className="px-4 py-3"><span className={`badge ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{p.status}</span></td>

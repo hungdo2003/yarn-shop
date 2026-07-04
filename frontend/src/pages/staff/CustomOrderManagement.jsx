@@ -222,7 +222,7 @@ export default function CustomOrderManagement() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [selected, setSelected] = useState(null);
-  const { data, loading, refetch } = useFetch('/custom-orders', { page, status: statusFilter });
+  const { data, loading, refetch } = useFetch('/custom-orders', { page, limit: 10, status: statusFilter });
 
   const FILTER_TABS = [
     { value: '', label: 'Tất cả' },
@@ -312,10 +312,11 @@ export default function CustomOrderManagement() {
               })}
             </tbody>
           </table>
+          <div className="px-4 pb-3">
+            <Pagination pagination={data?.pagination} onPageChange={setPage} />
+          </div>
         </div>
       )}
-
-      <Pagination pagination={data?.pagination} onPageChange={setPage} />
 
       {selected && (
         <OrderModal

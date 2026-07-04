@@ -1,9 +1,51 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { formatCurrency } from '../../utils/formatters';
+import useFetch from '../../hooks/useFetch';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Spinner from '../../components/common/Spinner';
+import Pagination from '../../components/common/Pagination';
+
+const REG_STATUS = {
+  pending_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-700' },
+  paid:            { label: 'Đã thanh toán',   color: 'bg-blue-100 text-blue-700' },
+  confirmed:       { label: 'Đã xác nhận',     color: 'bg-indigo-100 text-indigo-700' },
+  preparing:       { label: 'Đang chuẩn bị',   color: 'bg-purple-100 text-purple-700' },
+  shipping:        { label: 'Đang giao',        color: 'bg-cyan-100 text-cyan-700' },
+  delivered:       { label: 'Đã giao',          color: 'bg-green-100 text-green-700' },
+  cancelled:       { label: 'Đã hủy',           color: 'bg-red-100 text-red-700' },
+};
+
+const CUS_STATUS = {
+  submitted:     { label: 'Mới gửi',      color: 'bg-gray-100 text-gray-600' },
+  reviewing:     { label: 'Đang xét',     color: 'bg-blue-100 text-blue-700' },
+  quoted:        { label: 'Chờ thanh toán', color: 'bg-amber-100 text-amber-700' },
+  deposit_paid:  { label: 'Đã đặt cọc',   color: 'bg-indigo-100 text-indigo-700' },
+  in_production: { label: 'Đang làm',     color: 'bg-purple-100 text-purple-700' },
+  completed:     { label: 'Hoàn thành',   color: 'bg-teal-100 text-teal-700' },
+  delivered:     { label: 'Đã giao',      color: 'bg-green-100 text-green-700' },
+  remaining_paid:{ label: 'Thanh toán xong', color: 'bg-green-100 text-green-700' },
+  cancelled:     { label: 'Đã hủy',       color: 'bg-red-100 text-red-700' },
+};
+
+const StatusBadge = ({ status, map }) => {
+  const cfg = map[status] || { label: status, color: 'bg-gray-100 text-gray-600' };
+  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>{cfg.label}</span>;
+};
+
+const DateRangeFilter = ({ from, to, onFrom, onTo, onClear }) => (
+  <div className="flex items-center gap-1.5">
+    <input type="date" value={from} onChange={e => onFrom(e.target.value)}
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+    <span className="text-gray-300 text-xs">—</span>
+    <input type="date" value={to} onChange={e => onTo(e.target.value)}
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+    {(from || to) && (
+      <button onClick={onClear} className="text-xs text-gray-400 hover:text-rose-500 transition">✕</button>
+    )}
+  </div>
+);
 
 const StatCard = ({ title, value, icon, color, sub }) => (
   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
@@ -15,6 +57,157 @@ const StatCard = ({ title, value, icon, color, sub }) => (
     </div>
   </div>
 );
+
+const OrdersSection = () => {
+  const [tab, setTab] = useState('regular');
+
+  const [regPage, setRegPage] = useState(1);
+  const [regStatus, setRegStatus] = useState('');
+  const [regFrom, setRegFrom]   = useState('');
+  const [regTo, setRegTo]       = useState('');
+
+  const [cusPage, setCusPage]     = useState(1);
+  const [cusStatus, setCusStatus] = useState('');
+  const [cusFrom, setCusFrom]     = useState('');
+  const [cusTo, setCusTo]         = useState('');
+
+  const { data: regData, loading: regLoading } = useFetch('/orders', {
+    page: regPage, limit: 8,
+    ...(regStatus && { status: regStatus }),
+    ...(regFrom   && { from: regFrom }),
+    ...(regTo     && { to: regTo }),
+  });
+
+  const { data: cusData, loading: cusLoading } = useFetch('/custom-orders', {
+    page: cusPage, limit: 8,
+    ...(cusStatus && { status: cusStatus }),
+    ...(cusFrom   && { from: cusFrom }),
+    ...(cusTo     && { to: cusTo }),
+  });
+
+  const resetReg = () => { setRegPage(1); setRegStatus(''); setRegFrom(''); setRegTo(''); };
+  const resetCus = () => { setCusPage(1); setCusStatus(''); setCusFrom(''); setCusTo(''); };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-5 pt-5 pb-3 border-b">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800">Đơn hàng</h3>
+          <div className="flex gap-2">
+            {[['regular', '🛒 Đơn thường'], ['custom', '✂️ Đơn tùy chỉnh']].map(([v, l]) => (
+              <button key={v} onClick={() => setTab(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${tab === v ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {tab === 'regular' && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <select value={regStatus} onChange={e => { setRegStatus(e.target.value); setRegPage(1); }}
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              <option value="">Tất cả trạng thái</option>
+              {Object.entries(REG_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <DateRangeFilter from={regFrom} to={regTo}
+              onFrom={v => { setRegFrom(v); setRegPage(1); }}
+              onTo={v => { setRegTo(v); setRegPage(1); }}
+              onClear={resetReg} />
+          </div>
+        )}
+
+        {tab === 'custom' && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <select value={cusStatus} onChange={e => { setCusStatus(e.target.value); setCusPage(1); }}
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              <option value="">Tất cả trạng thái</option>
+              {Object.entries(CUS_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <DateRangeFilter from={cusFrom} to={cusTo}
+              onFrom={v => { setCusFrom(v); setCusPage(1); }}
+              onTo={v => { setCusTo(v); setCusPage(1); }}
+              onClear={resetCus} />
+          </div>
+        )}
+      </div>
+
+      {tab === 'regular' && (
+        regLoading ? <div className="flex justify-center py-10"><Spinner /></div> : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {['Mã đơn', 'Khách hàng', 'SĐT', 'Tổng tiền', 'Trạng thái', 'Ngày đặt'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {!regData?.items?.length
+                    ? <tr><td colSpan={6} className="text-center py-10 text-gray-400">Chưa có đơn hàng</td></tr>
+                    : regData.items.map(o => (
+                      <tr key={o.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3"><code className="text-xs font-mono text-rose-600">{o.orderCode}</code></td>
+                        <td className="px-4 py-3 font-medium text-gray-800 max-w-[140px] truncate">{o.shippingName}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">{o.shippingPhone}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-800">{formatCurrency(o.total)}</td>
+                        <td className="px-4 py-3"><StatusBadge status={o.status} map={REG_STATUS} /></td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 pb-3">
+              <Pagination pagination={regData?.pagination} onPageChange={setRegPage} />
+            </div>
+          </>
+        )
+      )}
+
+      {tab === 'custom' && (
+        cusLoading ? <div className="flex justify-center py-10"><Spinner /></div> : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {['Mã đơn', 'Khách hàng', 'Mô tả', 'Báo giá', 'Trạng thái', 'Ngày gửi'].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {!cusData?.items?.length
+                    ? <tr><td colSpan={6} className="text-center py-10 text-gray-400">Chưa có đơn tùy chỉnh</td></tr>
+                    : cusData.items.map(o => (
+                      <tr key={o.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3"><code className="text-xs font-mono text-violet-600">{o.code}</code></td>
+                        <td className="px-4 py-3 font-medium text-gray-800 max-w-[120px] truncate">{o.User?.fullName || '—'}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs max-w-[200px] truncate">{o.description}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-800">
+                          {o.quotedPrice ? formatCurrency(o.quotedPrice) : <span className="text-gray-400 text-xs italic">Chưa có</span>}
+                        </td>
+                        <td className="px-4 py-3"><StatusBadge status={o.status} map={CUS_STATUS} /></td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 pb-3">
+              <Pagination pagination={cusData?.pagination} onPageChange={setCusPage} />
+            </div>
+          </>
+        )
+      )}
+    </div>
+  );
+};
 
 const ManagerDashboard = () => {
   const [summary, setSummary] = useState(null);
@@ -83,6 +276,8 @@ const ManagerDashboard = () => {
           </div>
         </div>
       </div>
+
+      <OrdersSection />
 
       <div>
         <h3 className="font-semibold text-gray-800 mb-3">Truy cập nhanh</h3>

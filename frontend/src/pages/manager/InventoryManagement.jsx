@@ -6,6 +6,14 @@ import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
 import { FiArrowUp, FiSettings, FiAlertTriangle, FiSearch } from 'react-icons/fi';
 
+const TX_TYPE = {
+  import:     { label: 'Nhập hàng',    color: 'bg-green-100 text-green-700',  icon: '📦' },
+  adjustment: { label: 'Điều chỉnh',   color: 'bg-blue-100 text-blue-700',    icon: '⚙️' },
+  sale:       { label: 'Bán hàng',     color: 'bg-rose-100 text-rose-700',    icon: '🛒' },
+};
+
+const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 const InventoryManagement = () => {
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState('products');
@@ -16,6 +24,14 @@ const InventoryManagement = () => {
   const { data, loading, refetch } = useFetch('/inventory', { page, lowStock: filterLow || undefined, search: search || undefined });
   const { data: materials, refetch: refetchMaterials } = useFetch('/inventory/materials');
   const { data: lowStockData } = useFetch('/inventory/low-stock-count');
+
+  // History tab state
+  const [histPage, setHistPage] = useState(1);
+  const [histType, setHistType] = useState('');
+  const [histSearch, setHistSearch] = useState('');
+  const { data: histData, loading: histLoading } = useFetch('/inventory/transactions', {
+    page: histPage, limit: 15, type: histType || undefined, search: histSearch || undefined,
+  });
 
   const handleImport = async (e) => {
     e.preventDefault();
@@ -52,7 +68,7 @@ const InventoryManagement = () => {
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4 items-center">
-        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô']].map(([t, l]) => (
+        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô'], ['history', 'Lịch sử']].map(([t, l]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
             {l}
@@ -83,7 +99,9 @@ const InventoryManagement = () => {
                 ))}</tr>
               </thead>
               <tbody className="divide-y">
-                {data?.items?.map(p => (
+                {!data?.items?.length
+                  ? <tr><td colSpan={6} className="text-center py-12 text-gray-400">Chưa có</td></tr>
+                  : data.items.map(p => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium">{p.name}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{p.code}</td>
@@ -105,6 +123,7 @@ const InventoryManagement = () => {
                 ))}
               </tbody>
             </table>
+            <Pagination pagination={data?.pagination} onPageChange={setPage} />
           </div>
         )
       )}
@@ -118,7 +137,9 @@ const InventoryManagement = () => {
               ))}</tr>
             </thead>
             <tbody className="divide-y">
-              {(materials || []).map(m => (
+              {!(materials || []).length
+                ? <tr><td colSpan={4} className="text-center py-12 text-gray-400">Chưa có</td></tr>
+                : (materials || []).map(m => (
                 <tr key={m.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">{m.name}</td>
                   <td className="px-4 py-3 text-gray-500">{m.unit}</td>
@@ -131,7 +152,73 @@ const InventoryManagement = () => {
         </div>
       )}
 
-      <Pagination pagination={data?.pagination} onPageChange={setPage} />
+      {tab === 'history' && (
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex gap-2">
+              {[['', 'Tất cả'], ['import', '📦 Nhập hàng'], ['adjustment', '⚙️ Điều chỉnh'], ['sale', '🛒 Bán hàng']].map(([v, l]) => (
+                <button key={v} onClick={() => { setHistType(v); setHistPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${histType === v ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div className="relative ml-auto">
+              <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input value={histSearch} onChange={e => { setHistSearch(e.target.value); setHistPage(1); }}
+                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+            </div>
+          </div>
+
+          {histLoading ? <Spinner /> : (
+            <div className="card overflow-hidden p-0">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>{['Thời gian', 'Loại', 'Sản phẩm', 'Trước', 'Thay đổi', 'Sau', 'Ghi chú', 'Người thực hiện'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y">
+                  {!histData?.items?.length
+                    ? <tr><td colSpan={8} className="text-center py-12 text-gray-400">Chưa có lịch sử</td></tr>
+                    : histData.items.map(tx => {
+                      const cfg = TX_TYPE[tx.type] || { label: tx.type, color: 'bg-gray-100 text-gray-600', icon: '•' };
+                      const isPos = tx.quantity > 0;
+                      return (
+                        <tr key={tx.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{fmtDate(tx.createdAt)}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>
+                              {cfg.icon} {cfg.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-gray-800 max-w-[160px] truncate">{tx.Product?.name}</p>
+                            <p className="text-xs text-gray-400">{tx.Product?.code}</p>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-center">{tx.quantityBefore ?? '—'}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`font-bold ${isPos ? 'text-green-600' : 'text-red-500'}`}>
+                              {isPos ? '+' : ''}{tx.quantity}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-800 font-medium text-center">{tx.quantityAfter ?? '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs max-w-[140px] truncate">{tx.note || '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">{tx.performer?.fullName || '—'}</td>
+                        </tr>
+                      );
+                    })
+                  }
+                </tbody>
+              </table>
+              <div className="px-4 pb-2">
+                <Pagination pagination={histData?.pagination} onPageChange={setHistPage} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {importModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

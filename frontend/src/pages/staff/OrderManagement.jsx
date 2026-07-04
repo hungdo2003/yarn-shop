@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import Pagination from '../../components/common/Pagination';
 
 const statusColor = {
   pending_payment: 'bg-orange-100 text-orange-700', paid: 'bg-blue-100 text-blue-700',
@@ -29,7 +30,7 @@ export default function StaffOrderManagement() {
 
   const load = () => {
     setLoading(true);
-    api.get('/orders', { params: { page, limit: 20, ...filter } })
+    api.get('/orders', { params: { page, limit: 10, ...filter } })
       .then(r => { setOrders(r.data.items || []); setTotal(r.data.pagination?.total || 0); })
       .finally(() => setLoading(false));
   };
@@ -53,7 +54,7 @@ export default function StaffOrderManagement() {
     setSelected(r.data); setCallNote(r.data.callNote || '');
   };
 
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / 10);
 
   return (
     <div className="p-6">
@@ -77,7 +78,14 @@ export default function StaffOrderManagement() {
             <option value="true">Đã gọi xác nhận</option>
             <option value="false">Chưa gọi</option>
           </select>
-          <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm" />
+          <div className="col-span-2 md:col-span-1 flex items-center gap-1.5">
+            <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-sm flex-1 min-w-0" />
+            <span className="text-gray-300 text-xs shrink-0">—</span>
+            <input type="date" value={filter.to} onChange={e => { setFilter({ ...filter, to: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-sm flex-1 min-w-0" />
+            {(filter.from || filter.to) && (
+              <button onClick={() => { setFilter({ ...filter, from: '', to: '' }); setPage(1); }} className="text-gray-400 hover:text-rose-500 text-xs shrink-0 transition">✕</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -127,13 +135,9 @@ export default function StaffOrderManagement() {
             </tbody>
           </table>
         </div>
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 p-4 border-t">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 border rounded-lg text-sm disabled:opacity-40">‹</button>
-            <span className="text-sm text-gray-600">{page} / {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 border rounded-lg text-sm disabled:opacity-40">›</button>
-          </div>
-        )}
+        <div className="px-4 pb-3">
+          <Pagination pagination={{ page, totalPages }} onPageChange={setPage} />
+        </div>
       </div>
 
       {selected && (
