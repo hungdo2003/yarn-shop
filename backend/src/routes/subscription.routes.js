@@ -5,6 +5,6 @@ const { authorize } = require('../middleware/role.middleware');
 
 router.post('/subscribe', ctrl.subscribe);
 router.post('/unsubscribe', ctrl.unsubscribe);
-router.get('/', authenticate, authorize('admin', 'manager'), ctrl.getAll);
+router.get('/', authenticate, authorize('admin'), ctrl.getAll);
 
 module.exports = router;

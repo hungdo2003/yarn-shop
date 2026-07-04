@@ -1,5 +1,5 @@
 const payos = require('../config/payos');
-const { Order, OrderDetail, Payment, Product, InventoryTransaction, User, WalletTopup, sequelize } = require('../models');
+const { Order, OrderDetail, Payment, Product, InventoryTransaction, User, WalletTransaction, WalletTopup, sequelize } = require('../models');
 const { creditWalletFromTopup } = require('./wallet.controller');
 const { notify, notifyByRole } = require('../services/notificationService');
 const { calcPointsEarned } = require('../utils/loyalty');
@@ -37,6 +37,23 @@ async function confirmPayment(orderId, transactionId = null) {
       { status: 'paid', paidAt: new Date(), transactionId },
       { where: { orderId: order.id }, transaction: t }
     );
+
+    // Record PayOS payment in wallet transaction history (informational, balance unchanged)
+    if (order.userId) {
+      const buyer = await User.findByPk(order.userId, { transaction: t });
+      const currentBalance = parseFloat(buyer?.walletBalance || 0);
+      await WalletTransaction.create({
+        userId: order.userId,
+        type: 'payment',
+        amount: -parseFloat(order.total),
+        balanceBefore: currentBalance,
+        balanceAfter: currentBalance,
+        orderId: order.id,
+        description: `Thanh toán đơn hàng ${order.orderCode} qua PayOS`,
+        reference: transactionId || `PAYOS-${order.id}`,
+      }, { transaction: t });
+    }
+
     await t.commit();
 
     // Notifications (after commit so they don't block the transaction)

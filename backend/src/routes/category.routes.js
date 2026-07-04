@@ -4,8 +4,8 @@ const { authenticate } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
 router.get('/', getAll);
-router.post('/', authenticate, authorize('manager', 'admin'), create);
-router.put('/:id', authenticate, authorize('manager', 'admin'), update);
-router.delete('/:id', authenticate, authorize('manager', 'admin'), remove);
+router.post('/', authenticate, authorize('admin'), create);
+router.put('/:id', authenticate, authorize('admin'), update);
+router.delete('/:id', authenticate, authorize('admin'), remove);
 
 module.exports = router;

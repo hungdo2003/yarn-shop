@@ -13,9 +13,8 @@ router.get('/my/:id', authenticate, getOrderDetail);
 router.post('/my/:id/cancel', authenticate, authorize('customer'), cancelOrder);
 
 // Staff/Manager/Admin — read access
-router.get('/', authenticate, authorize('staff', 'manager', 'admin'), getAllOrders);
-router.get('/:id', authenticate, authorize('staff', 'manager', 'admin'), getOrderDetail);
-// Status updates are staff-only (manager is not in the approval chain)
+router.get('/', authenticate, authorize('staff', 'admin'), getAllOrders);
+router.get('/:id', authenticate, authorize('staff', 'admin'), getOrderDetail);
 router.put('/:id/status', authenticate, authorize('staff', 'admin'), updateStatus);
 
 module.exports = router;

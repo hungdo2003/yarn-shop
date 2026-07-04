@@ -20,13 +20,11 @@ const hash = (pw) => bcrypt.hashSync(pw, 12);
 const ROLES = [
   { name: 'admin',    description: 'Full system access' },
   { name: 'customer', description: 'Regular buyer' },
-  { name: 'staff',    description: 'Sales & order staff' },
-  { name: 'manager',  description: 'Store operations manager' }
+  { name: 'staff',    description: 'Sales & order staff' }
 ];
 
 const USERS = [
   { fullName: 'Admin User',     email: 'admin@yarnshop.com',    password: 'Admin@123',    roleKey: 'admin',    phone: '0900000001' },
-  { fullName: 'Store Manager',  email: 'manager@yarnshop.com',  password: 'Manager@123',  roleKey: 'manager',  phone: '0900000002' },
   { fullName: 'Sales Staff',    email: 'staff@yarnshop.com',    password: 'Staff@123',    roleKey: 'staff',    phone: '0900000003' },
   { fullName: 'Jane Customer',  email: 'jane@example.com',      password: 'Customer@123', roleKey: 'customer', phone: '0900000004', address: '123 Nguyen Hue, District 1, HCMC' },
   { fullName: 'Minh Nguyen',    email: 'minh@example.com',      password: 'Customer@123', roleKey: 'customer', phone: '0912345678', address: '45 Le Loi, Hoan Kiem, Hanoi' },

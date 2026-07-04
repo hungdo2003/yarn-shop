@@ -3,7 +3,7 @@ const { getInventory, importStock, adjustStock, getTransactions, getMaterials, c
 const { authenticate } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
-router.use(authenticate, authorize('manager', 'admin'));
+router.use(authenticate, authorize('admin'));
 router.get('/low-stock-count', getLowStockCount);
 router.get('/', getInventory);
 router.post('/import', importStock);

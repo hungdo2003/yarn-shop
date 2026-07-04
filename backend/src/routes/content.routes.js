@@ -5,6 +5,6 @@ const { authorize } = require('../middleware/role.middleware');
 
 router.get('/', ctrl.getAll);
 router.get('/:key', ctrl.get);
-router.put('/:key', authenticate, authorize('admin', 'manager'), ctrl.upsert);
+router.put('/:key', authenticate, authorize('admin'), ctrl.upsert);
 
 module.exports = router;

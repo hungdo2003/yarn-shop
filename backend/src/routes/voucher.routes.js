@@ -34,9 +34,9 @@ router.get('/flash-sale', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.post('/validate', authenticate, validate);
-router.get('/', authenticate, authorize('manager', 'admin'), getAll);
-router.post('/', authenticate, authorize('manager', 'admin'), create);
-router.put('/:id', authenticate, authorize('manager', 'admin'), update);
-router.delete('/:id', authenticate, authorize('manager', 'admin'), remove);
+router.get('/', authenticate, authorize('admin'), getAll);
+router.post('/', authenticate, authorize('admin'), create);
+router.put('/:id', authenticate, authorize('admin'), update);
+router.delete('/:id', authenticate, authorize('admin'), remove);
 
 module.exports = router;

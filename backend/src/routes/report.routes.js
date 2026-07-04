@@ -3,7 +3,7 @@ const ctrl = require('../controllers/report.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
-router.use(authenticate, authorize('manager', 'admin'));
+router.use(authenticate, authorize('admin'));
 router.get('/summary', ctrl.summary);
 router.get('/revenue', ctrl.revenueReport);
 router.get('/order-stats', ctrl.orderStats);

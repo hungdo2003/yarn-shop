@@ -9,12 +9,13 @@ const CustomOrder = sequelize.define('CustomOrder', {
   yarnColor: { type: DataTypes.STRING(100) },
   size: { type: DataTypes.STRING(100) },
   status: {
-    type: DataTypes.ENUM('submitted', 'reviewing', 'quoted', 'deposit_paid', 'in_production', 'completed', 'delivered', 'cancelled'),
+    type: DataTypes.ENUM('submitted', 'reviewing', 'quoted', 'deposit_paid', 'in_production', 'completed', 'delivered', 'remaining_paid', 'cancelled'),
     defaultValue: 'submitted'
   },
   quotedPrice: { type: DataTypes.DECIMAL(12, 2) },
   depositAmount: { type: DataTypes.DECIMAL(12, 2) },
   depositPaidAt: { type: DataTypes.DATE },
+  remainingPaidAt: { type: DataTypes.DATE },
   estimatedDays: { type: DataTypes.INTEGER },
   staffNote: { type: DataTypes.TEXT },
   handledBy: { type: DataTypes.INTEGER },

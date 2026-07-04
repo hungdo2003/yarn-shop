@@ -8,8 +8,8 @@ router.get('/', getAll);
 router.get('/featured', getFeatured);
 router.get('/:id/related', getRelated);
 router.get('/:slug', getBySlug);
-router.post('/', authenticate, authorize('manager', 'admin'), uploadProduct.array('images', 10), create);
-router.put('/:id', authenticate, authorize('manager', 'admin'), uploadProduct.array('images', 10), update);
-router.delete('/:id', authenticate, authorize('manager', 'admin'), remove);
+router.post('/', authenticate, authorize('admin'), uploadProduct.array('images', 10), create);
+router.put('/:id', authenticate, authorize('admin'), uploadProduct.array('images', 10), update);
+router.delete('/:id', authenticate, authorize('admin'), remove);
 
 module.exports = router;

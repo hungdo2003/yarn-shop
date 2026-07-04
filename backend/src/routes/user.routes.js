@@ -5,8 +5,8 @@ const { authorize } = require('../middleware/role.middleware');
 const { uploadAvatar } = require('../middleware/upload.middleware');
 
 router.get('/membership', authenticate, getMembership);
-router.get('/', authenticate, authorize('admin', 'manager'), getAll);
-router.get('/:id', authenticate, authorize('admin', 'manager'), getById);
+router.get('/', authenticate, authorize('admin'), getAll);
+router.get('/:id', authenticate, authorize('admin'), getById);
 router.put('/profile', authenticate, uploadAvatar.single('avatar'), updateProfile);
 router.put('/:id', authenticate, authorize('admin'), updateUser);
 router.delete('/:id', authenticate, authorize('admin'), deleteUser);

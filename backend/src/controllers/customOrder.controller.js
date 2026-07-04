@@ -1,4 +1,5 @@
 const { CustomOrder, CustomOrderImage, User, WalletTransaction, sequelize } = require('../models');
+const { Op } = require('sequelize');
 const { generateCode, paginate, paginateResult } = require('../utils/helpers');
 const { notify, notifyByRole } = require('../services/notificationService');
 const { fileUrl } = require('../middleware/upload.middleware');
@@ -31,9 +32,12 @@ const submit = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
+    const { status, from, to } = req.query;
+    const where = { userId: req.user.id };
+    if (status) where.status = status;
+    if (from || to) { where.createdAt = {}; if (from) where.createdAt[Op.gte] = new Date(from); if (to) where.createdAt[Op.lte] = new Date(to + 'T23:59:59'); }
     const { count, rows } = await CustomOrder.findAndCountAll({
-      where: { userId: req.user.id },
-      include: [CustomOrderImage],
+      where, include: [CustomOrderImage],
       limit, offset, order: [['createdAt', 'DESC']]
     });
     res.json(paginateResult(count, rows, page, limit));
@@ -54,9 +58,10 @@ const getMyOrderById = async (req, res) => {
 const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
-    const { status } = req.query;
+    const { status, from, to } = req.query;
     const where = {};
     if (status) where.status = status;
+    if (from || to) { where.createdAt = {}; if (from) where.createdAt[Op.gte] = new Date(from); if (to) where.createdAt[Op.lte] = new Date(to + 'T23:59:59'); }
     const { count, rows } = await CustomOrder.findAndCountAll({
       where, limit, offset, order: [['createdAt', 'DESC']],
       include: [
@@ -184,4 +189,72 @@ const payCustomOrder = async (req, res) => {
   }
 };
 
-module.exports = { submit, getMyOrders, getMyOrderById, getAll, getById, updateStatus, payCustomOrder };
+// Customer pays the remaining amount after delivery
+const payRemainingCustomOrder = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const order = await CustomOrder.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+    if (!order) { await t.rollback(); return res.status(404).json({ message: 'Không tìm thấy đơn hàng' }); }
+    if (order.status !== 'delivered') {
+      await t.rollback();
+      return res.status(400).json({ message: 'Đơn hàng chưa được giao hoặc đã thanh toán đủ' });
+    }
+
+    const quoted = parseFloat(order.quotedPrice || 0);
+    const deposit = parseFloat(order.depositAmount || 0);
+    const remaining = quoted - deposit;
+
+    if (!order.depositAmount || remaining <= 0) {
+      await t.rollback();
+      return res.status(400).json({ message: 'Không có số tiền còn lại cần thanh toán' });
+    }
+
+    const user = await User.findByPk(req.user.id, { transaction: t, lock: t.LOCK.UPDATE });
+    const balance = parseFloat(user.walletBalance || 0);
+
+    if (balance < remaining) {
+      await t.rollback();
+      return res.status(400).json({
+        message: `Số dư ví không đủ. Số dư: ${balance.toLocaleString('vi-VN')}đ, cần: ${remaining.toLocaleString('vi-VN')}đ`
+      });
+    }
+
+    const balanceAfter = balance - remaining;
+    await user.update({ walletBalance: balanceAfter }, { transaction: t });
+
+    await WalletTransaction.create({
+      userId: user.id,
+      type: 'payment',
+      amount: remaining,
+      balanceBefore: balance,
+      balanceAfter,
+      description: `Thanh toán phần còn lại đơn thiết kế #${order.code}`,
+      reference: order.code,
+    }, { transaction: t });
+
+    await order.update({ status: 'remaining_paid', remainingPaidAt: new Date() }, { transaction: t });
+
+    await t.commit();
+
+    if (order.handledBy) {
+      notify(order.handledBy, 'custom_order_paid', 'Khách đã thanh toán phần còn lại',
+        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}. Đơn hàng đã hoàn tất.`
+      );
+    } else {
+      notifyByRole('staff', 'custom_order_paid', 'Khách đã thanh toán phần còn lại',
+        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}.`
+      );
+    }
+
+    res.json({ message: 'Thanh toán thành công', walletBalance: balanceAfter });
+  } catch (err) {
+    await t.rollback();
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { submit, getMyOrders, getMyOrderById, getAll, getById, updateStatus, payCustomOrder, payRemainingCustomOrder };

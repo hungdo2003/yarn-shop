@@ -11,7 +11,7 @@ router.get('/my', authenticate, authorize('customer'), ctrl.getOrCreateConversat
 router.post('/conversations/:id/messages', authenticate, ctrl.sendMessage);
 
 // Live chat — staff
-router.get('/conversations', authenticate, authorize('staff', 'admin', 'manager'), ctrl.listConversations);
+router.get('/conversations', authenticate, authorize('staff', 'admin'), ctrl.listConversations);
 router.get('/conversations/:id/messages', authenticate, ctrl.getMessages);
 
 module.exports = router;
