@@ -9,13 +9,14 @@ import toast from 'react-hot-toast';
 import { FiCreditCard, FiFileText, FiImage } from 'react-icons/fi';
 
 const STEPS = [
-  { key: 'submitted',     label: 'Đã gửi',    icon: '📝' },
-  { key: 'reviewing',    label: 'Đang xét',  icon: '🔍' },
-  { key: 'quoted',       label: 'Báo giá',   icon: '💰' },
-  { key: 'deposit_paid', label: 'Đã TT',     icon: '💳' },
-  { key: 'in_production',label: 'Sản xuất',  icon: '🧶' },
-  { key: 'completed',    label: 'Xong',      icon: '✅' },
-  { key: 'delivered',    label: 'Đã giao',   icon: '🏠' },
+  { key: 'submitted',      label: 'Đã gửi',    icon: '📝' },
+  { key: 'reviewing',      label: 'Đang xét',  icon: '🔍' },
+  { key: 'quoted',         label: 'Báo giá',   icon: '💰' },
+  { key: 'deposit_paid',   label: 'Đã cọc',    icon: '💳' },
+  { key: 'in_production',  label: 'Sản xuất',  icon: '🧶' },
+  { key: 'completed',      label: 'Xong',      icon: '✅' },
+  { key: 'delivered',      label: 'Đã giao',   icon: '🏠' },
+  { key: 'remaining_paid', label: 'Hoàn tất',  icon: '🎉' },
 ];
 
 export default function CustomOrderDetail() {
@@ -36,6 +37,17 @@ export default function CustomOrderDetail() {
     } finally { setPaying(false); }
   };
 
+  const handlePayRemaining = async () => {
+    setPaying(true);
+    try {
+      await api.post(`/custom-orders/my/${order.id}/pay-remaining`);
+      toast.success('Thanh toán phần còn lại thành công!');
+      refetch();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Thanh toán thất bại');
+    } finally { setPaying(false); }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
   if (!order) return <div className="text-center py-20 text-gray-500">Không tìm thấy đơn hàng</div>;
 
@@ -44,6 +56,11 @@ export default function CustomOrderDetail() {
   const isQuoted = order.status === 'quoted' && parseFloat(order.quotedPrice || 0) > 0;
   const payAmount = parseFloat(order.depositAmount || order.quotedPrice || 0);
   const walletBalance = parseFloat(user?.walletBalance || 0);
+
+  const remainingAmount = order.depositAmount && order.quotedPrice
+    ? Math.max(0, parseFloat(order.quotedPrice) - parseFloat(order.depositAmount))
+    : 0;
+  const needsRemainingPayment = order.status === 'delivered' && remainingAmount > 0;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -77,6 +94,25 @@ export default function CustomOrderDetail() {
           <button onClick={handlePay} disabled={paying || walletBalance < payAmount}
             className="bg-amber-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-amber-600 transition disabled:opacity-60">
             {paying ? 'Đang xử lý...' : `Thanh toán ${formatCurrency(payAmount)} bằng ví`}
+          </button>
+        </div>
+      )}
+
+      {/* Delivered — remaining payment CTA */}
+      {needsRemainingPayment && (
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-center">
+          <div className="text-4xl mb-2">💰</div>
+          <h3 className="font-bold text-teal-700 text-lg mb-1">Thanh toán phần còn lại</h3>
+          <p className="text-teal-600 text-sm mb-1">
+            Đơn hàng đã được giao. Vui lòng thanh toán phần còn lại để hoàn tất đơn.
+          </p>
+          <p className="text-xs text-teal-500 mb-4">
+            Số dư ví: <span className={`font-bold ${walletBalance >= remainingAmount ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(walletBalance)}</span>
+            {walletBalance < remainingAmount && <> — cần thêm <span className="font-bold">{formatCurrency(remainingAmount - walletBalance)}</span>. <Link to="/wallet" className="underline">Nạp ví</Link></>}
+          </p>
+          <button onClick={handlePayRemaining} disabled={paying || walletBalance < remainingAmount}
+            className="bg-teal-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-600 transition disabled:opacity-60">
+            {paying ? 'Đang xử lý...' : `Thanh toán ${formatCurrency(remainingAmount)} bằng ví`}
           </button>
         </div>
       )}
@@ -150,10 +186,18 @@ export default function CustomOrderDetail() {
           {!order.depositPaidAt ? (
             <span className="text-xs px-2 py-1 rounded-full font-medium mt-1 inline-block bg-orange-50 text-orange-600">Chưa thanh toán</span>
           ) : (
-            <>
-              <span className="text-xs px-2 py-1 rounded-full font-medium mt-1 inline-block bg-blue-50 text-blue-600">Đã đặt cọc</span>
-              <p className="text-xs text-gray-400 mt-1">Lúc {formatDateTime(order.depositPaidAt)}</p>
-            </>
+            <div className="space-y-2 mt-1">
+              <div>
+                <span className="text-xs px-2 py-1 rounded-full font-medium inline-block bg-blue-50 text-blue-600">Đã đặt cọc</span>
+                <p className="text-xs text-gray-400 mt-1">Lúc {formatDateTime(order.depositPaidAt)}</p>
+              </div>
+              {order.remainingPaidAt && (
+                <div>
+                  <span className="text-xs px-2 py-1 rounded-full font-medium inline-block bg-teal-50 text-teal-600">Đã thanh toán đủ</span>
+                  <p className="text-xs text-gray-400 mt-1">Lúc {formatDateTime(order.remainingPaidAt)}</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -168,10 +212,16 @@ export default function CustomOrderDetail() {
               <span>{formatCurrency(order.quotedPrice)}</span>
             </div>
             {order.depositAmount && parseFloat(order.depositAmount) !== parseFloat(order.quotedPrice) && (
-              <div className="flex justify-between text-gray-500">
-                <span>Thanh toán ngay</span>
-                <span>{formatCurrency(order.depositAmount)}</span>
-              </div>
+              <>
+                <div className="flex justify-between text-gray-500">
+                  <span>Đặt cọc</span>
+                  <span>{formatCurrency(order.depositAmount)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Còn lại</span>
+                  <span>{formatCurrency(parseFloat(order.quotedPrice) - parseFloat(order.depositAmount))}</span>
+                </div>
+              </>
             )}
             {order.estimatedDays && (
               <div className="flex justify-between text-gray-500">

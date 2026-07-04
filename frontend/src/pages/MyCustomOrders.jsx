@@ -16,6 +16,7 @@ const STEPS = [
   { key: 'in_production' },
   { key: 'completed' },
   { key: 'delivered' },
+  { key: 'remaining_paid' },
 ];
 
 const FILTER_TABS = [
@@ -23,19 +24,19 @@ const FILTER_TABS = [
   { value: 'submitted', label: 'Mới gửi' },
   { value: 'reviewing', label: 'Đang xét' },
   { value: 'quoted', label: 'Cần thanh toán' },
-  { value: 'deposit_paid', label: 'Đã thanh toán' },
+  { value: 'deposit_paid', label: 'Đã cọc' },
   { value: 'in_production', label: 'Đang làm' },
   { value: 'delivered', label: 'Đã nhận' },
+  { value: 'remaining_paid', label: 'Hoàn tất' },
   { value: 'cancelled', label: 'Đã hủy' },
 ];
 
 export default function MyCustomOrders() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
-  const { data, loading } = useFetch('/custom-orders/my', { status: statusFilter });
-  const orders = data?.items || data || [];
-  const totalPages = Math.ceil(orders.length / PER_PAGE);
-  const paginatedOrders = orders.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const { data, loading } = useFetch('/custom-orders/my', { status: statusFilter, page, limit: PER_PAGE });
+  const orders = data?.items || [];
+  const pagination = data?.pagination;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -68,13 +69,16 @@ export default function MyCustomOrders() {
         </div>
       ) : (
         <div className="space-y-3">
-          {paginatedOrders.map(order => {
+          {orders.map(order => {
             const curStep = STEPS.findIndex(s => s.key === order.status);
             const progress = order.status === 'cancelled' ? 0 : Math.round(((curStep + 1) / STEPS.length) * 100);
             const needsPayment = order.status === 'quoted';
+            const needsRemainingPayment = order.status === 'delivered' &&
+              order.depositAmount && order.quotedPrice &&
+              parseFloat(order.quotedPrice) - parseFloat(order.depositAmount) > 0;
             return (
               <div key={order.id}
-                className={`bg-white rounded-2xl border shadow-sm p-5 hover:shadow-md transition ${needsPayment ? 'border-amber-300 ring-1 ring-amber-200' : 'border-gray-100'}`}>
+                className={`bg-white rounded-2xl border shadow-sm p-5 hover:shadow-md transition ${needsPayment || needsRemainingPayment ? 'border-amber-300 ring-1 ring-amber-200' : 'border-gray-100'}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-bold text-gray-800">#{order.code}</p>
@@ -84,6 +88,11 @@ export default function MyCustomOrders() {
                     {needsPayment && (
                       <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold animate-pulse">
                         Cần thanh toán
+                      </span>
+                    )}
+                    {needsRemainingPayment && (
+                      <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-semibold animate-pulse">
+                        Thanh toán còn lại
                       </span>
                     )}
                     <span className={`text-xs px-3 py-1 rounded-full font-semibold ${CUSTOM_STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
@@ -111,13 +120,13 @@ export default function MyCustomOrders() {
                     : <p className="text-xs text-gray-400">Chưa có báo giá</p>}
                   <Link to={`/custom-orders/${order.id}`}
                     className="flex items-center gap-1.5 text-rose-500 text-sm font-medium hover:underline">
-                    <FiEye size={14} /> {needsPayment ? 'Thanh toán ngay' : 'Chi tiết'}
+                    <FiEye size={14} /> {needsPayment || needsRemainingPayment ? 'Thanh toán ngay' : 'Chi tiết'}
                   </Link>
                 </div>
               </div>
             );
           })}
-          <Pagination pagination={{ page, totalPages }} onPageChange={setPage} />
+          <Pagination pagination={pagination} onPageChange={p => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         </div>
       )}
     </div>

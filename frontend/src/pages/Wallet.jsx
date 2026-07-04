@@ -9,10 +9,10 @@ const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const TX_TYPE = {
-  topup:            { label: 'Nạp tiền',        color: 'text-green-600',  bg: 'bg-green-50',  icon: '⬆️' },
-  payment:          { label: 'Thanh toán đơn',  color: 'text-red-500',    bg: 'bg-red-50',    icon: '🛒' },
-  refund:           { label: 'Hoàn tiền',        color: 'text-blue-600',   bg: 'bg-blue-50',   icon: '↩️' },
-  admin_adjustment: { label: 'Điều chỉnh',       color: 'text-gray-500',   bg: 'bg-gray-50',   icon: '⚙️' },
+  topup:            { label: 'Nạp tiền',         color: 'text-green-600', bg: 'bg-green-50', icon: '⬆️' },
+  payment:          { label: 'Thanh toán đơn',   color: 'text-red-500',   bg: 'bg-red-50',   icon: '🛒' },
+  refund:           { label: 'Hoàn tiền',         color: 'text-blue-600',  bg: 'bg-blue-50',  icon: '↩️' },
+  admin_adjustment: { label: 'Điều chỉnh',        color: 'text-gray-500',  bg: 'bg-gray-50',  icon: '⚙️' },
 };
 
 const TOPUP_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
@@ -146,7 +146,9 @@ export default function Wallet() {
           <div className="divide-y">
             {paginated.map(tx => {
               const cfg = TX_TYPE[tx.type] || TX_TYPE.admin_adjustment;
-              const isCredit = tx.amount > 0;
+              const amount = Number(tx.amount);
+              const isCredit = amount > 0;
+              const balanceChanged = Number(tx.balanceBefore) !== Number(tx.balanceAfter);
               return (
                 <div key={tx.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition">
                   <div className={`w-10 h-10 rounded-full ${cfg.bg} flex items-center justify-center text-lg shrink-0`}>
@@ -159,9 +161,11 @@ export default function Wallet() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`font-bold text-sm ${isCredit ? 'text-green-600' : 'text-red-500'}`}>
-                      {isCredit ? '+' : ''}{fmt(tx.amount)}
+                      {isCredit ? '+' : '-'}{fmt(Math.abs(amount))}
                     </p>
-                    <p className="text-xs text-gray-400">Sau: {fmt(tx.balanceAfter)}</p>
+                    {balanceChanged
+                      ? <p className="text-xs text-gray-400">Sau: {fmt(tx.balanceAfter)}</p>
+                      : <p className="text-xs text-gray-400 italic">Thanh toán ngoài ví</p>}
                   </div>
                 </div>
               );

@@ -146,9 +146,9 @@ export default function Orders() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const { data: regularData, loading: regularLoading } = useFetch('/orders/my', {
-    status, page,
-    ...(fromDate && { fromDate }),
-    ...(toDate && { toDate }),
+    status, page, limit: 5,
+    ...(fromDate && { from: fromDate }),
+    ...(toDate && { to: toDate }),
   });
 
   // Custom orders
@@ -156,18 +156,12 @@ export default function Orders() {
   const [customPage, setCustomPage] = useState(1);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const { data: customData, loading: customLoading } = useFetch('/custom-orders/my', {});
-  const allCustom = customData?.items || customData || [];
-
-  const filteredCustom = allCustom.filter(o => {
-    if (customStatus && o.status !== customStatus) return false;
-    const d = new Date(o.createdAt);
-    if (customFrom && d < new Date(customFrom)) return false;
-    if (customTo && d > new Date(customTo + 'T23:59:59')) return false;
-    return true;
+  const { data: customData, loading: customLoading } = useFetch('/custom-orders/my', {
+    status: customStatus, page: customPage, limit: 5,
+    ...(customFrom && { from: customFrom }),
+    ...(customTo && { to: customTo }),
   });
-  const customTotalPages = Math.ceil(filteredCustom.length / PER_PAGE);
-  const paginatedCustom = filteredCustom.slice((customPage - 1) * PER_PAGE, customPage * PER_PAGE);
+  const paginatedCustom = customData?.items || [];
 
   const loading = orderType === 'regular' ? regularLoading : customLoading;
 
@@ -262,7 +256,7 @@ export default function Orders() {
             <div className="space-y-3">
               {paginatedCustom.map(order => <CustomOrderCard key={order.id} order={order} />)}
             </div>
-            <Pagination pagination={{ page: customPage, totalPages: customTotalPages }} onPageChange={setCustomPage} />
+            <Pagination pagination={customData?.pagination} onPageChange={setCustomPage} />
           </>
         )
       )}

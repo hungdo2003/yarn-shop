@@ -251,7 +251,15 @@ const ProductList = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products.items.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
-              <Pagination pagination={products.pagination} onPageChange={p => setFilter('page', p)} />
+              <Pagination
+                pagination={products.pagination}
+                onPageChange={p => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', p);
+                  setSearchParams(params);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             </>
           ) : (
             <div className="text-center py-16 bg-white rounded-xl">

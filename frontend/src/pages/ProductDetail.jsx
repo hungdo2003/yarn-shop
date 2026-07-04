@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -274,6 +274,7 @@ function ReviewCard({ review }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function ProductDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
   const { toggle, isWishlisted } = useWishlist();
@@ -382,6 +383,25 @@ export default function ProductDetail() {
     } finally { setAddingToCart(false); }
   };
 
+  const handleBuyNow = () => {
+    if (!user) { toast.error('Vui lòng đăng nhập để mua hàng', { icon: '🔒' }); return; }
+    if (!isRole('customer')) { toast.error('Chỉ khách hàng mới có thể mua hàng'); return; }
+    if (product.stock < qty) { toast.error(`Chỉ còn ${product.stock} sản phẩm`); return; }
+    sessionStorage.setItem('buyNowItem', JSON.stringify({
+      id: `buynow-${product.id}`,
+      productId: product.id,
+      quantity: qty,
+      price: parseFloat(product.salePrice || product.price),
+      Product: {
+        name: product.name,
+        thumbnailImage: product.thumbnailImage,
+        color: product.color,
+        slug: product.slug,
+      },
+    }));
+    navigate('/checkout?mode=buynow');
+  };
+
   const handleReviewSubmitted = (newReview) => {
     setReviews(prev => [newReview, ...prev]);
     setReviewMeta(prev => ({
@@ -483,11 +503,36 @@ export default function ProductDetail() {
             )}
           </div>
 
+          {/* Color swatches */}
+          {product.color && (
+            <div>
+              <p className="text-sm text-gray-500 mb-2">
+                Màu sắc: <span className="font-semibold text-gray-800">{product.color}</span>
+              </p>
+              {product.colorVariants?.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {product.colorVariants.map(v => (
+                    <Link
+                      key={v.id}
+                      to={`/products/${v.slug}`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
+                        v.id === product.id
+                          ? 'border-rose-500 bg-rose-50 text-rose-600 shadow-sm'
+                          : v.stock === 0
+                          ? 'border-gray-200 bg-gray-50 text-gray-400 line-through pointer-events-none'
+                          : 'border-gray-200 text-gray-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500'
+                      }`}
+                    >
+                      {v.color}{v.stock === 0 && <span className="ml-1 text-[10px]">(hết)</span>}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Attributes */}
           <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-sm">
-            {product.color && (
-              <div className="flex gap-2"><span className="text-gray-500 w-24 shrink-0">Màu sắc</span><span className="font-medium text-gray-800">{product.color}</span></div>
-            )}
             {product.size && (
               <div className="flex gap-2"><span className="text-gray-500 w-24 shrink-0">Kích cỡ</span><span className="font-medium text-gray-800">{product.size}</span></div>
             )}
@@ -525,16 +570,24 @@ export default function ProductDetail() {
                     <FiPlus size={15} />
                   </button>
                 </div>
-                <button onClick={handleAddToCart} disabled={addingToCart}
-                  className="flex-1 bg-rose-500 hover:bg-rose-600 active:scale-[.98] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-rose-200 disabled:opacity-60">
-                  <FiShoppingCart size={17} />
-                  {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
-                </button>
+                <span className="text-xs text-gray-400">Còn {product.stock} sản phẩm</span>
                 <button onClick={handleWishlist}
-                  className={`p-3 rounded-xl border-2 transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'}`}
+                  className={`ml-auto p-3 rounded-xl border-2 transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'}`}
                   title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
                 >
                   <FiHeart size={20} className={wishlisted ? 'fill-rose-500' : ''} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={handleAddToCart} disabled={addingToCart}
+                  className="bg-white border-2 border-rose-500 hover:bg-rose-50 active:scale-[.98] text-rose-500 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60">
+                  <FiShoppingCart size={17} />
+                  {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                </button>
+                <button onClick={handleBuyNow}
+                  className="bg-rose-500 hover:bg-rose-600 active:scale-[.98] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-rose-200">
+                  <span>⚡</span>
+                  Mua ngay
                 </button>
               </div>
               <Link to="/custom-order"

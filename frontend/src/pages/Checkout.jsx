@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -20,6 +20,8 @@ const Checkout = ({ guest }) => {
   const { cart, fetchCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const checkoutMode = searchParams.get('mode'); // 'buynow' | 'selected' | null
   const [loading, setLoading] = useState(false);
   const [voucherCode, setVoucherCode] = useState('');
   const [voucher, setVoucher] = useState(null);
@@ -52,16 +54,22 @@ const Checkout = ({ guest }) => {
   }, [user]);
 
   const getCartItems = () => {
+    if (checkoutMode === 'buynow') {
+      const item = JSON.parse(sessionStorage.getItem('buyNowItem') || 'null');
+      return item ? [item] : [];
+    }
+    if (checkoutMode === 'selected') {
+      return JSON.parse(sessionStorage.getItem('selectedItems') || '[]');
+    }
     if (guest) {
-      const local = JSON.parse(localStorage.getItem('guestCart') || '[]');
-      return local;
+      return JSON.parse(localStorage.getItem('guestCart') || '[]');
     }
     return cart?.CartItems || [];
   };
 
   const cartItems = getCartItems();
-  const subtotal = guest
-    ? cartItems.reduce((s, i) => s + i.quantity * i.price, 0)
+  const subtotal = (checkoutMode === 'buynow' || checkoutMode === 'selected' || guest)
+    ? cartItems.reduce((s, i) => s + i.quantity * parseFloat(i.price), 0)
     : (cart?.total || 0);
 
   const selectedShipping = SHIPPING_METHODS.find(m => m.value === shippingMethod);
@@ -111,7 +119,12 @@ const Checkout = ({ guest }) => {
         orderId = res.data.orderId;
         paidByWallet = false;
       } else {
+        if (checkoutMode === 'buynow' || checkoutMode === 'selected') {
+          payload2.items = cartItems.map(i => ({ productId: i.productId, quantity: i.quantity }));
+        }
         const res = await api.post('/orders', payload2);
+        if (checkoutMode === 'buynow') sessionStorage.removeItem('buyNowItem');
+        else if (checkoutMode === 'selected') sessionStorage.removeItem('selectedItems');
         await fetchCart();
         orderId = res.data.orderId;
         paidByWallet = res.data.paidByWallet;
@@ -150,6 +163,16 @@ const Checkout = ({ guest }) => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Thanh Toán</h1>
+      {checkoutMode === 'buynow' && (
+        <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-2 text-sm text-rose-700 mb-4">
+          ⚡ Mua ngay — sản phẩm này sẽ không được thêm vào giỏ hàng.
+        </div>
+      )}
+      {checkoutMode === 'selected' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700 mb-4">
+          Thanh toán {cartItems.length} sản phẩm đã chọn. Các sản phẩm còn lại vẫn ở trong giỏ hàng.
+        </div>
+      )}
       {guest && <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm text-amber-800 mb-6">Bạn đang đặt hàng với tư cách khách. <a href="/login" className="underline font-medium">Đăng nhập</a> để theo dõi đơn hàng dễ hơn.</div>}
 
       <form onSubmit={handleSubmit}>

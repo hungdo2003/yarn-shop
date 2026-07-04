@@ -34,7 +34,6 @@ const EditModal = ({ user, onClose, onSave }) => {
               <option value={1}>Admin</option>
               <option value={2}>Customer</option>
               <option value={3}>Staff</option>
-              <option value={4}>Manager</option>
             </select>
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -65,8 +64,8 @@ const UserManagement = () => {
     refetch();
   };
 
-  const ROLE_LABELS = { 1: 'Admin', 2: 'Customer', 3: 'Staff', 4: 'Manager' };
-  const ROLE_COLORS = { admin: 'bg-red-100 text-red-700', customer: 'bg-blue-100 text-blue-700', staff: 'bg-purple-100 text-purple-700', manager: 'bg-green-100 text-green-700' };
+  const ROLE_LABELS = { 1: 'Admin', 2: 'Customer', 3: 'Staff' };
+  const ROLE_COLORS = { admin: 'bg-red-100 text-red-700', customer: 'bg-blue-100 text-blue-700', staff: 'bg-purple-100 text-purple-700' };
 
   return (
     <div className="p-6">
@@ -78,7 +77,6 @@ const UserManagement = () => {
           <option value="1">Admin</option>
           <option value="2">Customer</option>
           <option value="3">Staff</option>
-          <option value="4">Manager</option>
         </select>
       </div>
       {loading ? <Spinner /> : (

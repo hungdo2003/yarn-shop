@@ -24,8 +24,7 @@ const Login = () => {
       toast.dismiss(toastId);
       toast.success(`Chào mừng trở lại, ${user.fullName}! 👋`, { duration: 3000 });
       const role = user.Role?.name;
-      if (role === 'admin') navigate('/admin');
-      else if (role === 'manager') navigate('/manager');
+      if (role === 'admin') navigate('/manager');
       else if (role === 'staff') navigate('/staff');
       else navigate(from);
     } catch (err) {
@@ -104,7 +103,6 @@ const Login = () => {
           <p className="font-medium text-gray-600 mb-2">Tài khoản demo:</p>
           {[
             { role: 'Admin', email: 'admin@yarnshop.com', pass: 'Admin@123' },
-            { role: 'Manager', email: 'manager@yarnshop.com', pass: 'Manager@123' },
             { role: 'Staff', email: 'staff@yarnshop.com', pass: 'Staff@123' },
             { role: 'Customer', email: 'jane@example.com', pass: 'Customer@123' },
           ].map(acc => (

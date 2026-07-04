@@ -54,10 +54,11 @@ export const CUSTOM_STATUS_LABEL = {
   submitted: 'Đã gửi yêu cầu',
   reviewing: 'Đang xem xét',
   quoted: 'Đã báo giá',
-  deposit_paid: 'Đã thanh toán',
+  deposit_paid: 'Đã thanh toán cọc',
   in_production: 'Đang sản xuất',
   completed: 'Hoàn thành',
   delivered: 'Đã giao hàng',
+  remaining_paid: 'Đã thanh toán đủ',
   cancelled: 'Đã hủy',
 };
 
@@ -69,6 +70,7 @@ export const CUSTOM_STATUS_COLOR = {
   in_production: 'bg-orange-100 text-orange-700',
   completed: 'bg-green-100 text-green-700',
   delivered: 'bg-emerald-100 text-emerald-700',
+  remaining_paid: 'bg-teal-100 text-teal-700',
   cancelled: 'bg-red-100 text-red-700',
 };
 

@@ -9,7 +9,7 @@ export default function ChatWidget() {
   const [liveOpen, setLiveOpen] = useState(false);
 
   // Don't show on staff/manager/admin dashboards
-  if (user && (isRole('staff') || isRole('manager') || isRole('admin'))) return null;
+  if (user && (isRole('staff') || isRole('admin'))) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">

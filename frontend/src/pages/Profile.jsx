@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw, FiGift, FiTrendingUp } from 'react-icons/fi';
 import TierBadge from '../components/common/TierBadge';
 
-const roleLabel = { admin: 'Quản trị viên', manager: 'Quản lý', staff: 'Nhân viên', customer: 'Khách hàng' };
-const roleBg = { admin: 'bg-red-100 text-red-700', manager: 'bg-purple-100 text-purple-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
+const roleLabel = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' };
+const roleBg = { admin: 'bg-red-100 text-red-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
