@@ -32,10 +32,6 @@ const Notification = require('./Notification');
 const ChatConversation = require('./ChatConversation');
 const ChatMessage = require('./ChatMessage');
 const Wishlist = require('./Wishlist');
-const Campaign = require('./Campaign');
-const CampaignProduct = require('./CampaignProduct');
-const CampaignVoucher = require('./CampaignVoucher');
-
 // Role <-> User
 Role.hasMany(User, { foreignKey: 'roleId' });
 User.belongsTo(Role, { foreignKey: 'roleId' });
@@ -157,14 +153,6 @@ Wishlist.belongsTo(User, { foreignKey: 'userId' });
 Product.hasMany(Wishlist, { foreignKey: 'productId' });
 Wishlist.belongsTo(Product, { foreignKey: 'productId' });
 
-// Campaign
-Campaign.belongsToMany(Product, { through: CampaignProduct, foreignKey: 'campaignId' });
-Product.belongsToMany(Campaign, { through: CampaignProduct, foreignKey: 'productId' });
-Campaign.belongsToMany(Voucher, { through: CampaignVoucher, foreignKey: 'campaignId' });
-Voucher.belongsToMany(Campaign, { through: CampaignVoucher, foreignKey: 'voucherId' });
-Campaign.hasMany(CampaignProduct, { foreignKey: 'campaignId' });
-Campaign.hasMany(CampaignVoucher, { foreignKey: 'campaignId' });
-
 // Chat
 User.hasMany(ChatConversation, { foreignKey: 'customerId', as: 'customerConversations' });
 ChatConversation.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
@@ -188,5 +176,4 @@ module.exports = {
   WalletTransaction, WalletTopup, Notification,
   ChatConversation, ChatMessage,
   Wishlist,
-  Campaign, CampaignProduct, CampaignVoucher,
 };

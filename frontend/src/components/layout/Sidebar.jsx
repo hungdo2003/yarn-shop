@@ -13,23 +13,6 @@ import api from '../../services/api';
 const MENUS = {
   admin: [
     {
-      title: 'Hệ thống',
-      items: [
-        { label: 'Tổng quan', icon: FiHome, to: '/admin' },
-        { label: 'Quản lý tài khoản', icon: FiUsers, to: '/admin/users' },
-      ]
-    },
-    {
-      title: 'Nội dung',
-      items: [
-        { label: 'Quản lý banner', icon: FiImage, to: '/admin/banners' },
-        { label: 'Nội dung website', icon: FiFileText, to: '/admin/content' },
-        { label: 'Nhật ký hệ thống', icon: FiActivity, to: '/admin/logs' },
-      ]
-    }
-  ],
-  manager: [
-    {
       title: 'Tổng quan',
       items: [
         { label: 'Dashboard', icon: FiHome, to: '/manager' },
@@ -41,15 +24,23 @@ const MENUS = {
         { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
         { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
         { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
-        { label: 'Campaign sự kiện', icon: FiImage, to: '/manager/campaigns' },
       ]
     },
     {
       title: 'Vận hành',
       items: [
+        { label: 'Đơn hàng', icon: FiPackage, to: '/manager/orders' },
         { label: 'Kho hàng', icon: FiTool, to: '/manager/inventory' },
-        { label: 'Đặt hàng tùy chỉnh', icon: FiList, to: '/manager/custom-orders' },
         { label: 'Báo cáo', icon: FiBarChart2, to: '/manager/reports' },
+      ]
+    },
+    {
+      title: 'Hệ thống',
+      items: [
+        { label: 'Quản lý tài khoản', icon: FiUsers, to: '/admin/users' },
+        { label: 'Quản lý banner', icon: FiImage, to: '/admin/banners' },
+        { label: 'Nội dung website', icon: FiFileText, to: '/admin/content' },
+        { label: 'Nhật ký hệ thống', icon: FiActivity, to: '/admin/logs' },
       ]
     }
   ],
@@ -83,16 +74,6 @@ const ROLE_CONFIG = {
     activeBorder: 'border-violet-500',
     onlineDot: 'bg-violet-400',
   },
-  manager: {
-    label: 'Quản lý',
-    badge: 'MGR',
-    gradient: 'from-rose-600 via-rose-700 to-pink-800',
-    avatarBg: 'bg-rose-400',
-    activeText: 'text-rose-700',
-    activeBg: 'bg-rose-50',
-    activeBorder: 'border-rose-500',
-    onlineDot: 'bg-rose-400',
-  },
   staff: {
     label: 'Nhân viên',
     badge: 'STAFF',
@@ -112,7 +93,7 @@ const Sidebar = () => {
   const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
-    if (role === 'manager' || role === 'admin') {
+    if (role === 'admin') {
       api.get('/inventory/low-stock-count').then(r => setLowStockCount(r.data.count || 0)).catch(() => {});
     }
   }, [role]);
