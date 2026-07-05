@@ -22,10 +22,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/api/docs', swaggerUi.serve, (req, res, next) => {
-  const spec = { ...swaggerSpec, servers: [{ url: `${req.protocol}://${req.get('host')}` }] };
-  swaggerUi.setup(spec, { customSiteTitle: 'YarnShop API Docs' })(req, res, next);
+app.get('/api/docs/swagger.json', (req, res) => {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  res.json({ ...swaggerSpec, servers: [{ url: `${protocol}://${host}` }] });
 });
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(null, {
+  swaggerUrl: '/api/docs/swagger.json',
+  customSiteTitle: 'YarnShop API Docs',
+}));
 
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
