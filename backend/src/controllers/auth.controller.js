@@ -2,16 +2,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Role } = require('../models');
 const { log } = require('./log.controller');
+const { sendOtpEmail } = require('../services/emailService');
+const { generateOtp, saveOtp, consumeOtp } = require('../utils/otpStore');
 
 const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
-const register = async (req, res) => {
+const sendOtp = async (req, res) => {
   try {
     const { fullName, email, password, phone } = req.body;
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: 'Vui lòng điền đầy đủ thông tin' });
+    }
     const exists = await User.findOne({ where: { email } });
     if (exists) return res.status(409).json({ message: 'Email already registered' });
+
     const hashed = await bcrypt.hash(password, 12);
-    const user = await User.create({ fullName, email, password: hashed, phone, roleId: 2 });
+    const otp = generateOtp();
+    saveOtp(email, otp, { fullName, email, password: hashed, phone });
+
+    await sendOtpEmail(email, otp, fullName);
+    res.json({ message: 'OTP đã được gửi đến email của bạn' });
+  } catch (err) {
+    console.error('sendOtp error:', err);
+    res.status(500).json({ message: 'Không thể gửi email. Vui lòng thử lại.' });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Thiếu email hoặc OTP' });
+
+    const result = consumeOtp(email, otp);
+    if (!result.valid) return res.status(400).json({ message: result.reason });
+
+    const { fullName, password, phone } = result.userData;
+    const user = await User.create({ fullName, email, password, phone, roleId: 2 });
     const token = signToken(user.id);
     const { password: _, ...userData } = user.toJSON();
     await log(user.id, email, 'REGISTER', 'User', user.id, { fullName, phone }, req);
@@ -65,4 +91,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, changePassword };
+module.exports = { sendOtp, verifyOtp, login, getMe, changePassword };
