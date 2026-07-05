@@ -23,7 +23,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/api/docs/swagger.json', (req, res) => {
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : (req.headers['x-forwarded-proto'] || req.protocol);
   const host = req.headers['x-forwarded-host'] || req.get('host');
   res.json({ ...swaggerSpec, servers: [{ url: `${protocol}://${host}` }] });
 });
