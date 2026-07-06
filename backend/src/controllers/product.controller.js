@@ -1,4 +1,4 @@
-const { Product, ProductImage, Category, Inventory, Review, User } = require('../models');
+const { Product, ProductImage, Category, Inventory, Review, User, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult, generateCode, slugify } = require('../utils/helpers');
 const { fileUrl } = require('../middleware/upload.middleware');
@@ -157,4 +157,33 @@ const getRelated = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getAll, getBySlug, create, update, remove, getFeatured, getRelated };
+const bulkDiscount = async (req, res) => {
+  try {
+    const { productIds, selectAll, categoryId, discountPct, saleStartDate, saleEndDate, removeDiscount } = req.body;
+
+    const where = { status: 'active' };
+    if (!selectAll && productIds?.length) where.id = { [Op.in]: productIds };
+    if (selectAll && categoryId) where.categoryId = categoryId;
+
+    const products = await Product.findAll({ where, attributes: ['id', 'price'] });
+    if (!products.length) return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào' });
+
+    await Promise.all(products.map(p => {
+      const upd = removeDiscount
+        ? { salePrice: null, saleStartDate: null, saleEndDate: null }
+        : {
+            ...(discountPct ? { salePrice: Math.round(parseFloat(p.price) * (1 - discountPct / 100)) } : {}),
+            saleStartDate: saleStartDate || null,
+            saleEndDate: saleEndDate || null,
+          };
+      return p.update(upd);
+    }));
+
+    const action = removeDiscount ? 'Đã xóa giảm giá' : `Đã áp dụng giảm giá ${discountPct}%`;
+    await log(req.user?.id, req.user?.email, 'BULK_DISCOUNT', 'Product', null,
+      { count: products.length, discountPct, saleStartDate, saleEndDate, removeDiscount }, req);
+    res.json({ message: `${action} cho ${products.length} sản phẩm`, updatedCount: products.length });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getAll, getBySlug, create, update, remove, getFeatured, getRelated, bulkDiscount };

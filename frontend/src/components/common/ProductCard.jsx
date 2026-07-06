@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { SaleCountdownCompact } from './SaleCountdown';
 import toast from 'react-hot-toast';
 
 const Stars = ({ rating, count }) => (
@@ -43,8 +44,12 @@ const ProductCard = ({ product }) => {
   };
 
   const image = product.thumbnailImage || product.ProductImages?.[0]?.imageUrl;
-  const price = product.salePrice || product.price;
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const now = new Date();
+  const saleActive = product.salePrice && product.salePrice < product.price
+    && (!product.saleStartDate || new Date(product.saleStartDate) <= now)
+    && (!product.saleEndDate || new Date(product.saleEndDate) > now);
+  const price = saleActive ? product.salePrice : product.price;
+  const hasDiscount = saleActive;
 
   return (
     <Link to={`/products/${product.slug}`} className="group card p-0 overflow-hidden hover:shadow-md active:scale-[0.98] transition-all">
@@ -94,6 +99,9 @@ const ProductCard = ({ product }) => {
           )}
         </div>
       </div>
+      {hasDiscount && product.saleEndDate && (
+        <SaleCountdownCompact endDate={product.saleEndDate} />
+      )}
     </Link>
   );
 };

@@ -13,6 +13,7 @@ import {
   FiChevronLeft, FiChevronRight, FiCamera, FiX, FiCheck,
   FiPackage, FiTruck, FiRefreshCw,
 } from 'react-icons/fi';
+import { SaleCountdownFull } from '../components/common/SaleCountdown';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const STAR_LABELS = ['', 'Rất tệ', 'Không tốt', 'Bình thường', 'Tốt', 'Tuyệt vời'];
@@ -353,8 +354,12 @@ export default function ProductDetail() {
   );
 
   const images = product.ProductImages?.length ? product.ProductImages : [];
-  const price = product.salePrice || product.price;
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const now = new Date();
+  const saleActive = product.salePrice && product.salePrice < product.price
+    && (!product.saleStartDate || new Date(product.saleStartDate) <= now)
+    && (!product.saleEndDate || new Date(product.saleEndDate) > now);
+  const price = saleActive ? product.salePrice : product.price;
+  const hasDiscount = saleActive;
   const discountPct = hasDiscount ? Math.round((1 - product.salePrice / product.price) * 100) : 0;
   const stockLow = product.stock > 0 && product.stock <= 10;
 
@@ -502,6 +507,11 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
+
+          {/* Sale countdown */}
+          {hasDiscount && product.saleEndDate && (
+            <SaleCountdownFull endDate={product.saleEndDate} />
+          )}
 
           {/* Color swatches */}
           {product.color && (
