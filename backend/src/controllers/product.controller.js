@@ -1,4 +1,4 @@
-const { Product, ProductImage, Category, Inventory, Review, User, sequelize } = require('../models');
+const { Product, ProductImage, Category, Inventory, Review, User, SaleEvent, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult, generateCode, slugify } = require('../utils/helpers');
 const { fileUrl } = require('../middleware/upload.middleware');
@@ -161,7 +161,8 @@ const getRelated = async (req, res) => {
 
 const bulkDiscount = async (req, res) => {
   try {
-    const { productIds, selectAll, categoryId, discountPct, saleStartDate, saleEndDate, removeDiscount } = req.body;
+    const { name, productIds, selectAll, categoryId, discountPct, saleStartDate, saleEndDate, removeDiscount } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: 'Vui lòng đặt tên sự kiện' });
 
     const where = { status: 'active' };
     if (!selectAll && productIds?.length) where.id = { [Op.in]: productIds };
@@ -181,9 +182,21 @@ const bulkDiscount = async (req, res) => {
       return p.update(upd);
     }));
 
+    await SaleEvent.create({
+      name: name.trim(),
+      discountPct: removeDiscount ? null : (discountPct || null),
+      saleStartDate: saleStartDate || null,
+      saleEndDate: saleEndDate || null,
+      productCount: products.length,
+      selectAll: !!selectAll,
+      productIds: selectAll ? null : products.map(p => p.id),
+      isRemoval: !!removeDiscount,
+      createdBy: req.user?.id,
+    });
+
     const action = removeDiscount ? 'Đã xóa giảm giá' : `Đã áp dụng giảm giá ${discountPct}%`;
-    await log(req.user?.id, req.user?.email, 'BULK_DISCOUNT', 'Product', null,
-      { count: products.length, discountPct, saleStartDate, saleEndDate, removeDiscount }, req);
+    await log(req.user?.id, req.user?.email, 'BULK_DISCOUNT', 'SaleEvent', null,
+      { name, count: products.length, discountPct, saleStartDate, saleEndDate, removeDiscount }, req);
     res.json({ message: `${action} cho ${products.length} sản phẩm`, updatedCount: products.length });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
