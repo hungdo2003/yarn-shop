@@ -25,6 +25,7 @@ const MENUS = {
         { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
         { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
         { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
+        { label: 'Sự kiện KM', icon: FiTag, to: '/admin/sale-events' },
       ]
     },
     {

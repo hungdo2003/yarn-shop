@@ -51,6 +51,7 @@ import UserManagement from './pages/admin/UserManagement';
 import BannerManagement from './pages/admin/BannerManagement';
 import ContentManagement from './pages/admin/ContentManagement';
 import SystemLogs from './pages/admin/SystemLogs';
+import SaleEventManagement from './pages/admin/SaleEventManagement';
 
 // Route guard
 const PrivateRoute = ({ roles }) => {
@@ -154,6 +155,7 @@ const App = () => (
         <Route path="/admin/banners" element={<BannerManagement />} />
         <Route path="/admin/content" element={<ContentManagement />} />
         <Route path="/admin/logs" element={<SystemLogs />} />
+        <Route path="/admin/sale-events" element={<SaleEventManagement />} />
       </Route>
     </Route>
 

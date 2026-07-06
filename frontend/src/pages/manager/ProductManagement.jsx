@@ -376,18 +376,20 @@ const ReviewPanel = ({ product, onClose }) => {
 
 /* ── Bulk discount modal ── */
 const BulkDiscountModal = ({ selectedIds, selectAll, total, onClose, onDone }) => {
-  const [form, setForm] = useState({ discountPct: '', saleStartDate: '', saleEndDate: '', removeDiscount: false });
+  const [form, setForm] = useState({ name: '', discountPct: '', saleStartDate: '', saleEndDate: '', removeDiscount: false });
   const [loading, setLoading] = useState(false);
   const count = selectAll ? total : selectedIds.length;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.name?.trim()) return toast.error('Vui lòng đặt tên sự kiện');
     if (!form.removeDiscount && (!form.discountPct || form.discountPct < 1 || form.discountPct > 99)) {
       return toast.error('Vui lòng nhập % giảm giá từ 1 đến 99');
     }
     setLoading(true);
     try {
       const payload = {
+        name: form.name.trim(),
         selectAll,
         productIds: selectAll ? [] : selectedIds,
         removeDiscount: form.removeDiscount,
@@ -421,6 +423,17 @@ const BulkDiscountModal = ({ selectedIds, selectAll, total, onClose, onDone }) =
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1.5">Tên sự kiện <span className="text-rose-500">*</span></label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="VD: Sale hè 2025, Flash sale 7/7..."
+              className="input text-base"
+              required
+            />
+          </div>
           {/* Remove discount toggle */}
           <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-gray-50 transition-colors">
             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${form.removeDiscount ? 'bg-rose-500 border-rose-500' : 'border-gray-300'}`}>
