@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import Pagination from '../../components/common/Pagination';
 
 const statusBg = { success: 'bg-green-100 text-green-700', failure: 'bg-red-100 text-red-700' };
 
@@ -7,19 +8,25 @@ export default function SystemLogs() {
   const [logs, setLogs] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [filter, setFilter] = useState({ action: '', status: '', resource: '', from: '', to: '' });
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     setLoading(true);
-    api.get('/logs', { params: { page, limit: 50, ...filter } })
+    api.get('/logs', { params: { page, limit, ...filter } })
       .then(r => { setLogs(r.data.data); setTotal(r.data.total); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [page, filter]);
+  useEffect(() => { load(); }, [page, limit, filter]);
 
-  const totalPages = Math.ceil(total / 50);
+  const totalPages = Math.ceil(total / limit);
+
+  const handleLimitChange = (e) => {
+    setLimit(Number(e.target.value));
+    setPage(1);
+  };
 
   return (
     <div className="p-6">
@@ -40,8 +47,21 @@ export default function SystemLogs() {
       </div>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <span className="text-sm text-gray-500">Tổng: {total} bản ghi</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b gap-3 flex-wrap">
+          <span className="text-sm text-gray-500">
+            Tổng: <strong>{total}</strong> bản ghi
+            {totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {page}/{totalPages}</span>}
+          </span>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>Hiển thị</span>
+            <select value={limit} onChange={handleLimitChange} className="border rounded-lg px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>dòng</span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -77,13 +97,10 @@ export default function SystemLogs() {
             </tbody>
           </table>
         </div>
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 p-4 border-t">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 border rounded-lg text-sm disabled:opacity-40">‹</button>
-            <span className="px-3 py-1 text-sm text-gray-600">{page} / {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 border rounded-lg text-sm disabled:opacity-40">›</button>
-          </div>
-        )}
+        <Pagination
+          pagination={{ page, totalPages }}
+          onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        />
       </div>
     </div>
   );
