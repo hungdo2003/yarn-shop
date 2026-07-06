@@ -139,7 +139,7 @@ const getAvailableProducts = async (req, res) => {
 
     const { count, rows } = await Product.findAndCountAll({
       where,
-      attributes: ['id', 'name', 'price', 'thumbnailImage', 'averageRating', 'color'],
+      attributes: ['id', 'name', 'price', 'salePrice', 'thumbnailImage', 'averageRating', 'color'],
       include: [
         { model: Category, attributes: ['name'] },
         { model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] },

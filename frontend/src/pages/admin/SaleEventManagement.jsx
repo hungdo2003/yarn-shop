@@ -58,6 +58,17 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
 
   const handleSubmit = async () => {
     if (!selected.size) return toast.error('Chọn ít nhất 1 sản phẩm');
+
+    const withDiscount = products.filter(p => selected.has(p.id) && p.salePrice);
+    if (withDiscount.length > 0) {
+      const names = withDiscount.slice(0, 3).map(p => p.name).join(', ');
+      const more = withDiscount.length > 3 ? ` và ${withDiscount.length - 3} sản phẩm khác` : '';
+      const ok = window.confirm(
+        `${withDiscount.length} sản phẩm đang có giảm giá thường sẽ bị xóa giảm giá cũ khi thêm vào sự kiện:\n\n${names}${more}\n\nBạn có chắc muốn tiếp tục?`
+      );
+      if (!ok) return;
+    }
+
     setSubmitting(true);
     try {
       const r = await api.post(`/sale-events/${event.id}/products`, { productIds: [...selected] });
