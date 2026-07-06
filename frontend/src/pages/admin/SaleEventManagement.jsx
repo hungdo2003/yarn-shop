@@ -21,7 +21,7 @@ const statusBadge = (event) => {
 /* ── Add products modal ── */
 const AddProductsModal = ({ event, onClose, onAdded }) => {
   const [products, setProducts] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [selected, setSelected] = useState(new Set());
@@ -35,7 +35,7 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
         params: { page: pagination.page, limit: 20, search },
       });
       setProducts(r.data.items ?? []);
-      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1 }));
+      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Không tải được danh sách sản phẩm'); }
     finally { setLoading(false); }
   }, [pagination.page, search]);
@@ -170,8 +170,9 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
           )}
         </div>
 
-        {pagination.totalPages > 1 && (
-          <div className="px-6 py-2 border-t flex justify-center">
+        {pagination.total > 0 && (
+          <div className="px-6 py-2 border-t flex items-center justify-between">
+            <span className="text-xs text-gray-400">Tổng: {pagination.total} · Trang {pagination.page}/{pagination.totalPages}</span>
             <Pagination
               pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
               onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
@@ -457,7 +458,7 @@ const EventDetail = ({ eventId, onBack }) => {
 /* ── Non-event discounts tab ── */
 const NonEventDiscounts = () => {
   const [data, setData] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -468,7 +469,7 @@ const NonEventDiscounts = () => {
     try {
       const r = await api.get('/sale-events/non-event-discounts', { params: { page: pagination.page, limit: 20, search } });
       setData(r.data);
-      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1 }));
+      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
   }, [pagination.page, search]);
@@ -558,8 +559,9 @@ const NonEventDiscounts = () => {
         )}
       </div>
 
-      {data?.pagination && pagination.totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
+      {data?.pagination && (
+        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+          <span>Tổng: {pagination.total} sản phẩm · Trang {pagination.page}/{pagination.totalPages}</span>
           <Pagination
             pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
             onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
@@ -574,7 +576,7 @@ const NonEventDiscounts = () => {
 const SaleEventManagement = () => {
   const [tab, setTab] = useState('events');
   const [data, setData] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -586,7 +588,7 @@ const SaleEventManagement = () => {
     try {
       const r = await api.get('/sale-events', { params: { page: pagination.page, limit: 20, search } });
       setData(r.data);
-      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1 }));
+      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
   }, [pagination.page, search]);
@@ -700,8 +702,9 @@ const SaleEventManagement = () => {
         </div>
       )}
 
-      {data?.pagination && pagination.totalPages > 1 && (
-        <div className="mt-5 flex justify-center">
+      {data?.pagination && (
+        <div className="mt-5 flex items-center justify-between text-sm text-gray-500">
+          <span>Tổng: {pagination.total} sự kiện · Trang {pagination.page}/{pagination.totalPages}</span>
           <Pagination
             pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
             onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
