@@ -33,6 +33,8 @@ const ChatConversation = require('./ChatConversation');
 const ChatMessage = require('./ChatMessage');
 const Wishlist = require('./Wishlist');
 const SaleEvent = require('./SaleEvent');
+const SaleEventRun = require('./SaleEventRun');
+const SaleEventRunProduct = require('./SaleEventRunProduct');
 // Role <-> User
 Role.hasMany(User, { foreignKey: 'roleId' });
 User.belongsTo(Role, { foreignKey: 'roleId' });
@@ -159,6 +161,10 @@ User.hasMany(SaleEvent, { foreignKey: 'createdBy', as: 'saleEvents' });
 SaleEvent.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
 SaleEvent.hasMany(Product, { foreignKey: 'saleEventId', as: 'products' });
 Product.belongsTo(SaleEvent, { foreignKey: 'saleEventId', as: 'saleEvent' });
+SaleEvent.hasMany(SaleEventRun, { foreignKey: 'saleEventId', as: 'runs' });
+SaleEventRun.belongsTo(SaleEvent, { foreignKey: 'saleEventId' });
+SaleEventRun.hasMany(SaleEventRunProduct, { foreignKey: 'runId', as: 'runProducts' });
+SaleEventRunProduct.belongsTo(SaleEventRun, { foreignKey: 'runId' });
 
 // Chat
 User.hasMany(ChatConversation, { foreignKey: 'customerId', as: 'customerConversations' });
@@ -182,5 +188,5 @@ module.exports = {
   ReturnRequest, Banner, SiteContent, SystemLog,
   WalletTransaction, WalletTopup, Notification,
   ChatConversation, ChatMessage,
-  Wishlist, SaleEvent,
+  Wishlist, SaleEvent, SaleEventRun, SaleEventRunProduct,
 };

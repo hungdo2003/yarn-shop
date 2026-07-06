@@ -1,4 +1,4 @@
-const { SaleEvent, User, Product, ProductImage, Category } = require('../models');
+const { SaleEvent, SaleEventRun, SaleEventRunProduct, User, Product, ProductImage, Category } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult } = require('../utils/helpers');
 const { log } = require('./log.controller');
@@ -9,6 +9,8 @@ const create = async (req, res) => {
     if (!name?.trim()) return res.status(400).json({ message: 'Vui lòng đặt tên sự kiện' });
     if (!discountPct || discountPct < 1 || discountPct > 99)
       return res.status(400).json({ message: '% giảm giá phải từ 1 đến 99' });
+    if (!saleStartDate || !saleEndDate)
+      return res.status(400).json({ message: 'Vui lòng chọn ngày bắt đầu và kết thúc' });
 
     const event = await SaleEvent.create({
       name: name.trim(),
@@ -26,9 +28,18 @@ const create = async (req, res) => {
 const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
-    const { search } = req.query;
+    const { status } = req.query;
     const where = {};
-    if (search) where.name = { [Op.iLike]: `%${search}%` };
+    const now = new Date();
+    if (status === 'upcoming') where.saleStartDate = { [Op.gt]: now };
+    else if (status === 'active') {
+      where[Op.and] = [
+        { [Op.or]: [{ saleStartDate: null }, { saleStartDate: { [Op.lte]: now } }] },
+        { [Op.or]: [{ saleEndDate: null }, { saleEndDate: { [Op.gte]: now } }] },
+      ];
+    } else if (status === 'ended') {
+      where.saleEndDate = { [Op.lt]: now };
+    }
 
     const { count, rows } = await SaleEvent.findAndCountAll({
       where,
@@ -50,6 +61,12 @@ const getById = async (req, res) => {
           model: Product, as: 'products',
           attributes: ['id', 'name', 'price', 'salePrice', 'saleStartDate', 'saleEndDate', 'status', 'thumbnailImage', 'averageRating', 'reviewCount'],
           include: [{ model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }],
+        },
+        {
+          model: SaleEventRun, as: 'runs',
+          include: [{ model: SaleEventRunProduct, as: 'runProducts', separate: true }],
+          separate: true,
+          order: [['createdAt', 'DESC']],
         },
       ],
     });
@@ -114,17 +131,72 @@ const removeProduct = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-const remove = async (req, res) => {
+const restartEvent = async (req, res) => {
   try {
     const event = await SaleEvent.findByPk(req.params.id);
     if (!event) return res.status(404).json({ message: 'Không tìm thấy sự kiện' });
 
+    const now = new Date();
+    if (!event.saleEndDate || new Date(event.saleEndDate) > now)
+      return res.status(400).json({ message: 'Sự kiện chưa kết thúc' });
+
+    const { saleStartDate, saleEndDate } = req.body;
+
+    // Snapshot current products
+    const currentProducts = await Product.findAll({
+      where: { saleEventId: event.id },
+      attributes: ['id', 'name', 'price', 'salePrice', 'thumbnailImage'],
+    });
+
+    // Archive current run to history
+    const run = await SaleEventRun.create({
+      saleEventId: event.id,
+      saleStartDate: event.saleStartDate,
+      saleEndDate: event.saleEndDate,
+      productCount: currentProducts.length,
+      discountPct: event.discountPct,
+    });
+
+    if (currentProducts.length) {
+      await SaleEventRunProduct.bulkCreate(currentProducts.map(p => ({
+        runId: run.id,
+        productId: p.id,
+        name: p.name,
+        price: p.price,
+        salePrice: p.salePrice,
+        thumbnailImage: p.thumbnailImage,
+      })));
+    }
+
+    // Update event with new dates
+    await event.update({
+      saleStartDate: saleStartDate || null,
+      saleEndDate: saleEndDate || null,
+    });
+
+    // Sync products' dates
     await Product.update(
-      { salePrice: null, saleStartDate: null, saleEndDate: null, saleEventId: null },
+      { saleStartDate: saleStartDate || null, saleEndDate: saleEndDate || null },
       { where: { saleEventId: event.id } }
     );
-    await event.destroy();
-    res.json({ message: 'Đã xóa sự kiện và hoàn tác giảm giá cho tất cả sản phẩm' });
+
+    await log(req.user?.id, req.user?.email, 'RESTART_SALE_EVENT', 'SaleEvent', event.id,
+      { name: event.name, saleStartDate, saleEndDate }, req);
+
+    res.json({ message: 'Đã khởi động lại sự kiện' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const closeEarly = async (req, res) => {
+  try {
+    const event = await SaleEvent.findByPk(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Không tìm thấy sự kiện' });
+    const now = new Date();
+    if (event.saleEndDate && new Date(event.saleEndDate) <= now)
+      return res.status(400).json({ message: 'Sự kiện đã kết thúc' });
+    await event.update({ saleEndDate: now });
+    await log(req.user?.id, req.user?.email, 'CLOSE_SALE_EVENT_EARLY', 'SaleEvent', event.id, { name: event.name }, req);
+    res.json({ message: 'Đã đóng sự kiện sớm' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -157,13 +229,29 @@ const getAvailableProducts = async (req, res) => {
 const getNonEventDiscounts = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
-    const { search } = req.query;
+    const { search, status } = req.query;
+    const now = new Date();
     const where = { salePrice: { [Op.ne]: null }, saleEventId: null };
     if (search) where.name = { [Op.iLike]: `%${search}%` };
+    if (status === 'upcoming') {
+      where.saleStartDate = { [Op.gt]: now };
+      where.terminatedAt = null;
+    } else if (status === 'active') {
+      where[Op.and] = [
+        { [Op.or]: [{ saleStartDate: null }, { saleStartDate: { [Op.lte]: now } }] },
+        { saleEndDate: { [Op.gt]: now } },
+        { terminatedAt: null },
+      ];
+    } else if (status === 'ended') {
+      where[Op.or] = [
+        { saleEndDate: { [Op.lte]: now } },
+        { terminatedAt: { [Op.ne]: null } },
+      ];
+    }
 
     const { count, rows } = await Product.findAndCountAll({
       where,
-      attributes: ['id', 'name', 'price', 'salePrice', 'saleStartDate', 'saleEndDate', 'status', 'thumbnailImage'],
+      attributes: ['id', 'name', 'price', 'salePrice', 'saleStartDate', 'saleEndDate', 'terminatedAt', 'status', 'thumbnailImage'],
       include: [{ model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }],
       order: [['updatedAt', 'DESC']],
       limit, offset, distinct: true,
@@ -172,13 +260,18 @@ const getNonEventDiscounts = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-const clearNonEventDiscount = async (req, res) => {
+const terminateNonEventDiscount = async (req, res) => {
   try {
-    const product = await Product.findOne({ where: { id: req.params.productId, saleEventId: null } });
-    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
-    await product.update({ salePrice: null, saleStartDate: null, saleEndDate: null });
-    res.json({ message: 'Đã xóa giảm giá' });
+    const product = await Product.findOne({
+      where: { id: req.params.productId, saleEventId: null, salePrice: { [Op.ne]: null }, terminatedAt: null },
+    });
+    if (!product) return res.status(404).json({ message: 'Không tìm thấy hoặc đã chấm dứt' });
+    const now = new Date();
+    if (product.saleEndDate && new Date(product.saleEndDate) <= now)
+      return res.status(400).json({ message: 'Giảm giá đã hết hạn tự nhiên' });
+    await product.update({ terminatedAt: now });
+    res.json({ message: 'Đã chấm dứt giảm giá' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { create, getAll, getById, addProducts, removeProduct, remove, getAvailableProducts, getNonEventDiscounts, clearNonEventDiscount };
+module.exports = { create, getAll, getById, addProducts, removeProduct, restartEvent, closeEarly, getAvailableProducts, getNonEventDiscounts, terminateNonEventDiscount };

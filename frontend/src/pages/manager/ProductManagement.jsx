@@ -68,6 +68,10 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.salePrice && (!form.saleStartDate || !form.saleEndDate)) {
+      toast.error('Vui lòng chọn ngày bắt đầu và kết thúc khuyến mãi');
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -120,11 +124,11 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
               <input type="number" value={form.salePrice} onChange={e => handleSalePriceChange(e.target.value)} className="input mt-1 text-base" placeholder="Để trống nếu không giảm giá" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Ngày bắt đầu KM <span className="text-gray-400 font-normal">(tuỳ chọn)</span></label>
+              <label className="text-sm font-medium text-gray-600">Ngày bắt đầu KM {form.salePrice && <span className="text-rose-500">*</span>}</label>
               <input type="date" value={form.saleStartDate} onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Ngày kết thúc KM <span className="text-gray-400 font-normal">(tuỳ chọn)</span></label>
+              <label className="text-sm font-medium text-gray-600">Ngày kết thúc KM {form.salePrice && <span className="text-rose-500">*</span>}</label>
               <input type="date" value={form.saleEndDate} onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))} className="input mt-1 text-base" />
             </div>
             {showPreview && (

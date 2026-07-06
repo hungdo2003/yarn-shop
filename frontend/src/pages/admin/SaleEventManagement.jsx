@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FiTag, FiSearch, FiTrash2, FiPlus, FiX, FiCalendar,
-  FiPackage, FiUser, FiChevronLeft, FiCheck, FiPercent
+  FiPackage, FiUser, FiChevronLeft, FiCheck, FiPercent, FiRefreshCw, FiClock
 } from 'react-icons/fi';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN') : '—';
 
@@ -27,6 +28,7 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOverride, setConfirmOverride] = useState(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -61,14 +63,14 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
 
     const withDiscount = products.filter(p => selected.has(p.id) && p.salePrice);
     if (withDiscount.length > 0) {
-      const names = withDiscount.slice(0, 3).map(p => p.name).join(', ');
-      const more = withDiscount.length > 3 ? ` và ${withDiscount.length - 3} sản phẩm khác` : '';
-      const ok = window.confirm(
-        `${withDiscount.length} sản phẩm đang có giảm giá thường sẽ bị xóa giảm giá cũ khi thêm vào sự kiện:\n\n${names}${more}\n\nBạn có chắc muốn tiếp tục?`
-      );
-      if (!ok) return;
+      setConfirmOverride(withDiscount);
+      return;
     }
+    await doSubmit();
+  };
 
+  const doSubmit = async () => {
+    setConfirmOverride(null);
     setSubmitting(true);
     try {
       const r = await api.post(`/sale-events/${event.id}/products`, { productIds: [...selected] });
@@ -205,6 +207,18 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
           </div>
         </div>
       </div>
+
+      {confirmOverride && (
+        <ConfirmModal
+          title="Ghi đè giảm giá lẻ?"
+          message={`${confirmOverride.length} sản phẩm đang có giảm giá lẻ. Giảm giá cũ sẽ bị thay thế bởi giá sự kiện.`}
+          confirmLabel="Tiếp tục thêm"
+          variant="warning"
+          onConfirm={doSubmit}
+          onCancel={() => setConfirmOverride(null)}
+          loading={submitting}
+        />
+      )}
     </div>
   );
 };
@@ -268,12 +282,12 @@ const CreateEventModal = ({ onClose, onCreate }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-gray-600 block mb-1.5">Ngày bắt đầu <span className="text-xs text-gray-400">(tuỳ chọn)</span></label>
-              <input type="date" value={form.saleStartDate} onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))} className="input text-sm" />
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Ngày bắt đầu <span className="text-rose-500">*</span></label>
+              <input type="date" required value={form.saleStartDate} onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))} className="input text-sm" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600 block mb-1.5">Ngày kết thúc <span className="text-xs text-gray-400">(tuỳ chọn)</span></label>
-              <input type="date" value={form.saleEndDate} onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))} className="input text-sm" />
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Ngày kết thúc <span className="text-rose-500">*</span></label>
+              <input type="date" required value={form.saleEndDate} onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))} className="input text-sm" />
             </div>
           </div>
           {form.discountPct && (
@@ -293,13 +307,171 @@ const CreateEventModal = ({ onClose, onCreate }) => {
   );
 };
 
+const RUN_PAGE_SIZE = 10;
+
+/* ── Run history (always expanded, per-run pagination) ── */
+const RunHistory = ({ runs }) => {
+  const [pages, setPages] = useState({});
+  const getPage = (id) => pages[id] || 1;
+  const setPage = (id, p) => setPages(prev => ({ ...prev, [id]: p }));
+
+  return (
+    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mt-5">
+      <div className="flex items-center gap-2 px-5 py-4 border-b">
+        <FiClock size={14} className="text-gray-400" />
+        <p className="font-semibold text-gray-700 text-sm">Lịch sử chạy</p>
+        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{runs.length} lần</span>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {runs.map((run, i) => {
+          const products = run.runProducts || [];
+          const page = getPage(run.id);
+          const totalPages = Math.ceil(products.length / RUN_PAGE_SIZE);
+          const pageItems = products.slice((page - 1) * RUN_PAGE_SIZE, page * RUN_PAGE_SIZE);
+
+          return (
+            <div key={run.id} className="p-5">
+              {/* Run header */}
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-7 h-7 rounded-full bg-rose-50 text-rose-500 text-xs flex items-center justify-center font-bold shrink-0">
+                  {runs.length - i}
+                </span>
+                <div className="flex items-center gap-1.5 text-gray-600 text-sm">
+                  <FiCalendar size={12} className="text-gray-400" />
+                  {fmtDate(run.saleStartDate)} → {fmtDate(run.saleEndDate)}
+                </div>
+                <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-full">-{run.discountPct}%</span>
+                <span className="text-xs text-gray-400 ml-auto">{run.productCount} sản phẩm</span>
+              </div>
+
+              {/* Product table */}
+              {!products.length ? (
+                <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">Không có dữ liệu sản phẩm</p>
+              ) : (
+                <>
+                  <div className="rounded-xl border overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="text-xs text-gray-500">
+                          <th className="text-left px-4 py-2.5 font-semibold">Sản phẩm</th>
+                          <th className="text-right px-4 py-2.5 font-semibold">Giá gốc</th>
+                          <th className="text-right px-4 py-2.5 font-semibold text-rose-500">Giá KM</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {pageItems.map(p => (
+                          <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
+                                <span className="text-gray-700 font-medium">{p.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-gray-400 text-xs">{Number(p.price).toLocaleString('vi-VN')}đ</td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-rose-600 text-xs">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {totalPages > 1 && (
+                    <Pagination
+                      pagination={{ page, totalPages }}
+                      onPageChange={p => setPage(run.id, p)}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ── Restart event modal ── */
+const RestartEventModal = ({ event, onClose, onRestarted }) => {
+  const [form, setForm] = useState({ saleStartDate: '', saleEndDate: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post(`/sale-events/${event.id}/restart`, {
+        saleStartDate: form.saleStartDate || undefined,
+        saleEndDate: form.saleEndDate || undefined,
+      });
+      toast.success('Đã khởi động lại sự kiện');
+      onRestarted();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Thất bại');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+            <FiRefreshCw size={15} className="text-rose-500" /> Chạy lại sự kiện
+          </h3>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500">
+            <FiX size={16} />
+          </button>
+        </div>
+
+        <div className="px-6 py-4 bg-rose-50 border-b border-rose-100 text-sm text-rose-700">
+          <strong>{event.name}</strong> · Giảm <strong>{event.discountPct}%</strong> · {event.products?.length ?? 0} sản phẩm
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <p className="text-sm text-gray-500">Đặt thời gian mới cho lần chạy tiếp theo. Lần chạy cũ sẽ được lưu vào lịch sử.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Ngày bắt đầu</label>
+              <input
+                type="date"
+                value={form.saleStartDate}
+                onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))}
+                className="input text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Ngày kết thúc</label>
+              <input
+                type="date"
+                value={form.saleEndDate}
+                onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))}
+                className="input text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">Huỷ</button>
+            <button type="submit" disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-60">
+              <FiRefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Đang xử lý...' : 'Chạy lại'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 /* ── Event detail view ── */
 const EventDetail = ({ eventId, onBack }) => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showRestart, setShowRestart] = useState(false);
   const [removing, setRemoving] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [confirm, setConfirm] = useState(null);
 
   const fetchEvent = useCallback(async () => {
     setLoading(true);
@@ -312,29 +484,43 @@ const EventDetail = ({ eventId, onBack }) => {
 
   useEffect(() => { fetchEvent(); }, [fetchEvent]);
 
-  const handleRemoveProduct = async (productId) => {
-    if (!window.confirm('Xóa sản phẩm khỏi sự kiện? Giá sẽ được hoàn tác.')) return;
-    setRemoving(productId);
-    try {
-      await api.delete(`/sale-events/${eventId}/products/${productId}`);
-      toast.success('Đã xóa sản phẩm khỏi sự kiện');
-      fetchEvent();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Xóa thất bại');
-    } finally { setRemoving(null); }
+  const handleRemoveProduct = (productId) => {
+    setConfirm({
+      title: 'Xóa sản phẩm khỏi sự kiện',
+      message: 'Giá sản phẩm sẽ được hoàn về giá gốc.',
+      confirmLabel: 'Xóa',
+      onConfirm: async () => {
+        setConfirm(null);
+        setRemoving(productId);
+        try {
+          await api.delete(`/sale-events/${eventId}/products/${productId}`);
+          toast.success('Đã xóa sản phẩm khỏi sự kiện');
+          fetchEvent();
+        } catch (err) {
+          toast.error(err?.response?.data?.message || 'Xóa thất bại');
+        } finally { setRemoving(null); }
+      },
+    });
   };
 
-  const handleDeleteEvent = async () => {
-    if (!window.confirm(`Xóa sự kiện "${event.name}"? Tất cả sản phẩm sẽ hoàn về giá gốc.`)) return;
-    setDeleting(true);
-    try {
-      await api.delete(`/sale-events/${eventId}`);
-      toast.success('Đã xóa sự kiện');
-      onBack(true);
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Xóa thất bại');
-      setDeleting(false);
-    }
+  const handleCloseEarly = () => {
+    setConfirm({
+      title: `Đóng sớm sự kiện "${event?.name}"?`,
+      message: 'Sự kiện sẽ kết thúc ngay lập tức. Sản phẩm vẫn giữ giá khuyến mãi cho đến khi được xóa khỏi sự kiện.',
+      confirmLabel: 'Đóng sự kiện',
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirm(null);
+        setClosing(true);
+        try {
+          await api.patch(`/sale-events/${eventId}/close`);
+          toast.success('Đã đóng sự kiện sớm');
+          fetchEvent();
+        } catch (err) {
+          toast.error(err?.response?.data?.message || 'Thất bại');
+        } finally { setClosing(false); }
+      },
+    });
   };
 
   if (loading) return <div className="text-center py-20 text-gray-400">Đang tải...</div>;
@@ -362,13 +548,24 @@ const EventDetail = ({ eventId, onBack }) => {
               </p>
             )}
           </div>
-          <button
-            onClick={handleDeleteEvent}
-            disabled={deleting}
-            className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
-          >
-            <FiTrash2 size={13} /> {deleting ? 'Đang xóa...' : 'Xóa sự kiện'}
-          </button>
+          <div className="flex items-center gap-2">
+            {badge.label === 'Đã kết thúc' ? (
+              <button
+                onClick={() => setShowRestart(true)}
+                className="flex items-center gap-1.5 text-sm text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition-all"
+              >
+                <FiRefreshCw size={13} /> Chạy lại
+              </button>
+            ) : (
+              <button
+                onClick={handleCloseEarly}
+                disabled={closing}
+                className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-700 hover:bg-orange-50 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+              >
+                <FiX size={13} /> {closing ? 'Đang đóng...' : 'Đóng sớm'}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-4">
@@ -459,11 +656,35 @@ const EventDetail = ({ eventId, onBack }) => {
         )}
       </div>
 
+      {/* Run history */}
+      {event.runs?.length > 0 && (
+        <RunHistory runs={[...event.runs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))} />
+      )}
+
+      {showRestart && (
+        <RestartEventModal
+          event={event}
+          onClose={() => setShowRestart(false)}
+          onRestarted={() => { setShowRestart(false); fetchEvent(); }}
+        />
+      )}
+
       {showAddModal && (
         <AddProductsModal
           event={event}
           onClose={() => setShowAddModal(false)}
           onAdded={() => { setShowAddModal(false); fetchEvent(); }}
+        />
+      )}
+
+      {confirm && (
+        <ConfirmModal
+          title={confirm.title}
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel ?? 'Xác nhận'}
+          variant={confirm.variant ?? 'danger'}
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
         />
       )}
     </div>
@@ -476,35 +697,62 @@ const NonEventDiscounts = () => {
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [clearing, setClearing] = useState(null);
+  const [terminating, setTerminating] = useState(null);
+  const [confirmTerminate, setConfirmTerminate] = useState(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get('/sale-events/non-event-discounts', { params: { page: pagination.page, limit: 12, search } });
+      const params = { page: pagination.page, limit: 12, search };
+      if (statusFilter !== 'all') params.status = statusFilter;
+      const r = await api.get('/sale-events/non-event-discounts', { params });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
-  }, [pagination.page, search]);
+  }, [pagination.page, search, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleClear = async (product) => {
-    if (!window.confirm(`Xóa giảm giá của "${product.name}"?`)) return;
-    setClearing(product.id);
-    try {
-      await api.delete(`/sale-events/non-event-discounts/${product.id}`);
-      toast.success('Đã xóa giảm giá');
-      fetchData();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Xóa thất bại');
-    } finally { setClearing(null); }
+  const handleTerminate = (product) => {
+    setConfirmTerminate({
+      product,
+      onConfirm: async () => {
+        setConfirmTerminate(null);
+        setTerminating(product.id);
+        try {
+          await api.patch(`/sale-events/non-event-discounts/${product.id}/terminate`);
+          toast.success('Đã chấm dứt giảm giá');
+          fetchData();
+        } catch (err) {
+          toast.error(err?.response?.data?.message || 'Thất bại');
+        } finally { setTerminating(null); }
+      },
+    });
   };
+
+  const isEnded = (p) => p.terminatedAt || (p.saleEndDate && new Date(p.saleEndDate) <= new Date());
 
   return (
     <div>
+      {/* Status filter */}
+      <div className="flex items-center gap-2 mb-4">
+        {STATUS_FILTERS.map(f => (
+          <button
+            key={f.key}
+            onClick={() => { setStatusFilter(f.key); setPagination(p => ({ ...p, page: 1 })); }}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              statusFilter === f.key
+                ? 'bg-rose-500 text-white border-rose-500'
+                : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600'
+            }`}
+          >{f.label}</button>
+        ))}
+      </div>
+
+      {/* Search */}
       <div className="flex gap-3 mb-4">
         <div className="relative flex-1">
           <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -520,7 +768,7 @@ const NonEventDiscounts = () => {
       </div>
 
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b">
+        <div className="px-5 py-3 border-b">
           <span className="text-sm text-gray-500">
             Tổng: <strong>{pagination.total}</strong> sản phẩm
             {pagination.totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {pagination.page}/{pagination.totalPages}</span>}
@@ -531,52 +779,75 @@ const NonEventDiscounts = () => {
         ) : !data?.items?.length ? (
           <div className="text-center py-14 text-gray-400">
             <FiTag size={32} className="mx-auto mb-2 opacity-25" />
-            <p>Không có sản phẩm nào đang giảm giá lẻ</p>
+            <p>Không có sản phẩm nào</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-600">Giá gốc</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-600 text-rose-600">Giá KM</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-600">Giảm</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-600">Hết hạn</th>
-                <th className="w-12"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {data.items.map(p => {
-                const pct = Math.round((1 - parseFloat(p.salePrice) / parseFloat(p.price)) * 100);
-                return (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-10 h-10 rounded-lg object-cover" />}
-                        <p className="font-medium text-gray-800">{p.name}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-500">{Number(p.price).toLocaleString('vi-VN')}đ</td>
-                    <td className="px-4 py-3 text-right font-semibold text-rose-600">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-full">-{pct}%</span>
-                    </td>
-                    <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(p.saleEndDate)}</td>
-                    <td className="px-3 py-3 text-center">
-                      <button
-                        onClick={() => handleClear(p)}
-                        disabled={clearing === p.id}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-50 mx-auto"
-                        title="Xóa giảm giá"
-                      >
-                        <FiTrash2 size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-600">Giá gốc</th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-rose-600">Giá KM</th>
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600">Giảm</th>
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600">Ngày bắt đầu</th>
+                  <th className="text-center px-4 py-3 font-semibold text-gray-600">Ngày kết thúc</th>
+                  {statusFilter === 'ended' && (
+                    <th className="text-center px-4 py-3 font-semibold text-gray-600">Ngày chấm dứt</th>
+                  )}
+                  {statusFilter !== 'ended' && <th className="w-24 px-2 py-3"></th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {data.items.map(p => {
+                  const pct = Math.round((1 - parseFloat(p.salePrice) / parseFloat(p.price)) * 100);
+                  const ended = isEnded(p);
+                  return (
+                    <tr key={p.id} className={`transition-colors ${ended ? 'opacity-60' : 'hover:bg-gray-50'}`}>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-9 h-9 rounded-lg object-cover" />}
+                          <div>
+                            <p className="font-medium text-gray-800">{p.name}</p>
+                            {p.terminatedAt && (
+                              <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded-full">
+                                Kết thúc sớm
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-500">{Number(p.price).toLocaleString('vi-VN')}đ</td>
+                      <td className="px-4 py-3 text-right font-semibold text-rose-600">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-full">-{pct}%</span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(p.saleStartDate)}</td>
+                      <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(p.saleEndDate)}</td>
+                      {statusFilter === 'ended' && (
+                        <td className="px-4 py-3 text-center text-xs text-orange-500 font-medium">
+                          {p.terminatedAt ? fmtDate(p.terminatedAt) : '—'}
+                        </td>
+                      )}
+                      {statusFilter !== 'ended' && (
+                        <td className="px-3 py-3 text-center">
+                          {!ended && (
+                            <button
+                              onClick={() => handleTerminate(p)}
+                              disabled={terminating === p.id}
+                              className="text-xs px-3 py-1.5 rounded-lg text-orange-500 border border-orange-200 hover:bg-orange-50 transition-all disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {terminating === p.id ? '...' : 'Chấm dứt'}
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -584,17 +855,34 @@ const NonEventDiscounts = () => {
         pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
         onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
       />
+
+      {confirmTerminate && (
+        <ConfirmModal
+          title="Chấm dứt giảm giá?"
+          message={`Giảm giá của "${confirmTerminate.product.name}" sẽ kết thúc ngay lập tức.`}
+          confirmLabel="Chấm dứt"
+          variant="warning"
+          onConfirm={confirmTerminate.onConfirm}
+          onCancel={() => setConfirmTerminate(null)}
+        />
+      )}
     </div>
   );
 };
 
 /* ── Main page ── */
+const STATUS_FILTERS = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'upcoming', label: 'Sắp diễn ra' },
+  { key: 'active', label: 'Đang chạy' },
+  { key: 'ended', label: 'Đã kết thúc' },
+];
+
 const SaleEventManagement = () => {
   const [tab, setTab] = useState('events');
   const [data, setData] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -602,12 +890,14 @@ const SaleEventManagement = () => {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get('/sale-events', { params: { page: pagination.page, limit: 12, search } });
+      const params = { page: pagination.page, limit: 12 };
+      if (statusFilter !== 'all') params.status = statusFilter;
+      const r = await api.get('/sale-events', { params });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
-  }, [pagination.page, search]);
+  }, [pagination.page, statusFilter]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
@@ -656,31 +946,23 @@ const SaleEventManagement = () => {
 
       {tab === 'events' && (
       <>
-      {/* Search */}
-      <div className="flex gap-3 mb-5">
-        <div className="relative flex-1">
-          <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); } }}
-            placeholder="Tìm theo tên sự kiện..."
-            className="input pl-9 text-sm w-full"
-          />
-        </div>
-        <button
-          onClick={() => { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); }}
-          className="btn-primary px-5 text-sm"
-        >Tìm</button>
+      {/* Status filter */}
+      <div className="flex items-center gap-2 mb-5">
+        {STATUS_FILTERS.map(f => (
+          <button
+            key={f.key}
+            onClick={() => { setStatusFilter(f.key); setPagination(p => ({ ...p, page: 1 })); }}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              statusFilter === f.key
+                ? 'bg-rose-500 text-white border-rose-500'
+                : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600'
+            }`}
+          >{f.label}</button>
+        ))}
+        {data?.pagination && (
+          <span className="ml-auto text-sm text-gray-400">{pagination.total} sự kiện</span>
+        )}
       </div>
-
-      {/* Total count */}
-      {data?.pagination && (
-        <p className="text-sm text-gray-500 mb-3">
-          Tổng: <strong>{pagination.total}</strong> sự kiện
-          {pagination.totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {pagination.page}/{pagination.totalPages}</span>}
-        </p>
-      )}
 
       {/* Event cards */}
       {loading ? (

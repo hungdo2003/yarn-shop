@@ -22,6 +22,7 @@ const Product = sequelize.define('Product', {
   isCustomizable: { type: DataTypes.BOOLEAN, defaultValue: false },
   saleStartDate: { type: DataTypes.DATE },
   saleEndDate: { type: DataTypes.DATE },
+  terminatedAt: { type: DataTypes.DATE, allowNull: true },
   saleEventId: { type: DataTypes.INTEGER, allowNull: true },
 });
 
