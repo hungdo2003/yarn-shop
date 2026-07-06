@@ -91,10 +91,11 @@ const getProductReviews = async (req, res) => {
 const adminGetReviews = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
-    const { rating, isApproved, search } = req.query;
+    const { rating, isApproved, search, productId } = req.query;
     const where = {};
     if (rating) where.rating = parseInt(rating);
     if (isApproved !== undefined && isApproved !== '') where.isApproved = isApproved === 'true';
+    if (productId) where.productId = parseInt(productId);
 
     const productWhere = search ? { name: { [Op.iLike]: `%${search}%` } } : undefined;
 
