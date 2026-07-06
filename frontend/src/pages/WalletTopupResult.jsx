@@ -29,8 +29,8 @@ export default function WalletTopupResult() {
   const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-sm w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 xs:p-8 text-center">
         {status === 'polling' && (
           <>
             <div className="w-14 h-14 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -67,11 +67,11 @@ export default function WalletTopupResult() {
           </>
         )}
         <div className="mt-6 space-y-2">
-          <Link to="/wallet" className="block w-full bg-green-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-green-600 transition">
+          <Link to="/wallet" className="block w-full bg-green-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-green-600 active:scale-95 transition">
             Về ví của tôi
           </Link>
           {(status === 'failed' || status === 'cancelled') && (
-            <Link to="/wallet" className="block w-full border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50 transition">
+            <Link to="/wallet" className="block w-full border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50 active:scale-95 transition">
               Thử lại
             </Link>
           )}

@@ -161,7 +161,7 @@ const Checkout = ({ guest }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-6 xs:py-8 pb-28 md:pb-8">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Thanh Toán</h1>
       {checkoutMode === 'buynow' && (
         <div className="bg-rose-50 border border-rose-200 rounded-lg px-4 py-2 text-sm text-rose-700 mb-4">
@@ -175,21 +175,21 @@ const Checkout = ({ guest }) => {
       )}
       {guest && <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm text-amber-800 mb-6">Bạn đang đặt hàng với tư cách khách. <a href="/login" className="underline font-medium">Đăng nhập</a> để theo dõi đơn hàng dễ hơn.</div>}
 
-      <form onSubmit={handleSubmit}>
+      <form id="checkout-form" onSubmit={handleSubmit}>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-5">
             {/* Address selection — required */}
             <div className="bg-white rounded-xl shadow p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Địa Chỉ Giao Hàng</h3>
-                <a href="/addresses" target="_blank" rel="noreferrer" className="text-xs text-rose-500 hover:underline">+ Thêm địa chỉ</a>
+                <a href="/addresses" target="_blank" rel="noreferrer" className="text-xs text-rose-500 hover:underline active:scale-95 transition">+ Thêm địa chỉ</a>
               </div>
               {!guest && addresses.length === 0 ? (
                 <div className="border-2 border-dashed border-rose-300 rounded-xl p-6 text-center">
                   <p className="text-3xl mb-2">📍</p>
                   <p className="text-gray-600 font-medium text-sm mb-1">Bạn chưa có địa chỉ giao hàng</p>
                   <p className="text-gray-400 text-xs mb-3">Vui lòng thêm địa chỉ trước khi đặt hàng</p>
-                  <a href="/addresses" className="inline-block bg-rose-500 text-white text-sm px-5 py-2 rounded-xl font-semibold hover:bg-rose-600 transition">
+                  <a href="/addresses" className="inline-block bg-rose-500 text-white text-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition">
                     Thêm địa chỉ ngay
                   </a>
                 </div>
@@ -207,11 +207,11 @@ const Checkout = ({ guest }) => {
                           className="mt-0.5 accent-rose-500 shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-gray-800">{a.fullName}</p>
-                            <span className="text-sm text-gray-400">|</span>
-                            <p className="text-sm text-gray-600">{a.phone}</p>
-                            {a.isDefault && <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-bold">Mặc định</span>}
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5">
+                            <p className="text-sm font-semibold text-gray-800 min-w-0 truncate">{a.fullName}</p>
+                            <span className="text-sm text-gray-400 hidden xs:inline">|</span>
+                            <p className="text-sm text-gray-600 min-w-0">{a.phone}</p>
+                            {a.isDefault && <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-bold shrink-0">Mặc định</span>}
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5 truncate">{addrStr}</p>
                         </div>
@@ -225,26 +225,26 @@ const Checkout = ({ guest }) => {
                 <div className="grid sm:grid-cols-2 gap-4 mt-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Họ tên người nhận *</label>
-                    <input value={form.shippingName} onChange={e => setForm(f => ({ ...f, shippingName: e.target.value }))} required className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input value={form.shippingName} onChange={e => setForm(f => ({ ...f, shippingName: e.target.value }))} required className="w-full border rounded-lg px-3 py-2 text-base" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Số điện thoại *</label>
-                    <input value={form.shippingPhone} onChange={e => setForm(f => ({ ...f, shippingPhone: e.target.value }))} required className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input value={form.shippingPhone} onChange={e => setForm(f => ({ ...f, shippingPhone: e.target.value }))} required className="w-full border rounded-lg px-3 py-2 text-base" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">Email</label>
-                    <input type="email" value={form.guestEmail} onChange={e => setForm(f => ({ ...f, guestEmail: e.target.value }))} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input type="email" value={form.guestEmail} onChange={e => setForm(f => ({ ...f, guestEmail: e.target.value }))} className="w-full border rounded-lg px-3 py-2 text-base" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">Địa chỉ *</label>
-                    <textarea value={form.shippingAddress} onChange={e => setForm(f => ({ ...f, shippingAddress: e.target.value }))} required rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none" />
+                    <textarea value={form.shippingAddress} onChange={e => setForm(f => ({ ...f, shippingAddress: e.target.value }))} required rows={2} className="w-full border rounded-lg px-3 py-2 text-base resize-none" />
                   </div>
                 </div>
               )}
               {/* Note always available */}
               <div className="mt-3">
                 <label className="block text-xs text-gray-500 mb-1">Ghi chú đơn hàng</label>
-                <input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Yêu cầu đặc biệt, ghi chú giao hàng..." className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Yêu cầu đặc biệt, ghi chú giao hàng..." className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
             </div>
 
@@ -255,16 +255,16 @@ const Checkout = ({ guest }) => {
                 {SHIPPING_METHODS.map(m => {
                   const actualFee = m.freeThreshold && subtotal >= m.freeThreshold ? 0 : m.fee;
                   return (
-                    <label key={m.value} className={`flex items-center justify-between border-2 rounded-xl p-4 cursor-pointer transition ${shippingMethod === m.value ? 'border-rose-400 bg-rose-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="shipping" value={m.value} checked={shippingMethod === m.value} onChange={() => setShippingMethod(m.value)} className="accent-rose-500" />
-                        <div>
+                    <label key={m.value} className={`flex items-center justify-between gap-3 border-2 rounded-xl p-3 xs:p-4 cursor-pointer transition active:scale-95 ${shippingMethod === m.value ? 'border-rose-400 bg-rose-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <input type="radio" name="shipping" value={m.value} checked={shippingMethod === m.value} onChange={() => setShippingMethod(m.value)} className="accent-rose-500 shrink-0" />
+                        <div className="min-w-0">
                           <p className="font-medium text-sm">{m.label}</p>
                           <p className="text-xs text-gray-500">{m.desc}</p>
                           {m.freeThreshold && <p className="text-xs text-green-600">Miễn phí khi đơn từ {fmt(m.freeThreshold)}</p>}
                         </div>
                       </div>
-                      <span className={`font-semibold text-sm ${actualFee === 0 ? 'text-green-600' : 'text-gray-800'}`}>{actualFee === 0 ? 'Miễn phí' : fmt(actualFee)}</span>
+                      <span className={`font-semibold text-sm shrink-0 ${actualFee === 0 ? 'text-green-600' : 'text-gray-800'}`}>{actualFee === 0 ? 'Miễn phí' : fmt(actualFee)}</span>
                     </label>
                   );
                 })}
@@ -277,22 +277,22 @@ const Checkout = ({ guest }) => {
                 <h3 className="font-semibold mb-3">Phương Thức Thanh Toán</h3>
                 <div className="space-y-3">
                   {/* Wallet */}
-                  <label className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition ${paymentMethod === 'wallet' ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="payment" value="wallet" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="accent-green-500" />
-                    <span className="text-xl">💰</span>
-                    <div className="flex-1">
+                  <label className={`flex items-center gap-3 border-2 rounded-xl p-3 xs:p-4 cursor-pointer transition active:scale-95 ${paymentMethod === 'wallet' ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="payment" value="wallet" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="accent-green-500 shrink-0" />
+                    <span className="text-xl shrink-0">💰</span>
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-gray-800">Ví YarnShop</p>
                       <p className="text-xs text-gray-500">Số dư: <span className={`font-bold ${walletBalance >= total ? 'text-green-600' : 'text-red-500'}`}>{walletBalance.toLocaleString('vi-VN')}đ</span></p>
                     </div>
                     {walletBalance < total && (
-                      <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Không đủ</span>
+                      <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full shrink-0">Không đủ</span>
                     )}
                   </label>
                   {/* PayOS */}
-                  <label className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition ${paymentMethod === 'payos' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="payment" value="payos" checked={paymentMethod === 'payos'} onChange={() => setPaymentMethod('payos')} className="accent-blue-500" />
-                    <span className="text-xl">💳</span>
-                    <div>
+                  <label className={`flex items-center gap-3 border-2 rounded-xl p-3 xs:p-4 cursor-pointer transition active:scale-95 ${paymentMethod === 'payos' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="payment" value="payos" checked={paymentMethod === 'payos'} onChange={() => setPaymentMethod('payos')} className="accent-blue-500 shrink-0" />
+                    <span className="text-xl shrink-0">💳</span>
+                    <div className="min-w-0">
                       <p className="font-semibold text-sm text-blue-800">PayOS — Trực tuyến</p>
                       <p className="text-xs text-blue-600">Thẻ ATM, Visa/Mastercard, QR</p>
                     </div>
@@ -326,8 +326,8 @@ const Checkout = ({ guest }) => {
             <div className="bg-white rounded-xl shadow p-5">
               <h3 className="font-semibold mb-3">Mã giảm giá</h3>
               <div className="flex gap-2 mb-3">
-                <input value={voucherCode} onChange={e => setVoucherCode(e.target.value.toUpperCase())} placeholder="Nhập mã..." className="flex-1 border rounded-lg px-3 py-2 text-sm" />
-                <button type="button" onClick={applyVoucher} className="bg-gray-800 text-white px-3 rounded-lg text-sm hover:bg-gray-900">Áp dụng</button>
+                <input value={voucherCode} onChange={e => setVoucherCode(e.target.value.toUpperCase())} placeholder="Nhập mã..." className="flex-1 min-w-0 border rounded-lg px-3 py-2 text-base" />
+                <button type="button" onClick={applyVoucher} className="bg-gray-800 text-white px-3 py-2.5 rounded-lg text-sm hover:bg-gray-900 active:scale-95 transition shrink-0">Áp dụng</button>
               </div>
               {voucher && <p className="text-green-600 text-xs">✓ Giảm: -{fmt(discountAmt)}</p>}
             </div>
@@ -369,7 +369,7 @@ const Checkout = ({ guest }) => {
                           max={maxRedeemable}
                           value={pointsToRedeem}
                           onChange={e => setPointsToRedeem(Math.min(Number(e.target.value), maxRedeemable))}
-                          className="w-16 text-sm text-center focus:outline-none"
+                          className="w-16 text-base text-center focus:outline-none"
                         />
                         <span className="text-xs text-gray-400">đ/20%</span>
                       </div>
@@ -399,10 +399,11 @@ const Checkout = ({ guest }) => {
                   </div>
                 )}
               </div>
+              {/* Desktop submit — mobile uses sticky bottom bar */}
               <button
                 type="submit"
                 disabled={loading || !cartItems.length || (!guest && !form.shippingAddress) || (!guest && addresses.length === 0) || (paymentMethod === 'wallet' && walletBalance < total)}
-                className="w-full bg-rose-500 text-white py-3.5 rounded-xl font-bold hover:bg-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="hidden md:flex w-full bg-rose-500 text-white py-3.5 rounded-xl font-bold hover:bg-rose-600 active:scale-95 transition disabled:opacity-50 items-center justify-center gap-2"
               >
                 {loading ? '⏳ Đang xử lý...' : paymentMethod === 'wallet'
                   ? <><span>💰</span> Đặt hàng & Thanh toán bằng ví ({fmt(total)})</>
@@ -415,6 +416,24 @@ const Checkout = ({ guest }) => {
           </div>
         </div>
       </form>
+
+      {/* Mobile sticky checkout bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 pt-3 pb-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500 min-w-0 truncate">{cartItems.length} sản phẩm</span>
+          <span className="font-bold text-rose-500 text-sm shrink-0 ml-2">{fmt(total)}</span>
+        </div>
+        <button
+          type="submit"
+          form="checkout-form"
+          disabled={loading || !cartItems.length || (!guest && !form.shippingAddress) || (!guest && addresses.length === 0) || (paymentMethod === 'wallet' && walletBalance < total)}
+          className="w-full bg-rose-500 text-white py-3.5 rounded-xl font-bold hover:bg-rose-600 active:scale-95 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+        >
+          {loading ? '⏳ Đang xử lý...' : paymentMethod === 'wallet'
+            ? <><span>💰</span> Đặt hàng & thanh toán ví</>
+            : <><span>💳</span> Đặt hàng & thanh toán PayOS</>}
+        </button>
+      </div>
     </div>
   );
 };

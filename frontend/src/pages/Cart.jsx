@@ -31,7 +31,7 @@ const Cart = () => {
       <FiShoppingCart size={60} className="mx-auto text-gray-300 mb-4" />
       <h2 className="text-xl font-bold text-gray-700 mb-2">Giỏ hàng trống</h2>
       <p className="text-gray-500 text-sm mb-6">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
-      <Link to="/products" className="bg-rose-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-rose-600 transition">Mua sắm ngay</Link>
+      <Link to="/products" className="bg-rose-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition inline-block">Mua sắm ngay</Link>
     </div>
   );
 
@@ -84,12 +84,12 @@ const Cart = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Giỏ Hàng <span className="text-gray-400 font-normal text-lg">({items.length} sản phẩm)</span>
+    <div className="max-w-5xl mx-auto px-4 py-6 xs:py-8 pb-32 md:pb-8">
+      <h1 className="text-xl xs:text-2xl font-bold text-gray-800 mb-4 xs:mb-6">
+        Giỏ Hàng <span className="text-gray-400 font-normal text-base xs:text-lg">({items.length} sản phẩm)</span>
       </h1>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 xs:gap-6">
         <div className="md:col-span-2 space-y-3">
           {/* Select All row */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-3 flex items-center gap-3">
@@ -99,58 +99,76 @@ const Cart = () => {
               onChange={toggleAll}
               className="w-4 h-4 accent-rose-500 cursor-pointer"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-700 min-w-0 truncate">
               Chọn tất cả ({items.length} sản phẩm)
             </span>
             {selectedItems.length > 0 && !allSelected && (
-              <span className="text-xs text-gray-400 ml-auto">Đã chọn {selectedItems.length}</span>
+              <span className="text-xs text-gray-400 ml-auto shrink-0">Đã chọn {selectedItems.length}</span>
             )}
           </div>
 
           {items.map(item => (
-            <div key={item.id} className={`bg-white rounded-2xl shadow-sm border transition-all p-4 flex gap-3 items-center ${
+            <div key={item.id} className={`bg-white rounded-2xl shadow-sm border transition-all p-3 xs:p-4 ${
               updatingId === item.id ? 'opacity-60' : ''
             } ${selected.has(item.id) ? 'border-rose-200 bg-rose-50/30' : 'border-gray-100'}`}>
-              <input
-                type="checkbox"
-                checked={selected.has(item.id)}
-                onChange={() => toggleItem(item.id)}
-                className="w-4 h-4 accent-rose-500 cursor-pointer shrink-0"
-              />
-              <Link to={`/products/${item.Product?.slug}`} className="shrink-0">
-                {item.Product?.thumbnailImage
-                  ? <img src={item.Product.thumbnailImage} alt={item.Product?.name} className="w-20 h-20 object-cover rounded-xl" />
-                  : <div className="w-20 h-20 bg-rose-50 rounded-xl flex items-center justify-center text-3xl">🧶</div>}
-              </Link>
-              <div className="flex-1 min-w-0">
-                <Link to={`/products/${item.Product?.slug}`} className="font-semibold text-gray-800 hover:text-rose-500 line-clamp-1 transition">
-                  {item.Product?.name}
+              {/* Top row: checkbox + image + product info + delete */}
+              <div className="flex gap-2 xs:gap-3 items-start">
+                <input
+                  type="checkbox"
+                  checked={selected.has(item.id)}
+                  onChange={() => toggleItem(item.id)}
+                  className="w-4 h-4 accent-rose-500 cursor-pointer shrink-0 mt-1"
+                />
+                <Link to={`/products/${item.Product?.slug}`} className="shrink-0 active:scale-95 transition">
+                  {item.Product?.thumbnailImage
+                    ? <img src={item.Product.thumbnailImage} alt={item.Product?.name} className="w-16 h-16 xs:w-20 xs:h-20 object-cover rounded-xl" />
+                    : <div className="w-16 h-16 xs:w-20 xs:h-20 bg-rose-50 rounded-xl flex items-center justify-center text-2xl xs:text-3xl">🧶</div>}
                 </Link>
-                {item.Product?.color && (
-                  <p className="text-xs text-gray-400 mt-0.5">Màu: {item.Product.color}</p>
-                )}
-                <p className="text-rose-500 font-bold mt-1">{formatCurrency(item.price)}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => handleUpdate(item, item.quantity - 1)} disabled={!!updatingId} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 transition">
-                  <FiMinus size={12} />
+                <div className="flex-1 min-w-0">
+                  <Link to={`/products/${item.Product?.slug}`} className="font-semibold text-gray-800 hover:text-rose-500 line-clamp-2 xs:line-clamp-1 text-sm xs:text-base transition block">
+                    {item.Product?.name}
+                  </Link>
+                  {item.Product?.color && (
+                    <p className="text-xs text-gray-400 mt-0.5">Màu: {item.Product.color}</p>
+                  )}
+                  <p className="text-rose-500 font-bold text-sm mt-1">{formatCurrency(item.price)}</p>
+                </div>
+                {/* Delete — 44px touch target */}
+                <button
+                  onClick={() => handleRemove(item)}
+                  className="w-11 h-11 flex items-center justify-center text-gray-300 hover:text-red-500 active:scale-95 transition shrink-0"
+                >
+                  <FiTrash2 size={16} />
                 </button>
-                <span className="w-8 text-center font-semibold text-sm">{item.quantity}</span>
-                <button onClick={() => handleUpdate(item, item.quantity + 1)} disabled={!!updatingId} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 transition">
-                  <FiPlus size={12} />
-                </button>
               </div>
-              <div className="text-right min-w-[90px] shrink-0">
-                <p className="font-bold text-gray-800">{formatCurrency(item.quantity * parseFloat(item.price))}</p>
+              {/* Bottom row: quantity controls + subtotal */}
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-1 xs:gap-2">
+                  <button
+                    onClick={() => handleUpdate(item, item.quantity - 1)}
+                    disabled={!!updatingId}
+                    className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 active:scale-95 transition"
+                  >
+                    <FiMinus size={12} />
+                  </button>
+                  <span className="w-8 text-center font-semibold text-sm">{item.quantity}</span>
+                  <button
+                    onClick={() => handleUpdate(item, item.quantity + 1)}
+                    disabled={!!updatingId}
+                    className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 active:scale-95 transition"
+                  >
+                    <FiPlus size={12} />
+                  </button>
+                </div>
+                <p className="font-bold text-gray-800 text-sm xs:text-base shrink-0">
+                  {formatCurrency(item.quantity * parseFloat(item.price))}
+                </p>
               </div>
-              <button onClick={() => handleRemove(item)} className="text-gray-300 hover:text-red-500 p-1 transition shrink-0">
-                <FiTrash2 size={16} />
-              </button>
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 h-fit sticky top-20">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 h-fit md:sticky md:top-20">
           <h3 className="font-bold text-gray-800 mb-1">Tóm tắt đơn hàng</h3>
           <p className="text-xs text-gray-400 mb-4">
             {selectedItems.length > 0 ? `${selectedItems.length} sản phẩm được chọn` : 'Chưa chọn sản phẩm nào'}
@@ -179,17 +197,37 @@ const Cart = () => {
               <span className="text-rose-500 text-lg">{formatCurrency(selectedTotal + shippingFee)}</span>
             </div>
           </div>
+          {/* Checkout button — desktop only; mobile uses sticky bottom bar */}
           <button
             onClick={handleCheckout}
             disabled={!selectedItems.length}
-            className="w-full bg-rose-500 text-white py-3 rounded-xl font-bold hover:bg-rose-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="hidden md:block w-full bg-rose-500 text-white py-3 rounded-xl font-bold hover:bg-rose-600 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {selectedItems.length > 0 ? `Thanh toán (${selectedItems.length})` : 'Chọn sản phẩm để thanh toán'}
           </button>
-          <Link to="/products" className="block text-center text-sm text-gray-400 mt-3 hover:text-rose-500 transition">
+          <Link to="/products" className="block text-center text-sm text-gray-400 mt-3 hover:text-rose-500 active:scale-95 transition">
             ← Tiếp tục mua sắm
           </Link>
         </div>
+      </div>
+
+      {/* Mobile sticky checkout bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 pt-3 pb-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500 min-w-0 truncate">
+            {selectedItems.length > 0 ? `Đã chọn ${selectedItems.length} sản phẩm` : 'Chưa chọn sản phẩm nào'}
+          </span>
+          <span className="font-bold text-rose-500 text-sm shrink-0 ml-2">
+            {formatCurrency(selectedTotal + shippingFee)}
+          </span>
+        </div>
+        <button
+          onClick={handleCheckout}
+          disabled={!selectedItems.length}
+          className="w-full bg-rose-500 text-white py-3.5 rounded-xl font-bold text-base hover:bg-rose-600 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {selectedItems.length > 0 ? `Thanh toán (${selectedItems.length})` : 'Chọn sản phẩm để thanh toán'}
+        </button>
       </div>
     </div>
   );
