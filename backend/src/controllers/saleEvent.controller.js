@@ -28,9 +28,10 @@ const create = async (req, res) => {
 const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
-    const { status } = req.query;
+    const { status, search } = req.query;
     const where = {};
     const now = new Date();
+    if (search) where.name = { [Op.iLike]: `%${search}%` };
     if (status === 'upcoming') where.saleStartDate = { [Op.gt]: now };
     else if (status === 'active') {
       where[Op.and] = [
@@ -62,16 +63,30 @@ const getById = async (req, res) => {
           attributes: ['id', 'name', 'price', 'salePrice', 'saleStartDate', 'saleEndDate', 'status', 'thumbnailImage', 'averageRating', 'reviewCount'],
           include: [{ model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }],
         },
-        {
-          model: SaleEventRun, as: 'runs',
-          include: [{ model: SaleEventRunProduct, as: 'runProducts', separate: true }],
-          separate: true,
-          order: [['createdAt', 'DESC']],
-        },
       ],
     });
     if (!event) return res.status(404).json({ message: 'Không tìm thấy sự kiện' });
-    res.json(event);
+
+    // Fetch runs and their products separately — nested separate:true is not supported in Sequelize
+    const runs = await SaleEventRun.findAll({
+      where: { saleEventId: event.id },
+      order: [['createdAt', 'DESC']],
+    });
+
+    let runProducts = [];
+    if (runs.length) {
+      runProducts = await SaleEventRunProduct.findAll({
+        where: { runId: { [Op.in]: runs.map(r => r.id) } },
+      });
+    }
+
+    const result = event.toJSON();
+    result.runs = runs.map(r => ({
+      ...r.toJSON(),
+      runProducts: runProducts.filter(p => p.runId === r.id),
+    }));
+
+    res.json(result);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

@@ -696,23 +696,29 @@ const NonEventDiscounts = () => {
   const [data, setData] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [terminating, setTerminating] = useState(null);
   const [confirmTerminate, setConfirmTerminate] = useState(null);
 
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPagination(p => ({ ...p, page: 1 })); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { page: pagination.page, limit: 12, search };
+      const params = { page: pagination.page, limit: 12 };
+      if (debouncedSearch) params.search = debouncedSearch;
       if (statusFilter !== 'all') params.status = statusFilter;
       const r = await api.get('/sale-events/non-event-discounts', { params });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
-  }, [pagination.page, search, statusFilter]);
+  }, [pagination.page, debouncedSearch, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -737,34 +743,28 @@ const NonEventDiscounts = () => {
 
   return (
     <div>
-      {/* Status filter */}
+      {/* Status filter + search */}
       <div className="flex items-center gap-2 mb-4">
         {STATUS_FILTERS.map(f => (
           <button
             key={f.key}
             onClick={() => { setStatusFilter(f.key); setPagination(p => ({ ...p, page: 1 })); }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all shrink-0 ${
               statusFilter === f.key
                 ? 'bg-rose-500 text-white border-rose-500'
                 : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600'
             }`}
           >{f.label}</button>
         ))}
-      </div>
-
-      {/* Search */}
-      <div className="flex gap-3 mb-4">
-        <div className="relative flex-1">
-          <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="relative ml-auto w-52">
+          <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); } }}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Tìm sản phẩm..."
-            className="input pl-9 text-sm w-full"
+            className="input pl-8 text-sm w-full py-1.5"
           />
         </div>
-        <button onClick={() => { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); }} className="btn-primary px-4 text-sm">Tìm</button>
       </div>
 
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
@@ -883,21 +883,29 @@ const SaleEventManagement = () => {
   const [data, setData] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPagination(p => ({ ...p, page: 1 })); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const params = { page: pagination.page, limit: 12 };
       if (statusFilter !== 'all') params.status = statusFilter;
+      if (debouncedSearch) params.search = debouncedSearch;
       const r = await api.get('/sale-events', { params });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
     finally { setLoading(false); }
-  }, [pagination.page, statusFilter]);
+  }, [pagination.page, statusFilter, debouncedSearch]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
@@ -946,21 +954,30 @@ const SaleEventManagement = () => {
 
       {tab === 'events' && (
       <>
-      {/* Status filter */}
+      {/* Status filter + search */}
       <div className="flex items-center gap-2 mb-5">
         {STATUS_FILTERS.map(f => (
           <button
             key={f.key}
             onClick={() => { setStatusFilter(f.key); setPagination(p => ({ ...p, page: 1 })); }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all shrink-0 ${
               statusFilter === f.key
                 ? 'bg-rose-500 text-white border-rose-500'
                 : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-600'
             }`}
           >{f.label}</button>
         ))}
+        <div className="relative ml-auto w-52">
+          <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Tìm sự kiện..."
+            className="input pl-8 text-sm w-full py-1.5"
+          />
+        </div>
         {data?.pagination && (
-          <span className="ml-auto text-sm text-gray-400">{pagination.total} sự kiện</span>
+          <span className="text-sm text-gray-400 shrink-0">{pagination.total} sự kiện</span>
         )}
       </div>
 
