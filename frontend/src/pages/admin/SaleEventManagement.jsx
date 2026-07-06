@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FiTag, FiSearch, FiTrash2, FiPlus, FiX, FiCalendar,
-  FiPackage, FiUser, FiChevronLeft, FiCheck, FiPercent, FiRefreshCw, FiClock
+  FiPackage, FiUser, FiChevronLeft, FiChevronDown, FiChevronUp, FiCheck, FiPercent, FiRefreshCw, FiClock, FiLock
 } from 'react-icons/fi';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -308,12 +308,26 @@ const CreateEventModal = ({ onClose, onCreate }) => {
 };
 
 const RUN_PAGE_SIZE = 10;
+const RUNS_PER_PAGE = 5;
+const PRODUCT_PAGE_SIZE = 10;
 
-/* ── Run history (always expanded, per-run pagination) ── */
+/* ── Run history (accordion + paginated runs) ── */
 const RunHistory = ({ runs }) => {
-  const [pages, setPages] = useState({});
-  const getPage = (id) => pages[id] || 1;
-  const setPage = (id, p) => setPages(prev => ({ ...prev, [id]: p }));
+  const [expanded, setExpanded] = useState(new Set());
+  const [runPage, setRunPage] = useState(1);
+  const [productPages, setProductPages] = useState({});
+
+  const totalRunPages = Math.ceil(runs.length / RUNS_PER_PAGE);
+  const visibleRuns = runs.slice((runPage - 1) * RUNS_PER_PAGE, runPage * RUNS_PER_PAGE);
+
+  const toggle = (id) => setExpanded(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const getProductPage = (id) => productPages[id] || 1;
+  const setProductPage = (id, p) => setProductPages(prev => ({ ...prev, [id]: p }));
 
   return (
     <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mt-5">
@@ -324,70 +338,90 @@ const RunHistory = ({ runs }) => {
       </div>
 
       <div className="divide-y divide-gray-100">
-        {runs.map((run, i) => {
+        {visibleRuns.map((run, i) => {
+          const globalIndex = runs.length - ((runPage - 1) * RUNS_PER_PAGE + i);
+          const isOpen = expanded.has(run.id);
           const products = run.runProducts || [];
-          const page = getPage(run.id);
-          const totalPages = Math.ceil(products.length / RUN_PAGE_SIZE);
-          const pageItems = products.slice((page - 1) * RUN_PAGE_SIZE, page * RUN_PAGE_SIZE);
+          const pPage = getProductPage(run.id);
+          const totalProductPages = Math.ceil(products.length / RUN_PAGE_SIZE);
+          const pageItems = products.slice((pPage - 1) * RUN_PAGE_SIZE, pPage * RUN_PAGE_SIZE);
 
           return (
-            <div key={run.id} className="p-5">
-              {/* Run header */}
-              <div className="flex items-center gap-3 mb-4">
+            <div key={run.id}>
+              {/* Accordion header — always visible */}
+              <button
+                onClick={() => toggle(run.id)}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors text-left"
+              >
                 <span className="w-7 h-7 rounded-full bg-rose-50 text-rose-500 text-xs flex items-center justify-center font-bold shrink-0">
-                  {runs.length - i}
+                  {globalIndex}
                 </span>
                 <div className="flex items-center gap-1.5 text-gray-600 text-sm">
                   <FiCalendar size={12} className="text-gray-400" />
                   {fmtDate(run.saleStartDate)} → {fmtDate(run.saleEndDate)}
                 </div>
                 <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-full">-{run.discountPct}%</span>
-                <span className="text-xs text-gray-400 ml-auto">{run.productCount} sản phẩm</span>
-              </div>
+                <span className="text-xs text-gray-400">{run.productCount} sản phẩm</span>
+                <span className="ml-auto text-gray-400">
+                  {isOpen ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                </span>
+              </button>
 
-              {/* Product table */}
-              {!products.length ? (
-                <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">Không có dữ liệu sản phẩm</p>
-              ) : (
-                <>
-                  <div className="rounded-xl border overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b">
-                        <tr className="text-xs text-gray-500">
-                          <th className="text-left px-4 py-2.5 font-semibold">Sản phẩm</th>
-                          <th className="text-right px-4 py-2.5 font-semibold">Giá gốc</th>
-                          <th className="text-right px-4 py-2.5 font-semibold text-rose-500">Giá KM</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {pageItems.map(p => (
-                          <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-2.5">
-                                {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
-                                <span className="text-gray-700 font-medium">{p.name}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-right text-gray-400 text-xs">{Number(p.price).toLocaleString('vi-VN')}đ</td>
-                            <td className="px-4 py-2.5 text-right font-semibold text-rose-600 text-xs">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {totalPages > 1 && (
-                    <Pagination
-                      pagination={{ page, totalPages }}
-                      onPageChange={p => setPage(run.id, p)}
-                    />
+              {/* Accordion body */}
+              {isOpen && (
+                <div className="px-5 pb-5">
+                  {!products.length ? (
+                    <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">Không có dữ liệu sản phẩm</p>
+                  ) : (
+                    <>
+                      <div className="rounded-xl border overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 border-b">
+                            <tr className="text-xs text-gray-500">
+                              <th className="text-left px-4 py-2.5 font-semibold">Sản phẩm</th>
+                              <th className="text-right px-4 py-2.5 font-semibold">Giá gốc</th>
+                              <th className="text-right px-4 py-2.5 font-semibold text-rose-500">Giá KM</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {pageItems.map(p => (
+                              <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
+                                <td className="px-4 py-2.5">
+                                  <div className="flex items-center gap-2.5">
+                                    {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
+                                    <span className="text-gray-700 font-medium">{p.name}</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2.5 text-right text-gray-400 text-xs">{Number(p.price).toLocaleString('vi-VN')}đ</td>
+                                <td className="px-4 py-2.5 text-right font-semibold text-rose-600 text-xs">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {totalProductPages > 1 && (
+                        <Pagination
+                          pagination={{ page: pPage, totalPages: totalProductPages }}
+                          onPageChange={p => setProductPage(run.id, p)}
+                        />
+                      )}
+                    </>
                   )}
-                </>
+                </div>
               )}
             </div>
           );
         })}
       </div>
+
+      {totalRunPages > 1 && (
+        <div className="border-t px-5 py-3">
+          <Pagination
+            pagination={{ page: runPage, totalPages: totalRunPages }}
+            onPageChange={p => { setRunPage(p); setExpanded(new Set()); }}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -472,12 +506,14 @@ const EventDetail = ({ eventId, onBack }) => {
   const [removing, setRemoving] = useState(null);
   const [closing, setClosing] = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [productPage, setProductPage] = useState(1);
 
   const fetchEvent = useCallback(async () => {
     setLoading(true);
     try {
       const r = await api.get(`/sale-events/${eventId}`);
       setEvent(r.data);
+      setProductPage(1);
     } catch { toast.error('Không tải được sự kiện'); }
     finally { setLoading(false); }
   }, [eventId]);
@@ -592,68 +628,90 @@ const EventDetail = ({ eventId, onBack }) => {
             Sản phẩm trong sự kiện
             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{event.products?.length ?? 0}</span>
           </p>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 btn-primary text-sm px-4 py-2"
-          >
-            <FiPlus size={14} /> Thêm sản phẩm
-          </button>
+          {badge.label !== 'Đã kết thúc' && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 btn-primary text-sm px-4 py-2"
+            >
+              <FiPlus size={14} /> Thêm sản phẩm
+            </button>
+          )}
         </div>
 
         {!event.products?.length ? (
           <div className="text-center py-14 text-gray-400">
             <FiPackage size={36} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Chưa có sản phẩm nào</p>
-            <p className="text-sm mt-1">Nhấn "Thêm sản phẩm" để bắt đầu</p>
+            {badge.label !== 'Đã kết thúc' && <p className="text-sm mt-1">Nhấn "Thêm sản phẩm" để bắt đầu</p>}
           </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-600">Giá gốc</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-600 text-rose-600">Giá KM</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-600">Trạng thái</th>
-                <th className="w-12"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {event.products.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3">
-                      {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-10 h-10 rounded-lg object-cover" />}
-                      <div>
-                        <p className="font-medium text-gray-800">{p.name}</p>
-                        <p className="text-xs text-gray-400">{p.averageRating > 0 ? `★ ${p.averageRating}` : 'Chưa có đánh giá'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-500">
-                    {Number(p.price).toLocaleString('vi-VN')}đ
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold text-rose-600">
-                    {p.salePrice ? Number(p.salePrice).toLocaleString('vi-VN') + 'đ' : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {p.status === 'active' ? 'Đang bán' : 'Dừng bán'}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    <button
-                      onClick={() => handleRemoveProduct(p.id)}
-                      disabled={removing === p.id}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-50 mx-auto"
-                    >
-                      <FiTrash2 size={13} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        ) : (() => {
+          const totalProductPages = Math.ceil(event.products.length / PRODUCT_PAGE_SIZE);
+          const pageProducts = event.products.slice((productPage - 1) * PRODUCT_PAGE_SIZE, productPage * PRODUCT_PAGE_SIZE);
+          return (
+            <>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-600">Giá gốc</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-600 text-rose-600">Giá KM</th>
+                    <th className="text-center px-4 py-3 font-semibold text-gray-600">Trạng thái</th>
+                    <th className="w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {pageProducts.map(p => (
+                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                          <div>
+                            <p className="font-medium text-gray-800">{p.name}</p>
+                            <p className="text-xs text-gray-400">{p.averageRating > 0 ? `★ ${p.averageRating}` : 'Chưa có đánh giá'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-500">
+                        {Number(p.price).toLocaleString('vi-VN')}đ
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-rose-600">
+                        {p.salePrice ? Number(p.salePrice).toLocaleString('vi-VN') + 'đ' : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {p.status === 'active' ? 'Đang bán' : 'Dừng bán'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {badge.label === 'Đã kết thúc' ? (
+                          <span className="w-8 h-8 flex items-center justify-center mx-auto text-gray-300" title="Sự kiện đã kết thúc">
+                            <FiLock size={13} />
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleRemoveProduct(p.id)}
+                            disabled={removing === p.id}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-50 mx-auto"
+                          >
+                            <FiTrash2 size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {totalProductPages > 1 && (
+                <div className="border-t px-5 py-3">
+                  <Pagination
+                    pagination={{ page: productPage, totalPages: totalProductPages }}
+                    onPageChange={p => setProductPage(p)}
+                  />
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* Run history */}
@@ -665,7 +723,7 @@ const EventDetail = ({ eventId, onBack }) => {
         <RestartEventModal
           event={event}
           onClose={() => setShowRestart(false)}
-          onRestarted={() => { setShowRestart(false); fetchEvent(); }}
+          onRestarted={async () => { setShowRestart(false); await fetchEvent(); setShowAddModal(true); }}
         />
       )}
 

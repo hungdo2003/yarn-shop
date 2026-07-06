@@ -183,17 +183,18 @@ const restartEvent = async (req, res) => {
       })));
     }
 
-    // Update event with new dates
+    // Free current products from the event (they're archived in run history)
+    await Product.update(
+      { salePrice: null, saleStartDate: null, saleEndDate: null, saleEventId: null },
+      { where: { saleEventId: event.id } }
+    );
+
+    // Update event with new dates and reset product count
     await event.update({
       saleStartDate: saleStartDate || null,
       saleEndDate: saleEndDate || null,
+      productCount: 0,
     });
-
-    // Sync products' dates
-    await Product.update(
-      { saleStartDate: saleStartDate || null, saleEndDate: saleEndDate || null },
-      { where: { saleEventId: event.id } }
-    );
 
     await log(req.user?.id, req.user?.email, 'RESTART_SALE_EVENT', 'SaleEvent', event.id,
       { name: event.name, saleStartDate, saleEndDate }, req);
