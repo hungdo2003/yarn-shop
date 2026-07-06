@@ -153,4 +153,32 @@ const getAvailableProducts = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { create, getAll, getById, addProducts, removeProduct, remove, getAvailableProducts };
+// Products with manual discounts (no event)
+const getNonEventDiscounts = async (req, res) => {
+  try {
+    const { page, limit, offset } = paginate(req.query);
+    const { search } = req.query;
+    const where = { salePrice: { [Op.ne]: null }, saleEventId: null };
+    if (search) where.name = { [Op.iLike]: `%${search}%` };
+
+    const { count, rows } = await Product.findAndCountAll({
+      where,
+      attributes: ['id', 'name', 'price', 'salePrice', 'saleStartDate', 'saleEndDate', 'status', 'thumbnailImage'],
+      include: [{ model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }],
+      order: [['updatedAt', 'DESC']],
+      limit, offset, distinct: true,
+    });
+    res.json(paginateResult(count, rows, page, limit));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const clearNonEventDiscount = async (req, res) => {
+  try {
+    const product = await Product.findOne({ where: { id: req.params.productId, saleEventId: null } });
+    if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+    await product.update({ salePrice: null, saleStartDate: null, saleEndDate: null });
+    res.json({ message: 'Đã xóa giảm giá' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { create, getAll, getById, addProducts, removeProduct, remove, getAvailableProducts, getNonEventDiscounts, clearNonEventDiscount };

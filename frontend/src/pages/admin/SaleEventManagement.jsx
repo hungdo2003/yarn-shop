@@ -145,7 +145,14 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
                           {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-9 h-9 rounded-lg object-cover" />}
                           <div>
                             <p className="font-medium text-gray-800 text-sm">{p.name}</p>
-                            {p.color && <p className="text-xs text-gray-400">{p.color}</p>}
+                            <div className="flex items-center gap-1.5">
+                              {p.color && <p className="text-xs text-gray-400">{p.color}</p>}
+                              {p.salePrice && (
+                                <span className="text-[10px] bg-orange-50 text-orange-500 border border-orange-100 px-1.5 py-0.5 rounded-full font-medium">
+                                  Đang GG {Math.round((1 - p.salePrice / p.price) * 100)}% → sẽ bị thay thế
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -447,8 +454,125 @@ const EventDetail = ({ eventId, onBack }) => {
   );
 };
 
+/* ── Non-event discounts tab ── */
+const NonEventDiscounts = () => {
+  const [data, setData] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/sale-events/non-event-discounts', { params: { page: pagination.page, limit: 20, search } });
+      setData(r.data);
+      setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1 }));
+    } catch { toast.error('Tải dữ liệu thất bại'); }
+    finally { setLoading(false); }
+  }, [pagination.page, search]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleClear = async (product) => {
+    if (!window.confirm(`Xóa giảm giá của "${product.name}"?`)) return;
+    setClearing(product.id);
+    try {
+      await api.delete(`/sale-events/non-event-discounts/${product.id}`);
+      toast.success('Đã xóa giảm giá');
+      fetchData();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Xóa thất bại');
+    } finally { setClearing(null); }
+  };
+
+  return (
+    <div>
+      <div className="flex gap-3 mb-4">
+        <div className="relative flex-1">
+          <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); } }}
+            placeholder="Tìm sản phẩm..."
+            className="input pl-9 text-sm w-full"
+          />
+        </div>
+        <button onClick={() => { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); }} className="btn-primary px-4 text-sm">Tìm</button>
+      </div>
+
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="text-center py-14 text-gray-400">Đang tải...</div>
+        ) : !data?.items?.length ? (
+          <div className="text-center py-14 text-gray-400">
+            <FiTag size={32} className="mx-auto mb-2 opacity-25" />
+            <p>Không có sản phẩm nào đang giảm giá lẻ</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Sản phẩm</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-600">Giá gốc</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-600 text-rose-600">Giá KM</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-600">Giảm</th>
+                <th className="text-center px-4 py-3 font-semibold text-gray-600">Hết hạn</th>
+                <th className="w-12"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {data.items.map(p => {
+                const pct = Math.round((1 - parseFloat(p.salePrice) / parseFloat(p.price)) * 100);
+                return (
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        {p.thumbnailImage && <img src={p.thumbnailImage} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                        <p className="font-medium text-gray-800">{p.name}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-500">{Number(p.price).toLocaleString('vi-VN')}đ</td>
+                    <td className="px-4 py-3 text-right font-semibold text-rose-600">{Number(p.salePrice).toLocaleString('vi-VN')}đ</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-full">-{pct}%</span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(p.saleEndDate)}</td>
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        onClick={() => handleClear(p)}
+                        disabled={clearing === p.id}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-50 mx-auto"
+                        title="Xóa giảm giá"
+                      >
+                        <FiTrash2 size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {data?.pagination && pagination.totalPages > 1 && (
+        <div className="mt-4 flex justify-center">
+          <Pagination
+            pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
+            onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ── Main page ── */
 const SaleEventManagement = () => {
+  const [tab, setTab] = useState('events');
   const [data, setData] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
   const [search, setSearch] = useState('');
@@ -492,11 +616,28 @@ const SaleEventManagement = () => {
             <p className="text-sm text-gray-500">Quản lý các đợt giảm giá theo sự kiện</p>
           </div>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 text-sm px-4 py-2.5">
-          <FiPlus size={15} /> Tạo sự kiện
-        </button>
+        {tab === 'events' && (
+          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 text-sm px-4 py-2.5">
+            <FiPlus size={15} /> Tạo sự kiện
+          </button>
+        )}
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 border-b">
+        {[['events', 'Theo sự kiện'], ['manual', 'Giảm giá lẻ']].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? 'border-rose-500 text-rose-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+          >{label}</button>
+        ))}
+      </div>
+
+      {tab === 'manual' && <NonEventDiscounts />}
+
+      {tab === 'events' && (
+      <>
       {/* Search */}
       <div className="flex gap-3 mb-5">
         <div className="relative flex-1">
@@ -573,6 +714,8 @@ const SaleEventManagement = () => {
           onClose={() => setShowCreate(false)}
           onCreate={(ev) => { setShowCreate(false); setSelectedId(ev.id); fetchEvents(); }}
         />
+      )}
+      </>
       )}
     </div>
   );

@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useFetch from '../../hooks/useFetch';
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
-import { FiPlus, FiEdit2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiTag, FiCheck, FiPauseCircle, FiPlayCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiPauseCircle, FiPlayCircle } from 'react-icons/fi';
 
 const fmt = n => n ? Number(n).toLocaleString('vi-VN') + 'đ' : '';
 
@@ -382,35 +381,9 @@ const ProductManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [modal, setModal] = useState(null);
   const [viewProduct, setViewProduct] = useState(null);
-  const [selected, setSelected] = useState(new Set());
-  const [selectAll, setSelectAll] = useState(false);
-  const navigate = useNavigate();
   const { data, loading, refetch } = useFetch('/products', { page, search, status: statusFilter });
   const { data: cats } = useFetch('/categories');
   const allCategories = (cats || []).flatMap(c => [c, ...(c.children || [])]);
-  const pageItems = data?.items || [];
-  const allPageIds = pageItems.map(p => p.id);
-  const allPageSelected = allPageIds.length > 0 && allPageIds.every(id => selected.has(id));
-
-  const toggleOne = (id) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-    setSelectAll(false);
-  };
-
-  const togglePage = () => {
-    if (allPageSelected) {
-      setSelected(prev => { const next = new Set(prev); allPageIds.forEach(id => next.delete(id)); return next; });
-    } else {
-      setSelected(prev => { const next = new Set(prev); allPageIds.forEach(id => next.add(id)); return next; });
-    }
-    setSelectAll(false);
-  };
-
-  const clearSelection = () => { setSelected(new Set()); setSelectAll(false); };
 
   const handleToggleStatus = async (product) => {
     const isActive = product.status === 'active';
@@ -442,7 +415,7 @@ const ProductManagement = () => {
           </div>
           <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-medium shrink-0">
             {[['all', 'Tất cả'], ['active', 'Đang bán'], ['inactive', 'Dừng bán']].map(([val, label]) => (
-              <button key={val} onClick={() => { setStatusFilter(val); setPage(1); clearSelection(); }}
+              <button key={val} onClick={() => { setStatusFilter(val); setPage(1); }}
                 className={`px-4 py-2 transition-colors ${statusFilter === val ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
                 {label}
               </button>
@@ -451,39 +424,12 @@ const ProductManagement = () => {
         </div>
       </div>
 
-      {/* Floating bulk action bar */}
-      {(selected.size > 0 || selectAll) && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 flex-wrap">
-          <span className="text-sm font-medium">
-            {selectAll ? `Tất cả ${data?.pagination?.total ?? ''} sản phẩm` : `${selected.size} sản phẩm`} đã chọn
-          </span>
-          {!selectAll && data?.pagination?.total > selected.size && (
-            <button onClick={() => setSelectAll(true)} className="text-xs text-indigo-300 hover:text-indigo-200 underline whitespace-nowrap active:scale-95 transition-all">
-              Chọn tất cả {data.pagination.total}
-            </button>
-          )}
-          <button
-            onClick={() => navigate('/admin/sale-events')}
-            className="flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-xl active:scale-95 transition-all"
-          >
-            <FiTag size={14} /> Quản lý sự kiện KM
-          </button>
-          <button onClick={clearSelection} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all">
-            <FiX size={15} />
-          </button>
-        </div>
-      )}
 
       {loading ? <Spinner /> : (
         <div className="card overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-4 py-3 w-10">
-                  <button onClick={togglePage} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${allPageSelected ? 'bg-rose-500 border-rose-500' : 'border-gray-300 hover:border-gray-400'}`}>
-                    {allPageSelected && <FiCheck size={11} className="text-white" strokeWidth={3} />}
-                  </button>
-                </th>
                 {[
                   ['Sản phẩm', ''],
                   ['Danh mục', 'hidden md:table-cell'],
@@ -499,12 +445,7 @@ const ProductManagement = () => {
             </thead>
             <tbody className="divide-y">
               {data?.items?.map(p => (
-                <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${selected.has(p.id) ? 'bg-rose-50/40' : ''} ${p.status !== 'active' ? 'opacity-60' : ''}`}>
-                  <td className="px-4 py-3">
-                    <button onClick={() => toggleOne(p.id)} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${selected.has(p.id) ? 'bg-rose-500 border-rose-500' : 'border-gray-300 hover:border-gray-400'}`}>
-                      {selected.has(p.id) && <FiCheck size={11} className="text-white" strokeWidth={3} />}
-                    </button>
-                  </td>
+                <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${p.status !== 'active' ? 'opacity-60' : ''}`}>
                   {/* Product */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
