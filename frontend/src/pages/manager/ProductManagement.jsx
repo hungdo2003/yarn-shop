@@ -5,7 +5,7 @@ import { formatCurrency } from '../../utils/formatters';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
-import { FiPlus, FiEdit2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiPauseCircle, FiPlayCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiTrash2, FiPauseCircle, FiPlayCircle } from 'react-icons/fi';
 
 const fmt = n => n ? Number(n).toLocaleString('vi-VN') + 'đ' : '';
 
