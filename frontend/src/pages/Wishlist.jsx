@@ -53,8 +53,8 @@ export default function Wishlist() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
+      <div className="flex items-center gap-3 mb-6 min-w-0">
         <FiHeart size={24} className="text-rose-500 fill-rose-500" />
         <h1 className="text-2xl font-bold text-gray-900">Danh sách yêu thích</h1>
         {items.length > 0 && (
@@ -69,7 +69,7 @@ export default function Wishlist() {
           <div className="text-6xl mb-4">🧶</div>
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Chưa có sản phẩm yêu thích</h2>
           <p className="text-gray-500 mb-6">Hãy nhấn vào biểu tượng trái tim trên sản phẩm để lưu lại nhé!</p>
-          <Link to="/products" className="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium">
+          <Link to="/products" className="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium active:scale-95">
             Khám phá sản phẩm
           </Link>
         </div>
@@ -106,7 +106,7 @@ export default function Wishlist() {
                 <div className="p-3">
                   <p className="text-xs text-gray-400 mb-1">{product.Category?.name}</p>
                   <Link to={`/products/${product.slug}`}>
-                    <h3 className="font-medium text-gray-900 line-clamp-2 text-sm mb-2 hover:text-rose-600 transition-colors">
+                    <h3 className="font-medium text-gray-900 line-clamp-2 text-sm mb-2 min-w-0 hover:text-rose-600 transition-colors">
                       {product.name}
                     </h3>
                   </Link>
@@ -122,7 +122,7 @@ export default function Wishlist() {
                     {product.stock > 0 && (
                       <button
                         onClick={(e) => handleAddToCart(e, productId)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-rose-500 text-white text-xs font-medium rounded-lg hover:bg-rose-600 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-rose-500 text-white text-xs font-medium rounded-lg hover:bg-rose-600 active:scale-95 transition-colors"
                       >
                         <FiShoppingCart size={13} />
                         Thêm vào giỏ
@@ -130,7 +130,7 @@ export default function Wishlist() {
                     )}
                     <button
                       onClick={() => handleRemove(productId)}
-                      className="p-1.5 border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
+                      className="w-11 h-11 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:border-red-300 active:scale-95 transition-colors"
                       title="Xóa khỏi yêu thích"
                     >
                       <FiTrash2 size={14} />

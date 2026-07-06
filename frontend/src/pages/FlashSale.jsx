@@ -63,11 +63,11 @@ function VoucherCard({ voucher }) {
         )}
       </div>
       <div className="px-5 py-4">
-        <div className="flex gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3">
           <code className="flex-1 bg-orange-50 text-orange-700 font-mono font-bold text-center py-2 rounded-lg text-sm border border-orange-200">
             {voucher.code}
           </code>
-          <button onClick={copy} className="flex items-center gap-1 bg-orange-500 text-white px-3 rounded-lg text-sm hover:bg-orange-600 transition">
+          <button onClick={copy} className="flex items-center gap-1 bg-orange-500 text-white px-3 h-11 rounded-lg text-sm hover:bg-orange-600 active:scale-95 transition shrink-0">
             <FiCopy size={14} /> Sao chép
           </button>
         </div>
@@ -132,7 +132,7 @@ function SaleProductCard({ product }) {
           </div>
           {product.stock > 0 && (
             <button onClick={handleCart}
-              className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition shrink-0">
+              className="w-11 h-11 flex items-center justify-center bg-red-500 text-white rounded-xl hover:bg-red-600 active:scale-95 transition shrink-0">
               <FiShoppingCart size={16} />
             </button>
           )}
@@ -165,7 +165,7 @@ export default function FlashSale() {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero banner */}
-      <div className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-600 py-12 px-4 text-white text-center relative overflow-hidden">
+      <div className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-600 py-10 sm:py-12 px-4 text-white text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 text-[8rem] flex flex-wrap gap-8 items-center justify-center select-none pointer-events-none">
           {['⚡','🔥','💥','⚡','🔥','💥'].map((e,i) => <span key={i}>{e}</span>)}
         </div>
@@ -175,7 +175,7 @@ export default function FlashSale() {
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight">FLASH SALE</h1>
             <FiZap size={28} className="fill-yellow-300 text-yellow-300" />
           </div>
-          <p className="text-orange-100 text-lg mb-6">Ưu đãi sốc — Số lượng có hạn — Nhanh tay kẻo hết!</p>
+          <p className="text-orange-100 text-base sm:text-lg mb-6">Ưu đãi sốc — Số lượng có hạn — Nhanh tay kẻo hết!</p>
 
           {endDate ? (
             <div>
@@ -188,7 +188,7 @@ export default function FlashSale() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-10">
 
         {/* Voucher section */}
         {hasVouchers && (
@@ -222,7 +222,7 @@ export default function FlashSale() {
               <div className="text-6xl mb-4">⚡</div>
               <h2 className="text-xl font-bold text-gray-700 mb-2">Chưa có Flash Sale nào</h2>
               <p className="text-gray-500 mb-6">Theo dõi để không bỏ lỡ ưu đãi tiếp theo nhé!</p>
-              <Link to="/products" className="inline-block bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 transition">
+              <Link to="/products" className="inline-block bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition">
                 Xem tất cả sản phẩm
               </Link>
             </div>

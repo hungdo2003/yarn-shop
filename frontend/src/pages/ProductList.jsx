@@ -36,7 +36,7 @@ const FilterSection = ({ title, children, defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border-b pb-4 mb-4">
-      <button onClick={() => setOpen(!open)} className="flex items-center justify-between w-full font-semibold text-sm text-gray-800 mb-3">
+      <button onClick={() => setOpen(!open)} className="flex items-center justify-between w-full font-semibold text-sm text-gray-800 mb-3 py-1 active:scale-95 transition-transform">
         {title} {open ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
       </button>
       {open && children}
@@ -147,8 +147,8 @@ const ProductList = () => {
           </label>
         ))}
         <div className="flex gap-2 mt-2">
-          <input type="number" placeholder="Từ" value={filters.minPrice} onChange={e => setFilter('minPrice', e.target.value)} className="border rounded-lg px-2 py-1 text-xs w-full" />
-          <input type="number" placeholder="Đến" value={filters.maxPrice} onChange={e => setFilter('maxPrice', e.target.value)} className="border rounded-lg px-2 py-1 text-xs w-full" />
+          <input type="number" placeholder="Từ" value={filters.minPrice} onChange={e => setFilter('minPrice', e.target.value)} className="border rounded-lg px-2 py-1.5 text-base w-full" />
+          <input type="number" placeholder="Đến" value={filters.maxPrice} onChange={e => setFilter('maxPrice', e.target.value)} className="border rounded-lg px-2 py-1.5 text-base w-full" />
         </div>
       </FilterSection>
 
@@ -162,7 +162,7 @@ const ProductList = () => {
       </FilterSection>
 
       <FilterSection title="Màu sắc" defaultOpen={false}>
-        <input placeholder="Vd: Đỏ, Xanh..." value={filters.color} onChange={e => setFilter('color', e.target.value)} className="border rounded-lg px-2 py-1 text-sm w-full" />
+        <input placeholder="Vd: Đỏ, Xanh..." value={filters.color} onChange={e => setFilter('color', e.target.value)} className="border rounded-lg px-2 py-1.5 text-base w-full" />
       </FilterSection>
 
       <FilterSection title="Tùy chọn khác" defaultOpen={false}>
@@ -177,7 +177,7 @@ const ProductList = () => {
       </FilterSection>
 
       {hasActiveFilters && (
-        <button onClick={clearFilters} className="w-full border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50 transition">Xóa bộ lọc</button>
+        <button onClick={clearFilters} className="w-full border border-gray-300 text-gray-600 py-2.5 rounded-lg text-sm hover:bg-gray-50 active:scale-95 transition">Xóa bộ lọc</button>
       )}
     </div>
   );
@@ -191,7 +191,7 @@ const ProductList = () => {
     'Tất Cả Sản Phẩm';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       {/* Quick filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-6 no-scrollbar">
         {QUICK_FILTERS.map((qf, i) => {
@@ -200,24 +200,24 @@ const ProductList = () => {
           ));
           return (
             <button key={i} onClick={() => applyQuickFilter(qf.params)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition shrink-0 ${isActive ? 'bg-rose-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-rose-50 hover:border-rose-300'}`}>
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition shrink-0 active:scale-95 ${isActive ? 'bg-rose-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-rose-50 hover:border-rose-300'}`}>
               {qf.label}
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{pageTitle}</h1>
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl xs:text-2xl font-bold text-gray-800 truncate">{pageTitle}</h1>
           {products && <p className="text-sm text-gray-500 mt-1">{products.pagination?.total || 0} sản phẩm</p>}
         </div>
-        <div className="flex items-center gap-3">
-          <select value={filters.sortBy} onChange={e => setFilter('sortBy', e.target.value)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-300">
+        <div className="flex items-center gap-2 shrink-0">
+          <select value={filters.sortBy} onChange={e => setFilter('sortBy', e.target.value)} className="border border-gray-300 rounded-lg px-2 xs:px-3 py-1.5 text-base focus:outline-none focus:ring-1 focus:ring-rose-300 max-w-[120px] xs:max-w-none">
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <button onClick={() => setShowFilter(!showFilter)} className="md:hidden border border-gray-300 rounded-lg px-3 py-1.5 text-sm flex items-center gap-1 hover:bg-gray-50">
-            <FiFilter size={14} /> Lọc {hasActiveFilters && <span className="bg-rose-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">!</span>}
+          <button onClick={() => setShowFilter(!showFilter)} className="md:hidden border border-gray-300 rounded-lg px-3 h-11 text-sm flex items-center gap-1.5 hover:bg-gray-50 active:scale-95 transition shrink-0">
+            <FiFilter size={14} /><span>Lọc</span>{hasActiveFilters && <span className="bg-rose-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">!</span>}
           </button>
         </div>
       </div>
@@ -227,7 +227,7 @@ const ProductList = () => {
           <div className="bg-white rounded-xl shadow p-4 sticky top-20">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-800">Bộ lọc</h3>
-              {hasActiveFilters && <button onClick={clearFilters} className="text-xs text-rose-500 hover:underline">Xóa tất cả</button>}
+              {hasActiveFilters && <button onClick={clearFilters} className="text-xs text-rose-500 hover:underline active:opacity-70">Xóa tất cả</button>}
             </div>
             <FilterPanel />
           </div>
@@ -235,10 +235,10 @@ const ProductList = () => {
 
         {showFilter && (
           <div className="fixed inset-0 z-50 bg-black/40 md:hidden" onClick={() => setShowFilter(false)}>
-            <div className="absolute right-0 top-0 bottom-0 w-72 bg-white p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="absolute right-0 top-0 bottom-0 w-4/5 max-w-xs bg-white p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between mb-4">
                 <h3 className="font-semibold">Bộ lọc</h3>
-                <button onClick={() => setShowFilter(false)}><FiX /></button>
+                <button onClick={() => setShowFilter(false)} className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-gray-100 active:scale-95 transition"><FiX size={20} /></button>
               </div>
               <FilterPanel />
             </div>
@@ -248,7 +248,7 @@ const ProductList = () => {
         <main className="flex-1 min-w-0">
           {loading ? <div className="flex justify-center py-16"><Spinner /></div> : products?.items?.length ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 xs:gap-4">
                 {products.items.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
               <Pagination

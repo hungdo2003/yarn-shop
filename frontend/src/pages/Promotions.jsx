@@ -32,19 +32,19 @@ export default function Promotions() {
   const normalVouchers = vouchers.filter(v => v.type !== 'flash_sale');
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-rose-600 mb-2">Khuyến Mãi & Voucher</h1>
+    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10">
+      <h1 className="text-2xl xs:text-3xl font-bold text-rose-600 mb-2">Khuyến Mãi & Voucher</h1>
       <p className="text-gray-500 mb-8">Các ưu đãi hiện có từ Yarn Shop</p>
 
       {/* Flash Sale banner */}
       {flashVouchers.length > 0 && (
         <Link to="/flash-sale" className="block bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl p-5 mb-8 hover:opacity-95 transition">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="font-black text-xl flex items-center gap-2">⚡ Flash Sale Đang Diễn Ra!</p>
               <p className="text-orange-100 text-sm mt-1">{flashVouchers.length} mã giảm giá đặc biệt — Số lượng có hạn</p>
             </div>
-            <span className="bg-white text-orange-600 font-bold px-4 py-2 rounded-full text-sm hover:bg-orange-50 whitespace-nowrap">Xem ngay →</span>
+            <span className="bg-white text-orange-600 font-bold px-4 py-2 rounded-full text-sm hover:bg-orange-50 active:scale-95 whitespace-nowrap shrink-0">Xem ngay →</span>
           </div>
         </Link>
       )}
@@ -68,7 +68,7 @@ export default function Promotions() {
                 <div className="px-6 py-4">
                   <div className="flex items-center gap-2 mb-3">
                     <code className="bg-gray-100 px-3 py-1 rounded font-mono font-bold text-rose-600 flex-1 text-center">{v.code}</code>
-                    <button onClick={() => copy(v.code)} className="bg-rose-500 text-white px-3 py-1 rounded text-sm hover:bg-rose-600 transition">Sao chép</button>
+                    <button onClick={() => copy(v.code)} className="bg-rose-500 text-white px-3 py-2 rounded text-sm hover:bg-rose-600 active:scale-95 transition shrink-0">Sao chép</button>
                   </div>
                   {v.minOrderAmount > 0 && <p className="text-xs text-gray-500">Đơn tối thiểu: {parseInt(v.minOrderAmount).toLocaleString()}đ</p>}
                   {v.maxDiscountAmount && v.type === 'percentage' && <p className="text-xs text-gray-500">Giảm tối đa: {parseInt(v.maxDiscountAmount).toLocaleString()}đ</p>}
@@ -80,12 +80,12 @@ export default function Promotions() {
         )
       )}
 
-      <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-8 text-white text-center">
+      <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-6 sm:p-8 text-white text-center">
         <h2 className="text-2xl font-bold mb-2">Nhận Ưu Đãi Riêng</h2>
         <p className="mb-6 opacity-90">Đăng ký nhận thông báo để không bỏ lỡ khuyến mãi độc quyền</p>
-        <form onSubmit={subscribe} className="flex gap-3 max-w-md mx-auto">
-          <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Nhập email của bạn" className="flex-1 px-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-white" />
-          <button type="submit" className="bg-white text-rose-600 px-6 py-3 rounded-lg font-semibold hover:bg-rose-50 transition whitespace-nowrap">Đăng ký</button>
+        <form onSubmit={subscribe} className="flex flex-col xs:flex-row gap-3 max-w-md mx-auto">
+          <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Nhập email của bạn" className="flex-1 px-4 py-3 rounded-lg text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-white" />
+          <button type="submit" className="bg-white text-rose-600 px-6 py-3 rounded-lg font-semibold hover:bg-rose-50 active:scale-95 transition whitespace-nowrap">Đăng ký</button>
         </form>
       </div>
     </div>
