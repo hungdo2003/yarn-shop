@@ -32,7 +32,7 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
     setLoading(true);
     try {
       const r = await api.get('/sale-events/available-products', {
-        params: { page: pagination.page, limit: 20, search },
+        params: { page: pagination.page, limit: 12, search },
       });
       setProducts(r.data.items ?? []);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
@@ -471,7 +471,7 @@ const NonEventDiscounts = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get('/sale-events/non-event-discounts', { params: { page: pagination.page, limit: 20, search } });
+      const r = await api.get('/sale-events/non-event-discounts', { params: { page: pagination.page, limit: 12, search } });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }
@@ -591,7 +591,7 @@ const SaleEventManagement = () => {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await api.get('/sale-events', { params: { page: pagination.page, limit: 20, search } });
+      const r = await api.get('/sale-events', { params: { page: pagination.page, limit: 12, search } });
       setData(r.data);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Tải dữ liệu thất bại'); }

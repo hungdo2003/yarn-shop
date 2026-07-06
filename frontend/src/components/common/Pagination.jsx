@@ -1,7 +1,7 @@
 const Pagination = ({ pagination, onPageChange }) => {
   if (!pagination) return null;
   const { page, totalPages } = pagination;
-  if (!totalPages || totalPages < 1) return null;
+  if (!totalPages || totalPages <= 1) return null;
 
   const getPages = () => {
     if (totalPages <= 4) {
