@@ -87,14 +87,14 @@ const CustomOrder = () => {
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               required rows={4} placeholder="Describe what you want: animal type, size, accessories, special features..."
-              className="input"
+              className="input text-base"
             />
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Yarn Color</label>
-              <select value={form.yarnColor} onChange={e => setForm(f => ({ ...f, yarnColor: e.target.value }))} className="input">
+              <select value={form.yarnColor} onChange={e => setForm(f => ({ ...f, yarnColor: e.target.value }))} className="input text-base">
                 <option value="">Select color...</option>
                 {YARN_COLORS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -105,7 +105,7 @@ const CustomOrder = () => {
                 value={form.size}
                 onChange={e => setForm(f => ({ ...f, size: e.target.value }))}
                 placeholder="e.g. 20cm tall, small, medium..."
-                className="input"
+                className="input text-base"
               />
             </div>
           </div>
@@ -114,7 +114,7 @@ const CustomOrder = () => {
             <strong>How it works:</strong> After submitting, our team will review your request and provide a price quote within 1-2 business days. You'll need to pay a 50% deposit to start production.
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+          <button type="submit" disabled={loading} className="btn-primary w-full xs:w-auto py-3 active:scale-95 transition-all">
             {loading ? 'Submitting...' : 'Submit Custom Order'}
           </button>
         </form>

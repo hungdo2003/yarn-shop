@@ -18,13 +18,13 @@ const payments = [
 export default function HowToBuy() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-rose-600 mb-2">Hướng Dẫn Mua Hàng</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-rose-600 mb-2">Hướng Dẫn Mua Hàng</h1>
       <p className="text-gray-500 mb-10">Quy trình mua hàng đơn giản, nhanh chóng tại Yarn Shop</p>
 
       <div className="space-y-4 mb-12">
         {steps.map(s => (
           <div key={s.num} className="flex gap-5 bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition">
-            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 xs:w-12 xs:h-12 bg-rose-100 rounded-full flex items-center justify-center shrink-0">
               <span className="text-rose-600 font-bold text-sm">{s.num}</span>
             </div>
             <div>
@@ -48,7 +48,7 @@ export default function HowToBuy() {
 
       <div className="bg-rose-50 rounded-xl p-6 text-center">
         <p className="text-gray-700 mb-4">Bạn cần hỗ trợ thêm?</p>
-        <Link to="/contact" className="bg-rose-500 text-white px-6 py-2 rounded-lg hover:bg-rose-600 transition font-medium">Liên hệ với chúng tôi</Link>
+        <Link to="/contact" className="bg-rose-500 text-white px-6 py-2 rounded-lg hover:bg-rose-600 active:scale-95 transition-all font-medium">Liên hệ với chúng tôi</Link>
       </div>
     </div>
   );

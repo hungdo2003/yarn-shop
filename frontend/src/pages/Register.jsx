@@ -123,33 +123,33 @@ const Register = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-8 bg-gradient-to-br from-rose-50 to-pink-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block"><div className="text-5xl mb-3">🧶</div></Link>
+          <Link to="/" className="inline-block active:scale-95 transition-all"><div className="text-5xl mb-3">🧶</div></Link>
           <h1 className="text-2xl font-bold text-gray-800">Tạo Tài Khoản</h1>
           <p className="text-gray-500 text-sm mt-1">Tham gia cộng đồng YarnShop ngay hôm nay</p>
         </div>
 
         {step === 1 ? (
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-5 xs:p-8 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Họ và tên *</label>
-              <input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required placeholder="Nguyễn Văn A" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
+              <input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required placeholder="Nguyễn Văn A" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required placeholder="email@example.com" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
+              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required placeholder="email@example.com" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
-              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="0901 234 567 (tuỳ chọn)" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
+              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="0901 234 567 (tuỳ chọn)" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 transition" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu *</label>
               <div className="relative">
-                <input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required placeholder="Tối thiểu 6 ký tự" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 transition pr-10" />
-                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{showPass ? 'Ẩn' : 'Hiện'}</button>
+                <input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required placeholder="Tối thiểu 6 ký tự" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 transition pr-12" />
+                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 text-xs w-11 h-11 flex items-center justify-center active:scale-95 transition-all">{showPass ? 'Ẩn' : 'Hiện'}</button>
               </div>
               {form.password && (
                 <div className="mt-1.5 flex gap-1 items-center">
@@ -161,22 +161,22 @@ const Register = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Xác nhận mật khẩu *</label>
-              <input type="password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 transition ${form.confirmPassword && form.password !== form.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'}`} />
+              <input type="password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required className={`w-full border rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 transition ${form.confirmPassword && form.password !== form.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'}`} />
               {form.confirmPassword && form.password !== form.confirmPassword && <p className="text-red-500 text-xs mt-1">Mật khẩu không khớp</p>}
             </div>
 
-            <button type="submit" disabled={loading} className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 transition disabled:opacity-60 mt-2">
+            <button type="submit" disabled={loading} className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-60 mt-2">
               {loading ? 'Đang gửi mã...' : 'Tiếp theo'}
             </button>
 
             <p className="text-center text-sm text-gray-500">
               Đã có tài khoản?{' '}
-              <Link to="/login" className="text-rose-500 font-semibold hover:underline">Đăng nhập</Link>
+              <Link to="/login" className="text-rose-500 font-semibold hover:underline active:scale-95 transition-all">Đăng nhập</Link>
             </p>
           </form>
         ) : (
-          <form onSubmit={handleVerify} className="bg-white rounded-2xl shadow-lg p-8">
-            <button type="button" onClick={() => setStep(1)} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-sm mb-6 transition">
+          <form onSubmit={handleVerify} className="bg-white rounded-2xl shadow-lg p-5 xs:p-8">
+            <button type="button" onClick={() => setStep(1)} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-sm mb-6 transition min-h-[44px]">
               ← Quay lại
             </button>
 
@@ -205,7 +205,7 @@ const Register = () => {
               ))}
             </div>
 
-            <button type="submit" disabled={loading || otp.join('').length < 4} className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 transition disabled:opacity-60 mb-4">
+            <button type="submit" disabled={loading || otp.join('').length < 4} className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-60 mb-4">
               {loading ? 'Đang xác nhận...' : 'Xác nhận'}
             </button>
 
@@ -214,7 +214,7 @@ const Register = () => {
               {countdown > 0 ? (
                 <span className="text-gray-400">Gửi lại sau {countdown}s</span>
               ) : (
-                <button type="button" onClick={handleResend} disabled={loading} className="text-rose-500 font-semibold hover:underline disabled:opacity-50">
+                <button type="button" onClick={handleResend} disabled={loading} className="text-rose-500 font-semibold hover:underline active:scale-95 transition-all disabled:opacity-50">
                   Gửi lại
                 </button>
               )}

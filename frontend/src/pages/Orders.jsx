@@ -41,10 +41,10 @@ function DateFilter({ from, to, onFromChange, onToChange, onClear }) {
     <div className="flex items-center gap-1">
       <FiCalendar size={12} className="text-gray-300 shrink-0" />
       <input type="date" value={from} onChange={e => onFromChange(e.target.value)}
-        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-[11px] text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
+        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-base text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
       <span className="text-gray-300 text-[11px]">—</span>
       <input type="date" value={to} onChange={e => onToChange(e.target.value)}
-        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-[11px] text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
+        className="border border-gray-200 rounded-md px-1.5 py-0.5 text-base text-gray-500 w-28 focus:outline-none focus:ring-1 focus:ring-rose-200 focus:border-rose-200" />
       {hasFilter && (
         <button onClick={onClear} className="text-gray-300 hover:text-rose-400 transition ml-0.5">
           <FiX size={12} />
@@ -175,7 +175,7 @@ export default function Orders() {
     <div className="max-w-4xl mx-auto px-4 py-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Đơn Hàng Của Tôi</h1>
         {orderType === 'regular' ? (
           <DateFilter
@@ -208,13 +208,13 @@ export default function Orders() {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 flex-nowrap">
         {(orderType === 'regular' ? REGULAR_STATUS_TABS : CUSTOM_STATUS_TABS).map(tab => (
           <button key={tab.value}
             onClick={() => orderType === 'regular'
               ? (setStatus(tab.value), setPage(1))
               : (setCustomStatus(tab.value), setCustomPage(1))}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition shrink-0 ${
               (orderType === 'regular' ? status : customStatus) === tab.value
                 ? 'bg-rose-500 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

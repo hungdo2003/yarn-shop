@@ -47,9 +47,9 @@ export default function Returns() {
         <button onClick={() => setShowForm(true)} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 text-sm font-medium">+ Yêu cầu đổi/trả</button>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 flex-nowrap">
         {['', 'pending', 'approved', 'rejected', 'completed'].map(s => (
-          <button key={s} onClick={() => { setFilter(s); setPage(1); }} className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${filter === s ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+          <button key={s} onClick={() => { setFilter(s); setPage(1); }} className={`px-3 py-1.5 rounded-full text-sm font-medium transition shrink-0 ${filter === s ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {s ? statusLabel[s] : 'Tất cả'}
           </button>
         ))}
@@ -71,7 +71,7 @@ export default function Returns() {
                 </div>
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor[r.status]}`}>{statusLabel[r.status]}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 text-sm text-gray-600">
                 <div><span className="text-gray-400">Loại:</span> {r.type === 'return' ? 'Trả hàng' : 'Đổi hàng'}</div>
                 <div><span className="text-gray-400">Ngày tạo:</span> {new Date(r.createdAt).toLocaleDateString('vi-VN')}</div>
               </div>
@@ -90,7 +90,7 @@ export default function Returns() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Chọn đơn hàng *</label>
-                <select required value={form.orderId} onChange={e => setForm({ ...form, orderId: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm">
+                <select required value={form.orderId} onChange={e => setForm({ ...form, orderId: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base">
                   <option value="">-- Chọn đơn hàng --</option>
                   {orders.map(o => <option key={o.id} value={o.id}>{o.orderCode} – {new Date(o.createdAt).toLocaleDateString('vi-VN')}</option>)}
                 </select>
@@ -108,11 +108,11 @@ export default function Returns() {
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Lý do *</label>
-                <textarea required rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="Mô tả lý do đổi/trả hàng..." className="w-full border rounded-lg px-3 py-2 text-sm resize-none" />
+                <textarea required rows={3} value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} placeholder="Mô tả lý do đổi/trả hàng..." className="w-full border rounded-lg px-3 py-2 text-base resize-none" />
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Ghi chú thêm</label>
-                <input value={form.customerNote} onChange={e => setForm({ ...form, customerNote: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input value={form.customerNote} onChange={e => setForm({ ...form, customerNote: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Hình ảnh (tối đa 5)</label>
@@ -120,7 +120,7 @@ export default function Returns() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border py-2 rounded-lg text-gray-700 hover:bg-gray-50">Huỷ</button>
-                <button type="submit" className="flex-1 bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-medium">Gửi yêu cầu</button>
+                <button type="submit" className="flex-1 bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 active:scale-95 transition-all font-medium">Gửi yêu cầu</button>
               </div>
             </form>
           </div>

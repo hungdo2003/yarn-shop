@@ -30,7 +30,7 @@ export default function Contact() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-rose-600 mb-2">Liên Hệ Với Chúng Tôi</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-rose-600 mb-2">Liên Hệ Với Chúng Tôi</h1>
       <p className="text-gray-500 mb-10">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
       <div className="grid md:grid-cols-2 gap-10">
         <div>
@@ -50,7 +50,7 @@ export default function Contact() {
             <h3 className="font-semibold text-gray-800 mb-3">Mạng xã hội</h3>
             <div className="flex gap-3">
               {['Facebook', 'Instagram', 'Zalo', 'TikTok'].map(s => (
-                <span key={s} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm font-medium">{s}</span>
+                <span key={s} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm font-medium min-h-[44px] flex items-center justify-center">{s}</span>
               ))}
             </div>
           </div>
@@ -67,29 +67,29 @@ export default function Contact() {
             <>
               <h2 className="text-xl font-semibold text-gray-800 mb-6">Gửi Tin Nhắn</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Họ tên *</label>
-                    <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-rose-300 focus:outline-none focus:ring-2" />
+                    <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base focus:ring-rose-300 focus:outline-none focus:ring-2" />
                   </div>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Điện thoại</label>
-                    <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-rose-300 focus:outline-none focus:ring-2" />
+                    <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base focus:ring-rose-300 focus:outline-none focus:ring-2" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Email *</label>
-                  <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-rose-300 focus:outline-none focus:ring-2" />
+                  <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base focus:ring-rose-300 focus:outline-none focus:ring-2" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Tiêu đề</label>
-                  <input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-rose-300 focus:outline-none focus:ring-2" />
+                  <input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base focus:ring-rose-300 focus:outline-none focus:ring-2" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Nội dung *</label>
-                  <textarea required rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-rose-300 focus:outline-none focus:ring-2 resize-none" />
+                  <textarea required rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base focus:ring-rose-300 focus:outline-none focus:ring-2 resize-none" />
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 transition disabled:opacity-50">
+                <button type="submit" disabled={loading} className="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-50">
                   {loading ? 'Đang gửi...' : 'Gửi Tin Nhắn'}
                 </button>
               </form>

@@ -74,7 +74,7 @@ export default function CustomOrderDetail() {
           <h1 className="text-xl font-bold text-gray-800">Đơn #{order.code}</h1>
           <p className="text-gray-400 text-sm mt-0.5">{formatDate(order.createdAt)}</p>
         </div>
-        <span className={`text-sm px-3 py-1 rounded-full font-semibold ${CUSTOM_STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
+        <span className={`text-sm px-3 py-1 rounded-full font-semibold shrink-0 ${CUSTOM_STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
           {CUSTOM_STATUS_LABEL[order.status]}
         </span>
       </div>
@@ -92,7 +92,7 @@ export default function CustomOrderDetail() {
             {walletBalance < payAmount && <> — cần thêm <span className="font-bold">{formatCurrency(payAmount - walletBalance)}</span>. <Link to="/wallet" className="underline">Nạp ví</Link></>}
           </p>
           <button onClick={handlePay} disabled={paying || walletBalance < payAmount}
-            className="bg-amber-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-amber-600 transition disabled:opacity-60">
+            className="bg-amber-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-amber-600 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto">
             {paying ? 'Đang xử lý...' : `Thanh toán ${formatCurrency(payAmount)} bằng ví`}
           </button>
         </div>
@@ -111,7 +111,7 @@ export default function CustomOrderDetail() {
             {walletBalance < remainingAmount && <> — cần thêm <span className="font-bold">{formatCurrency(remainingAmount - walletBalance)}</span>. <Link to="/wallet" className="underline">Nạp ví</Link></>}
           </p>
           <button onClick={handlePayRemaining} disabled={paying || walletBalance < remainingAmount}
-            className="bg-teal-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-600 transition disabled:opacity-60">
+            className="bg-teal-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-600 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto">
             {paying ? 'Đang xử lý...' : `Thanh toán ${formatCurrency(remainingAmount)} bằng ví`}
           </button>
         </div>
