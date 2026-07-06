@@ -88,4 +88,52 @@ const getProductReviews = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { canReview, createReview, getProductReviews };
+const adminGetReviews = async (req, res) => {
+  try {
+    const { page, limit, offset } = paginate(req.query);
+    const { rating, isApproved, search } = req.query;
+    const where = {};
+    if (rating) where.rating = parseInt(rating);
+    if (isApproved !== undefined && isApproved !== '') where.isApproved = isApproved === 'true';
+
+    const productWhere = search ? { name: { [Op.iLike]: `%${search}%` } } : undefined;
+
+    const { count, rows } = await Review.findAndCountAll({
+      where,
+      include: [
+        { model: User, attributes: ['id', 'fullName', 'email'] },
+        { model: Product, attributes: ['id', 'name', 'slug'], ...(productWhere ? { where: productWhere, required: true } : {}) },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit, offset,
+    });
+    res.json(paginateResult(count, rows, page, limit));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const adminToggleApprove = async (req, res) => {
+  try {
+    const review = await Review.findByPk(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Không tìm thấy đánh giá' });
+    await review.update({ isApproved: !review.isApproved });
+    res.json({ message: review.isApproved ? 'Đã duyệt đánh giá' : 'Đã ẩn đánh giá', isApproved: review.isApproved });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const adminDeleteReview = async (req, res) => {
+  try {
+    const review = await Review.findByPk(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Không tìm thấy đánh giá' });
+    const { productId } = review;
+    await review.destroy();
+    const allReviews = await Review.findAll({ where: { productId } });
+    const avg = allReviews.length > 0 ? allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length : 0;
+    await Product.update(
+      { averageRating: avg ? parseFloat(avg.toFixed(2)) : 0, reviewCount: allReviews.length },
+      { where: { id: productId } }
+    );
+    res.json({ message: 'Đã xóa đánh giá' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { canReview, createReview, getProductReviews, adminGetReviews, adminToggleApprove, adminDeleteReview };

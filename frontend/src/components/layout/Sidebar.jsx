@@ -6,7 +6,7 @@ import {
   FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2,
   FiTag, FiGrid, FiList, FiTool, FiFileText,
   FiMessageSquare, FiImage, FiActivity, FiLogOut, FiRefreshCw, FiMessageCircle,
-  FiMenu, FiX
+  FiMenu, FiX, FiStar
 } from 'react-icons/fi';
 import NotificationBell from '../common/NotificationBell';
 import api from '../../services/api';
@@ -25,6 +25,7 @@ const MENUS = {
         { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
         { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
         { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
+        { label: 'Đánh giá', icon: FiStar, to: '/admin/reviews' },
       ]
     },
     {
