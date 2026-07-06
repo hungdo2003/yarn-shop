@@ -171,12 +171,16 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
         </div>
 
         {pagination.total > 0 && (
-          <div className="px-6 py-2 border-t flex items-center justify-between">
-            <span className="text-xs text-gray-400">Tổng: {pagination.total} · Trang {pagination.page}/{pagination.totalPages}</span>
-            <Pagination
-              pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
-              onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
-            />
+          <div className="border-t">
+            <div className="px-6 pt-2 text-xs text-gray-400">
+              Tổng: {pagination.total} sản phẩm{pagination.totalPages > 1 && ` · Trang ${pagination.page}/${pagination.totalPages}`}
+            </div>
+            <div className="pb-1">
+              <Pagination
+                pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
+                onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
+              />
+            </div>
           </div>
         )}
 
@@ -505,6 +509,12 @@ const NonEventDiscounts = () => {
       </div>
 
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b">
+          <span className="text-sm text-gray-500">
+            Tổng: <strong>{pagination.total}</strong> sản phẩm
+            {pagination.totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {pagination.page}/{pagination.totalPages}</span>}
+          </span>
+        </div>
         {loading ? (
           <div className="text-center py-14 text-gray-400">Đang tải...</div>
         ) : !data?.items?.length ? (
@@ -559,15 +569,10 @@ const NonEventDiscounts = () => {
         )}
       </div>
 
-      {data?.pagination && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>Tổng: {pagination.total} sản phẩm · Trang {pagination.page}/{pagination.totalPages}</span>
-          <Pagination
-            pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
-            onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
-          />
-        </div>
-      )}
+      <Pagination
+        pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
+        onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
+      />
     </div>
   );
 };
@@ -658,6 +663,14 @@ const SaleEventManagement = () => {
         >Tìm</button>
       </div>
 
+      {/* Total count */}
+      {data?.pagination && (
+        <p className="text-sm text-gray-500 mb-3">
+          Tổng: <strong>{pagination.total}</strong> sự kiện
+          {pagination.totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {pagination.page}/{pagination.totalPages}</span>}
+        </p>
+      )}
+
       {/* Event cards */}
       {loading ? (
         <div className="text-center py-20 text-gray-400">Đang tải...</div>
@@ -702,15 +715,10 @@ const SaleEventManagement = () => {
         </div>
       )}
 
-      {data?.pagination && (
-        <div className="mt-5 flex items-center justify-between text-sm text-gray-500">
-          <span>Tổng: {pagination.total} sự kiện · Trang {pagination.page}/{pagination.totalPages}</span>
-          <Pagination
-            pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
-            onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
-          />
-        </div>
-      )}
+      <Pagination
+        pagination={{ page: pagination.page, totalPages: pagination.totalPages }}
+        onPageChange={p => setPagination(prev => ({ ...prev, page: p }))}
+      />
 
       {showCreate && (
         <CreateEventModal
