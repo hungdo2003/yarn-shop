@@ -21,7 +21,8 @@ const Product = sequelize.define('Product', {
   status: { type: DataTypes.ENUM('active', 'inactive', 'out_of_stock'), defaultValue: 'active' },
   isCustomizable: { type: DataTypes.BOOLEAN, defaultValue: false },
   saleStartDate: { type: DataTypes.DATE },
-  saleEndDate: { type: DataTypes.DATE }
+  saleEndDate: { type: DataTypes.DATE },
+  saleEventId: { type: DataTypes.INTEGER, allowNull: true },
 });
 
 module.exports = Product;

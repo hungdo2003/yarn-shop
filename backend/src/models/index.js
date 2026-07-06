@@ -157,6 +157,8 @@ Wishlist.belongsTo(Product, { foreignKey: 'productId' });
 // SaleEvent
 User.hasMany(SaleEvent, { foreignKey: 'createdBy', as: 'saleEvents' });
 SaleEvent.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
+SaleEvent.hasMany(Product, { foreignKey: 'saleEventId', as: 'products' });
+Product.belongsTo(SaleEvent, { foreignKey: 'saleEventId', as: 'saleEvent' });
 
 // Chat
 User.hasMany(ChatConversation, { foreignKey: 'customerId', as: 'customerConversations' });

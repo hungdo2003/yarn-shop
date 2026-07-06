@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useFetch from '../../hooks/useFetch';
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
@@ -374,125 +375,6 @@ const ReviewPanel = ({ product, onClose }) => {
   );
 };
 
-/* ── Bulk discount modal ── */
-const BulkDiscountModal = ({ selectedIds, selectAll, total, onClose, onDone }) => {
-  const [form, setForm] = useState({ name: '', discountPct: '', saleStartDate: '', saleEndDate: '', removeDiscount: false });
-  const [loading, setLoading] = useState(false);
-  const count = selectAll ? total : selectedIds.length;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name?.trim()) return toast.error('Vui lòng đặt tên sự kiện');
-    if (!form.removeDiscount && (!form.discountPct || form.discountPct < 1 || form.discountPct > 99)) {
-      return toast.error('Vui lòng nhập % giảm giá từ 1 đến 99');
-    }
-    setLoading(true);
-    try {
-      const payload = {
-        name: form.name.trim(),
-        selectAll,
-        productIds: selectAll ? [] : selectedIds,
-        removeDiscount: form.removeDiscount,
-        discountPct: form.removeDiscount ? undefined : Number(form.discountPct),
-        saleStartDate: form.saleStartDate || undefined,
-        saleEndDate: form.saleEndDate || undefined,
-      };
-      const r = await api.post('/products/bulk-discount', payload);
-      toast.success(r.data.message);
-      onDone();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Áp dụng thất bại');
-    } finally { setLoading(false); }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b">
-          <div>
-            <h3 className="font-bold text-gray-800 flex items-center gap-2">
-              <FiTag size={16} className="text-rose-500" /> Sự kiện giảm giá
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Áp dụng cho <strong className="text-rose-600">{count}</strong> sản phẩm {selectAll ? '(tất cả)' : 'đã chọn'}
-            </p>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 active:scale-95 transition-all">
-            <FiX size={16} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1.5">Tên sự kiện <span className="text-rose-500">*</span></label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="VD: Sale hè 2025, Flash sale 7/7..."
-              className="input text-base"
-              required
-            />
-          </div>
-          {/* Remove discount toggle */}
-          <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-gray-50 transition-colors">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${form.removeDiscount ? 'bg-rose-500 border-rose-500' : 'border-gray-300'}`}>
-              {form.removeDiscount && <FiCheck size={11} className="text-white" strokeWidth={3} />}
-            </div>
-            <input type="checkbox" className="hidden" checked={form.removeDiscount} onChange={e => setForm(f => ({ ...f, removeDiscount: e.target.checked }))} />
-            <div>
-              <p className="text-sm font-medium text-gray-700">Xoá giảm giá</p>
-              <p className="text-xs text-gray-400">Đặt lại giá gốc và xoá ngày khuyến mãi</p>
-            </div>
-          </label>
-
-          {!form.removeDiscount && (
-            <>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">% Giảm giá <span className="text-rose-500">*</span></label>
-                <div className="relative">
-                  <input
-                    type="number" min="1" max="99"
-                    value={form.discountPct}
-                    onChange={e => setForm(f => ({ ...f, discountPct: e.target.value }))}
-                    placeholder="Ví dụ: 20"
-                    className="input text-base pr-8"
-                    required={!form.removeDiscount}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">%</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1.5">Ngày bắt đầu <span className="text-gray-400 text-xs font-normal">(tuỳ chọn)</span></label>
-                  <input type="date" value={form.saleStartDate} onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))} className="input text-base" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1.5">Ngày kết thúc <span className="text-gray-400 text-xs font-normal">(tuỳ chọn)</span></label>
-                  <input type="date" value={form.saleEndDate} onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))} className="input text-base" />
-                </div>
-              </div>
-              {form.discountPct && (
-                <div className="bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5 text-xs text-rose-700 font-medium">
-                  Mỗi sản phẩm sẽ được giảm <strong>{form.discountPct}%</strong> so với giá gốc
-                  {form.saleEndDate && <span> · Hết hạn {new Date(form.saleEndDate).toLocaleDateString('vi-VN')}</span>}
-                </div>
-              )}
-            </>
-          )}
-
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">Huỷ</button>
-            <button type="submit" disabled={loading} className={`flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:opacity-60 ${form.removeDiscount ? 'bg-gray-600 hover:bg-gray-700 text-white' : 'btn-primary'}`}>
-              {loading ? 'Đang áp dụng...' : form.removeDiscount ? 'Xoá giảm giá' : 'Áp dụng'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 /* ── Main page ── */
 const ProductManagement = () => {
   const [page, setPage] = useState(1);
@@ -502,7 +384,7 @@ const ProductManagement = () => {
   const [viewProduct, setViewProduct] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [bulkModal, setBulkModal] = useState(false);
+  const navigate = useNavigate();
   const { data, loading, refetch } = useFetch('/products', { page, search, status: statusFilter });
   const { data: cats } = useFetch('/categories');
   const allCategories = (cats || []).flatMap(c => [c, ...(c.children || [])]);
@@ -581,10 +463,10 @@ const ProductManagement = () => {
             </button>
           )}
           <button
-            onClick={() => setBulkModal(true)}
+            onClick={() => navigate('/admin/sale-events')}
             className="flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-xl active:scale-95 transition-all"
           >
-            <FiTag size={14} /> Sự kiện giảm giá
+            <FiTag size={14} /> Quản lý sự kiện KM
           </button>
           <button onClick={clearSelection} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all">
             <FiX size={15} />
@@ -632,7 +514,14 @@ const ProductManagement = () => {
                       }
                       <div className="min-w-0">
                         <p className="font-medium line-clamp-1">{p.name}</p>
-                        <p className="text-gray-400 text-xs">{p.code}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-gray-400 text-xs">{p.code}</p>
+                          {p.saleEvent && (
+                            <span className="text-[10px] bg-rose-50 text-rose-500 font-medium px-1.5 py-0.5 rounded-full border border-rose-100">
+                              {p.saleEvent.name}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -750,15 +639,6 @@ const ProductManagement = () => {
         />
       )}
 
-      {bulkModal && (
-        <BulkDiscountModal
-          selectedIds={[...selected]}
-          selectAll={selectAll}
-          total={data?.pagination?.total ?? 0}
-          onClose={() => setBulkModal(false)}
-          onDone={() => { setBulkModal(false); clearSelection(); refetch(); }}
-        />
-      )}
     </div>
   );
 };

@@ -24,7 +24,8 @@ const getAll = async (req, res) => {
 
     const include = [
       { model: Category, where: type ? { type } : undefined },
-      { model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }
+      { model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] },
+      { model: SaleEvent, as: 'saleEvent', attributes: ['id', 'name'], required: false },
     ];
     if (categoryId) include[0].where = { ...include[0].where, id: categoryId };
 
