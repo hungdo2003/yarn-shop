@@ -34,7 +34,7 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
       const r = await api.get('/sale-events/available-products', {
         params: { page: pagination.page, limit: 20, search },
       });
-      setProducts(r.data.rows ?? []);
+      setProducts(r.data.items ?? []);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1 }));
     } catch { toast.error('Không tải được danh sách sản phẩm'); }
     finally { setLoading(false); }
@@ -518,7 +518,7 @@ const SaleEventManagement = () => {
       {/* Event cards */}
       {loading ? (
         <div className="text-center py-20 text-gray-400">Đang tải...</div>
-      ) : !data?.rows?.length ? (
+      ) : !data?.items?.length ? (
         <div className="text-center py-20 text-gray-400">
           <FiTag size={40} className="mx-auto mb-3 opacity-25" />
           <p className="font-medium">Chưa có sự kiện nào</p>
@@ -526,7 +526,7 @@ const SaleEventManagement = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.rows.map(ev => {
+          {data.items.map(ev => {
             const badge = statusBadge(ev);
             return (
               <div
