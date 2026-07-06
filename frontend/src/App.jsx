@@ -15,6 +15,7 @@ import OrderDetail from './pages/OrderDetail';
 import CustomOrder from './pages/CustomOrder';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Policies from './pages/Policies';
 import HowToBuy from './pages/HowToBuy';
@@ -89,6 +90,7 @@ const App = () => (
       <Route path="/products/:slug" element={<ProductDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/custom-order" element={<CustomOrder />} />
       <Route path="/policies" element={<Policies />} />
       <Route path="/how-to-buy" element={<HowToBuy />} />

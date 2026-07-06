@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, Role } = require('../models');
 const { log } = require('./log.controller');
-const { sendOtpEmail } = require('../services/emailService');
+const { sendOtpEmail, sendPasswordResetEmail } = require('../services/emailService');
 const { generateOtp, saveOtp, consumeOtp } = require('../utils/otpStore');
 
 const signToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -91,4 +91,42 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { sendOtp, verifyOtp, login, getMe, changePassword };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Vui lòng nhập email' });
+    const user = await User.findOne({ where: { email: email.toLowerCase() }, include: [Role] });
+    if (!user) return res.status(404).json({ message: 'Email không tồn tại trong hệ thống' });
+    if (!user.isActive) return res.status(403).json({ message: 'Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.' });
+
+    const otp = generateOtp();
+    saveOtp(`reset:${email.toLowerCase()}`, otp, { email: email.toLowerCase() });
+    await sendPasswordResetEmail(email, otp, user.fullName);
+    res.json({ message: 'Mã OTP đã được gửi đến email của bạn' });
+  } catch (err) {
+    console.error('forgotPassword error:', err);
+    res.status(500).json({ message: 'Không thể gửi email. Vui lòng thử lại.' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+
+    const result = consumeOtp(`reset:${email.toLowerCase()}`, otp);
+    if (!result.valid) return res.status(400).json({ message: result.reason });
+
+    const user = await User.findOne({ where: { email: email.toLowerCase() } });
+    if (!user) return res.status(404).json({ message: 'Người dùng không tồn tại' });
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await user.update({ password: hashed });
+    await log(user.id, email, 'RESET_PASSWORD', 'User', user.id, {}, req);
+    res.json({ message: 'Đặt lại mật khẩu thành công' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { sendOtp, verifyOtp, login, getMe, changePassword, forgotPassword, resetPassword };
