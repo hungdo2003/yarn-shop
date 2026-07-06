@@ -47,7 +47,7 @@ const ProductCard = ({ product }) => {
   const hasDiscount = product.salePrice && product.salePrice < product.price;
 
   return (
-    <Link to={`/products/${product.slug}`} className="group card p-0 overflow-hidden hover:shadow-md transition-shadow">
+    <Link to={`/products/${product.slug}`} className="group card p-0 overflow-hidden hover:shadow-md active:scale-[0.98] transition-all">
       <div className="relative overflow-hidden aspect-square bg-gray-100">
         {image ? (
           <img src={image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -66,30 +66,30 @@ const ProductCard = ({ product }) => {
         )}
         <button
           onClick={handleWishlist}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-all"
+          className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 hover:bg-white active:scale-95 shadow-sm transition-all"
           title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
         >
           <FiHeart size={15} className={wishlisted ? 'text-rose-500 fill-rose-500' : 'text-gray-400'} />
         </button>
       </div>
-      <div className="p-3">
+      <div className="p-2.5 xs:p-3">
         <p className="text-xs text-gray-500 mb-1">{product.Category?.name}</p>
-        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm mb-1.5">{product.name}</h3>
+        <h3 className="font-medium text-gray-900 line-clamp-2 text-xs xs:text-sm mb-1.5">{product.name}</h3>
         {product.color && <p className="text-xs text-gray-500 mb-1">Màu: {product.color}</p>}
         <div className="mb-2">
           <Stars rating={product.averageRating || 0} count={product.reviewCount || 0} />
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-semibold text-primary">{formatCurrency(price)}</span>
+        <div className="flex items-center justify-between gap-1">
+          <div className="min-w-0">
+            <span className="font-semibold text-primary text-xs xs:text-sm">{formatCurrency(price)}</span>
             {hasDiscount && <span className="text-xs text-gray-400 line-through ml-1">{formatCurrency(product.price)}</span>}
           </div>
           {product.stock > 0 && (
             <button
               onClick={handleAddToCart}
-              className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white active:scale-95 transition-all shrink-0"
             >
-              <FiShoppingCart size={16} />
+              <FiShoppingCart size={15} />
             </button>
           )}
         </div>

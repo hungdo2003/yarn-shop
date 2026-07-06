@@ -28,22 +28,23 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (search.trim()) navigate(`/products?search=${encodeURIComponent(search.trim())}`);
+    if (search.trim()) { navigate(`/products?search=${encodeURIComponent(search.trim())}`); setMenuOpen(false); }
   };
 
-  const handleLogout = () => { logout(); navigate('/'); setUserMenuOpen(false); };
+  const handleLogout = () => { logout(); navigate('/'); setUserMenuOpen(false); setMenuOpen(false); };
 
   const dashboardLink = isRole('admin') ? '/manager' : isRole('staff') ? '/staff' : '/profile';
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 text-rose-600 font-bold text-xl shrink-0">
-            <span className="text-2xl">🧶</span>
+        <div className="flex items-center justify-between h-14 xs:h-16">
+          <Link to="/" className="flex items-center gap-2 text-rose-600 font-bold text-lg xs:text-xl shrink-0 active:scale-95 transition-transform">
+            <span className="text-xl xs:text-2xl">🧶</span>
             <span>YarnShop</span>
           </Link>
 
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-5 text-sm">
             <Link to="/products" className="text-gray-600 hover:text-rose-600 transition-colors font-medium">Shop</Link>
             <Link to="/flash-sale" className="flex items-center gap-1 font-bold text-orange-500 hover:text-orange-600 transition-colors relative">
@@ -63,43 +64,52 @@ const Navbar = () => {
               </div>
             </div>
             {user && isRole('customer') && walletBalance !== null && (
-              <Link to="/wallet" className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3.5 py-1.5 rounded-xl font-bold hover:from-emerald-600 hover:to-green-600 transition-all shadow-sm hover:shadow-md" style={{ fontSize: '13px' }}>
+              <Link to="/wallet" className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3.5 py-1.5 rounded-xl font-bold hover:from-emerald-600 hover:to-green-600 transition-all shadow-sm hover:shadow-md active:scale-95" style={{ fontSize: '13px' }}>
                 <span className="text-base leading-none">💰</span>
                 <span>{Number(walletBalance).toLocaleString('vi-VN')}đ</span>
               </Link>
             )}
           </div>
 
+          {/* Desktop search */}
           <form onSubmit={handleSearch} className="hidden md:flex items-center">
             <div className="relative">
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm kiếm sản phẩm..."
-                className="border border-gray-300 rounded-l-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-400 w-52"
+                className="border border-gray-300 rounded-l-lg px-3 py-1.5 text-base focus:outline-none focus:ring-1 focus:ring-rose-400 w-52"
               />
-              <button type="submit" className="bg-rose-500 text-white px-3 py-1.5 rounded-r-lg hover:bg-rose-600">
+              <button type="submit" className="bg-rose-500 text-white px-3 py-1.5 rounded-r-lg hover:bg-rose-600 active:scale-95 transition-all h-full">
                 <FiSearch />
               </button>
             </div>
           </form>
 
-          <div className="flex items-center gap-3">
+          {/* Right icons */}
+          <div className="flex items-center gap-1 xs:gap-2">
             {user && isRole('customer') && <NotificationBell />}
             {user && isRole('customer') && (
-              <Link to="/wishlist" className="relative p-2 text-gray-600 hover:text-rose-600" title="Danh sách yêu thích">
-                <FiHeart size={22} />
+              <Link
+                to="/wishlist"
+                className="relative w-11 h-11 flex items-center justify-center text-gray-600 hover:text-rose-600 active:scale-95 transition-all rounded-lg"
+                title="Danh sách yêu thích"
+              >
+                <FiHeart size={21} />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
                     {wishlistCount > 99 ? '99+' : wishlistCount}
                   </span>
                 )}
               </Link>
             )}
-            <Link to={user && isRole('customer') ? '/cart' : '/login'} className="relative p-2 text-gray-600 hover:text-rose-600">
-              <FiShoppingCart size={22} />
+            <Link
+              to={user && isRole('customer') ? '/cart' : '/login'}
+              className="relative w-11 h-11 flex items-center justify-center text-gray-600 hover:text-rose-600 active:scale-95 transition-all rounded-lg"
+            >
+              <FiShoppingCart size={21} />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
@@ -107,15 +117,18 @@ const Navbar = () => {
 
             {user ? (
               <div className="relative">
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 text-gray-700 hover:text-rose-600">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 text-gray-700 hover:text-rose-600 h-11 px-1 active:scale-95 transition-all rounded-lg min-w-0"
+                >
                   {user.avatar ? (
-                    <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center text-sm font-semibold shrink-0">
                       {user.fullName?.[0]?.toUpperCase()}
                     </div>
                   )}
-                  <span className="hidden md:block text-sm font-medium max-w-[120px] truncate">{user.fullName}</span>
+                  <span className="hidden md:block text-sm font-medium max-w-[120px] truncate min-w-0">{user.fullName}</span>
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
@@ -126,65 +139,93 @@ const Navbar = () => {
                         {tier && <TierBadge tier={tier} size="sm" />}
                       </div>
                     </div>
-                    <Link to={dashboardLink} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <Link to={dashboardLink} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100">
                       <FiSettings size={16} /> Dashboard
                     </Link>
                     {isRole('customer') && <>
-                      <Link to="/wishlist" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-rose-50">
-                        <span className="flex items-center gap-2"><FiHeart size={15} className="text-rose-400" /> Yêu thích của tôi</span>
-                        {wishlistCount > 0 && <span className="text-xs font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">{wishlistCount}</span>}
+                      <Link to="/wishlist" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-rose-50 active:bg-rose-100">
+                        <span className="flex items-center gap-2 min-w-0"><FiHeart size={15} className="text-rose-400 shrink-0" /> <span className="truncate">Yêu thích của tôi</span></span>
+                        {wishlistCount > 0 && <span className="text-xs font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full ml-1 shrink-0">{wishlistCount}</span>}
                       </Link>
-                      <Link to="/wallet" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-green-50 group">
+                      <Link to="/wallet" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 active:bg-green-100">
                         <span className="flex items-center gap-2">💰 Ví của tôi</span>
                         {walletBalance !== null && (
-                          <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full ml-1 shrink-0">
                             {walletBalance.toLocaleString('vi-VN')}đ
                           </span>
                         )}
                       </Link>
-                      <Link to="/orders" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <Link to="/orders" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100">
                         <FiPackage size={16} /> Đơn hàng của tôi
                       </Link>
-                      <Link to="/addresses" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <Link to="/addresses" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100">
                         📍 Địa chỉ giao hàng
                       </Link>
-                      <Link to="/returns" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <Link to="/returns" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100">
                         🔄 Đổi trả hàng
                       </Link>
                     </>}
-                    <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100">
                       <FiUser size={16} /> Thông tin cá nhân
                     </Link>
                     <hr className="my-1" />
-                    <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all">
                       <FiLogOut size={16} /> Đăng xuất
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="text-sm px-3 py-1.5 border border-rose-300 text-rose-600 rounded-lg hover:bg-rose-50 transition">Đăng nhập</Link>
-                <Link to="/register" className="text-sm px-3 py-1.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">Đăng ký</Link>
+              <div className="hidden xs:flex items-center gap-1.5">
+                <Link to="/login" className="text-xs xs:text-sm px-2.5 xs:px-3 py-1.5 border border-rose-300 text-rose-600 rounded-lg hover:bg-rose-50 active:scale-95 transition-all">Đăng nhập</Link>
+                <Link to="/register" className="text-xs xs:text-sm px-2.5 xs:px-3 py-1.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 active:scale-95 transition-all">Đăng ký</Link>
               </div>
             )}
 
-            <button className="md:hidden text-gray-600" onClick={() => setMenuOpen(!menuOpen)}>
+            {/* Hamburger — 44px touch target */}
+            <button
+              className="md:hidden w-11 h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 active:scale-95 transition-all rounded-lg"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
               {menuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile drawer */}
       {menuOpen && (
-        <div className="md:hidden border-t bg-white px-4 py-3 space-y-2">
+        <div className="md:hidden border-t bg-white px-4 py-3 space-y-1 max-h-[80vh] overflow-y-auto">
+          {/* Mobile search */}
           <form onSubmit={handleSearch} className="flex mb-3">
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm kiếm..." className="border rounded-l-lg px-3 py-2 text-sm flex-1 focus:outline-none" />
-            <button type="submit" className="bg-rose-500 text-white px-3 rounded-r-lg"><FiSearch /></button>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm kiếm..."
+              className="border rounded-l-lg px-3 py-2.5 text-base flex-1 focus:outline-none focus:ring-1 focus:ring-rose-400 min-w-0"
+            />
+            <button type="submit" className="bg-rose-500 text-white px-3 rounded-r-lg active:scale-95 transition-all"><FiSearch /></button>
           </form>
+
+          {/* Nav links */}
           {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/flash-sale', '⚡ Flash Sale'], ['/promotions', 'Khuyến mãi'], ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
-            <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="block py-2 text-gray-600 hover:text-rose-600 border-b border-gray-50 text-sm">{label}</Link>
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center py-3 px-1 text-gray-700 hover:text-rose-600 border-b border-gray-50 text-sm active:bg-rose-50 rounded-lg transition-colors"
+            >
+              {label}
+            </Link>
           ))}
+
+          {/* Login/Register for guests */}
+          {!user && (
+            <div className="flex gap-2 pt-2 pb-1">
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="flex-1 text-center py-2.5 border border-rose-300 text-rose-600 rounded-lg text-sm font-medium active:scale-95 transition-all">Đăng nhập</Link>
+              <Link to="/register" onClick={() => setMenuOpen(false)} className="flex-1 text-center py-2.5 bg-rose-500 text-white rounded-lg text-sm font-medium active:scale-95 transition-all">Đăng ký</Link>
+            </div>
+          )}
         </div>
       )}
     </nav>
