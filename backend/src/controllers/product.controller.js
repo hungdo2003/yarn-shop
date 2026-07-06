@@ -8,7 +8,9 @@ const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
     const { search, categoryId, type, color, minPrice, maxPrice, minRating, status, sortBy, isNew, inStock } = req.query;
-    const where = { status: status || 'active' };
+    const where = {};
+    if (!status || status === 'active') where.status = 'active';
+    else if (status !== 'all') where.status = status;
     if (search) where.name = { [Op.iLike]: `%${search}%` };
     if (color) where.color = { [Op.iLike]: `%${color}%` };
     if (isNew === 'true') { const d = new Date(); d.setDate(d.getDate() - 30); where.createdAt = { [Op.gte]: d }; }

@@ -5,7 +5,7 @@ import { formatCurrency } from '../../utils/formatters';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiTag, FiCheck } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiSearch, FiStar, FiEye, FiEyeOff, FiX, FiMessageSquare, FiTag, FiCheck, FiPauseCircle, FiPlayCircle } from 'react-icons/fi';
 
 const fmt = n => n ? Number(n).toLocaleString('vi-VN') + 'đ' : '';
 
@@ -484,12 +484,13 @@ const BulkDiscountModal = ({ selectedIds, selectAll, total, onClose, onDone }) =
 const ProductManagement = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [modal, setModal] = useState(null);
   const [viewProduct, setViewProduct] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [bulkModal, setBulkModal] = useState(false);
-  const { data, loading, refetch } = useFetch('/products', { page, search, status: '' });
+  const { data, loading, refetch } = useFetch('/products', { page, search, status: statusFilter });
   const { data: cats } = useFetch('/categories');
   const allCategories = (cats || []).flatMap(c => [c, ...(c.children || [])]);
   const pageItems = data?.items || [];
@@ -516,11 +517,17 @@ const ProductManagement = () => {
 
   const clearSelection = () => { setSelected(new Set()); setSelectAll(false); };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Deactivate this product?')) return;
-    await api.delete(`/products/${id}`);
-    toast.success('Product deactivated');
-    refetch();
+  const handleToggleStatus = async (product) => {
+    const isActive = product.status === 'active';
+    const msg = isActive ? 'Dừng bán sản phẩm này?' : 'Cho phép bán lại sản phẩm này?';
+    if (!confirm(msg)) return;
+    try {
+      await api.put(`/products/${product.id}`, { status: isActive ? 'inactive' : 'active' });
+      toast.success(isActive ? 'Đã dừng bán sản phẩm' : 'Đã cho bán lại sản phẩm');
+      refetch();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Thao tác thất bại');
+    }
   };
 
   return (
@@ -533,9 +540,19 @@ const ProductManagement = () => {
       </div>
 
       <div className="card mb-4">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input placeholder="Search products..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input pl-9 text-base" />
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[180px]">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input placeholder="Search products..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input pl-9 text-base" />
+          </div>
+          <div className="flex rounded-xl overflow-hidden border border-gray-200 text-sm font-medium shrink-0">
+            {[['all', 'Tất cả'], ['active', 'Đang bán'], ['inactive', 'Dừng bán']].map(([val, label]) => (
+              <button key={val} onClick={() => { setStatusFilter(val); setPage(1); clearSelection(); }}
+                className={`px-4 py-2 transition-colors ${statusFilter === val ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -587,7 +604,7 @@ const ProductManagement = () => {
             </thead>
             <tbody className="divide-y">
               {data?.items?.map(p => (
-                <tr key={p.id} className={`hover:bg-gray-50 ${selected.has(p.id) ? 'bg-rose-50/40' : ''}`}>
+                <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${selected.has(p.id) ? 'bg-rose-50/40' : ''} ${p.status !== 'active' ? 'opacity-60' : ''}`}>
                   <td className="px-4 py-3">
                     <button onClick={() => toggleOne(p.id)} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${selected.has(p.id) ? 'bg-rose-500 border-rose-500' : 'border-gray-300 hover:border-gray-400'}`}>
                       {selected.has(p.id) && <FiCheck size={11} className="text-white" strokeWidth={3} />}
@@ -676,13 +693,23 @@ const ProductManagement = () => {
                       >
                         <FiEdit2 size={15} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        title="Xóa"
-                        className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg active:scale-95 transition-all"
-                      >
-                        <FiTrash2 size={15} />
-                      </button>
+                      {p.status === 'active' ? (
+                        <button
+                          onClick={() => handleToggleStatus(p)}
+                          title="Dừng bán"
+                          className="w-9 h-9 flex items-center justify-center text-orange-500 hover:bg-orange-50 rounded-lg active:scale-95 transition-all"
+                        >
+                          <FiPauseCircle size={15} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleStatus(p)}
+                          title="Bán lại"
+                          className="w-9 h-9 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-lg active:scale-95 transition-all"
+                        >
+                          <FiPlayCircle size={15} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
