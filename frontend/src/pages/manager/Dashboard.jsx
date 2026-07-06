@@ -35,12 +35,12 @@ const StatusBadge = ({ status, map }) => {
 };
 
 const DateRangeFilter = ({ from, to, onFrom, onTo, onClear }) => (
-  <div className="flex items-center gap-1.5">
+  <div className="flex flex-wrap items-center gap-1.5">
     <input type="date" value={from} onChange={e => onFrom(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 min-w-0" />
     <span className="text-gray-300 text-xs">—</span>
     <input type="date" value={to} onChange={e => onTo(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 min-w-0" />
     {(from || to) && (
       <button onClick={onClear} className="text-xs text-gray-400 hover:text-rose-500 transition">✕</button>
     )}
@@ -91,12 +91,12 @@ const OrdersSection = () => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-5 pt-5 pb-3 border-b">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h3 className="font-semibold text-gray-800">Đơn hàng</h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {[['regular', '🛒 Đơn thường'], ['custom', '✂️ Đơn tùy chỉnh']].map(([v, l]) => (
               <button key={v} onClick={() => setTab(v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${tab === v ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${tab === v ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {l}
               </button>
             ))}
@@ -106,7 +106,7 @@ const OrdersSection = () => {
         {tab === 'regular' && (
           <div className="flex flex-wrap gap-2 items-center">
             <select value={regStatus} onChange={e => { setRegStatus(e.target.value); setRegPage(1); }}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
               <option value="">Tất cả trạng thái</option>
               {Object.entries(REG_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -120,7 +120,7 @@ const OrdersSection = () => {
         {tab === 'custom' && (
           <div className="flex flex-wrap gap-2 items-center">
             <select value={cusStatus} onChange={e => { setCusStatus(e.target.value); setCusPage(1); }}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
               <option value="">Tất cả trạng thái</option>
               {Object.entries(CUS_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -139,8 +139,11 @@ const OrdersSection = () => {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã đơn', 'Khách hàng', 'SĐT', 'Tổng tiền', 'Trạng thái', 'Ngày đặt'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã đơn', ''], ['Khách hàng', ''], ['SĐT', 'hidden md:table-cell'],
+                      ['Tổng tiền', ''], ['Trạng thái', ''], ['Ngày đặt', 'hidden sm:table-cell']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -151,10 +154,10 @@ const OrdersSection = () => {
                       <tr key={o.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3"><code className="text-xs font-mono text-rose-600">{o.orderCode}</code></td>
                         <td className="px-4 py-3 font-medium text-gray-800 max-w-[140px] truncate">{o.shippingName}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">{o.shippingPhone}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{o.shippingPhone}</td>
                         <td className="px-4 py-3 font-semibold text-gray-800">{formatCurrency(o.total)}</td>
                         <td className="px-4 py-3"><StatusBadge status={o.status} map={REG_STATUS} /></td>
-                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">{formatDate(o.createdAt)}</td>
                       </tr>
                     ))
                   }
@@ -175,8 +178,11 @@ const OrdersSection = () => {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã đơn', 'Khách hàng', 'Mô tả', 'Báo giá', 'Trạng thái', 'Ngày gửi'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã đơn', ''], ['Khách hàng', ''], ['Mô tả', 'hidden md:table-cell'],
+                      ['Báo giá', ''], ['Trạng thái', ''], ['Ngày gửi', 'hidden sm:table-cell']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -187,12 +193,12 @@ const OrdersSection = () => {
                       <tr key={o.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3"><code className="text-xs font-mono text-violet-600">{o.code}</code></td>
                         <td className="px-4 py-3 font-medium text-gray-800 max-w-[120px] truncate">{o.User?.fullName || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs max-w-[200px] truncate">{o.description}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs max-w-[200px] truncate hidden md:table-cell">{o.description}</td>
                         <td className="px-4 py-3 font-semibold text-gray-800">
                           {o.quotedPrice ? formatCurrency(o.quotedPrice) : <span className="text-gray-400 text-xs italic">Chưa có</span>}
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={o.status} map={CUS_STATUS} /></td>
-                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">{formatDate(o.createdAt)}</td>
                       </tr>
                     ))
                   }

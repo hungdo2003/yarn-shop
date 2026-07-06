@@ -27,15 +27,15 @@ export default function SystemLogs() {
 
       <div className="bg-white rounded-xl shadow p-4 mb-4">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <input placeholder="Hành động..." value={filter.action} onChange={e => { setFilter({ ...filter, action: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm" />
-          <input placeholder="Tài nguyên..." value={filter.resource} onChange={e => { setFilter({ ...filter, resource: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm" />
-          <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm">
+          <input placeholder="Hành động..." value={filter.action} onChange={e => { setFilter({ ...filter, action: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base" />
+          <input placeholder="Tài nguyên..." value={filter.resource} onChange={e => { setFilter({ ...filter, resource: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base" />
+          <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả trạng thái</option>
             <option value="success">Thành công</option>
             <option value="failure">Thất bại</option>
           </select>
-          <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm" />
-          <input type="date" value={filter.to} onChange={e => { setFilter({ ...filter, to: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm" />
+          <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base" />
+          <input type="date" value={filter.to} onChange={e => { setFilter({ ...filter, to: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base" />
         </div>
       </div>
 
@@ -47,8 +47,12 @@ export default function SystemLogs() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {['Thời gian', 'Người dùng', 'Hành động', 'Tài nguyên', 'ID', 'IP', 'Trạng thái'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase">{h}</th>
+                {[
+                  ['Thời gian', ''], ['Người dùng', 'hidden md:table-cell'], ['Hành động', ''],
+                  ['Tài nguyên', 'hidden md:table-cell'], ['ID', 'hidden md:table-cell'],
+                  ['IP', 'hidden md:table-cell'], ['Trạng thái', '']
+                ].map(([h, cls]) => (
+                  <th key={h} className={`text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase ${cls}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -60,11 +64,11 @@ export default function SystemLogs() {
               ) : logs.map(log => (
                 <tr key={log.id} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">{new Date(log.createdAt).toLocaleString('vi-VN')}</td>
-                  <td className="px-4 py-2 text-xs">{log.User?.email || log.userEmail || <span className="text-gray-400">Khách</span>}</td>
+                  <td className="px-4 py-2 text-xs hidden md:table-cell">{log.User?.email || log.userEmail || <span className="text-gray-400">Khách</span>}</td>
                   <td className="px-4 py-2"><code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">{log.action}</code></td>
-                  <td className="px-4 py-2 text-xs text-gray-600">{log.resource || '–'}</td>
-                  <td className="px-4 py-2 text-xs text-gray-500">{log.resourceId || '–'}</td>
-                  <td className="px-4 py-2 text-xs text-gray-500">{log.ipAddress || '–'}</td>
+                  <td className="px-4 py-2 text-xs text-gray-600 hidden md:table-cell">{log.resource || '–'}</td>
+                  <td className="px-4 py-2 text-xs text-gray-500 hidden md:table-cell">{log.resourceId || '–'}</td>
+                  <td className="px-4 py-2 text-xs text-gray-500 hidden md:table-cell">{log.ipAddress || '–'}</td>
                   <td className="px-4 py-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBg[log.status]}`}>{log.status === 'success' ? 'OK' : 'Lỗi'}</span>
                   </td>

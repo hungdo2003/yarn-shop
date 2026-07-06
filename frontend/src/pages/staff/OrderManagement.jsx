@@ -62,26 +62,26 @@ export default function StaffOrderManagement() {
 
       <div className="bg-white rounded-xl shadow p-4 mb-4">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <input placeholder="Tìm mã ĐH, tên, SĐT..." value={filter.search} onChange={e => { setFilter({ ...filter, search: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm col-span-2" />
-          <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm">
+          <input placeholder="Tìm mã ĐH, tên, SĐT..." value={filter.search} onChange={e => { setFilter({ ...filter, search: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base col-span-2" />
+          <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả trạng thái</option>
             {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <select value={filter.shippingMethod} onChange={e => { setFilter({ ...filter, shippingMethod: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm">
+          <select value={filter.shippingMethod} onChange={e => { setFilter({ ...filter, shippingMethod: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả vận chuyển</option>
             <option value="standard">Tiêu chuẩn</option>
             <option value="express">Hỏa tốc</option>
             <option value="economy">Tiết kiệm</option>
           </select>
-          <select value={filter.callConfirmed} onChange={e => { setFilter({ ...filter, callConfirmed: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm">
+          <select value={filter.callConfirmed} onChange={e => { setFilter({ ...filter, callConfirmed: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả cuộc gọi</option>
             <option value="true">Đã gọi xác nhận</option>
             <option value="false">Chưa gọi</option>
           </select>
           <div className="col-span-2 md:col-span-1 flex items-center gap-1.5">
-            <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-sm flex-1 min-w-0" />
+            <input type="date" value={filter.from} onChange={e => { setFilter({ ...filter, from: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-base flex-1 min-w-0" />
             <span className="text-gray-300 text-xs shrink-0">—</span>
-            <input type="date" value={filter.to} onChange={e => { setFilter({ ...filter, to: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-sm flex-1 min-w-0" />
+            <input type="date" value={filter.to} onChange={e => { setFilter({ ...filter, to: e.target.value }); setPage(1); }} className="border rounded-lg px-2 py-2 text-base flex-1 min-w-0" />
             {(filter.from || filter.to) && (
               <button onClick={() => { setFilter({ ...filter, from: '', to: '' }); setPage(1); }} className="text-gray-400 hover:text-rose-500 text-xs shrink-0 transition">✕</button>
             )}
@@ -97,8 +97,12 @@ export default function StaffOrderManagement() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {['Mã ĐH', 'Khách hàng', 'SĐT', 'Vận chuyển', 'Tổng tiền', 'Trạng thái', 'Gọi xác nhận', 'Hành động'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase whitespace-nowrap">{h}</th>
+                {[
+                  ['Mã ĐH', ''], ['Khách hàng', ''], ['SĐT', 'hidden md:table-cell'],
+                  ['Vận chuyển', 'hidden md:table-cell'], ['Tổng tiền', ''], ['Trạng thái', ''],
+                  ['Gọi xác nhận', 'hidden md:table-cell'], ['Hành động', '']
+                ].map(([h, cls]) => (
+                  <th key={h} className={`text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase whitespace-nowrap ${cls}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -109,13 +113,13 @@ export default function StaffOrderManagement() {
                   <tr key={o.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3"><code className="text-xs font-mono text-rose-600">{o.orderCode}</code></td>
                     <td className="px-4 py-3 font-medium text-gray-800 max-w-[140px] truncate">{o.shippingName || o.User?.fullName}</td>
-                    <td className="px-4 py-3 text-gray-600">{o.shippingPhone}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{shipLabel[o.shippingMethod]}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{o.shippingPhone}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{shipLabel[o.shippingMethod]}</td>
                     <td className="px-4 py-3 font-medium">{parseFloat(o.total).toLocaleString()}đ</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[o.status]}`}>{statusLabel[o.status]}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       {o.callConfirmed
                         ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Đã gọi</span>
                         : <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Chưa gọi</span>}
@@ -174,7 +178,7 @@ export default function StaffOrderManagement() {
 
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
               <h3 className="font-semibold text-sm mb-3 text-amber-800">📞 Xác nhận cuộc gọi</h3>
-              <textarea value={callNote} onChange={e => setCallNote(e.target.value)} placeholder="Ghi chú cuộc gọi xác nhận..." rows={2} className="w-full border rounded-lg px-3 py-2 text-sm resize-none mb-3" />
+              <textarea value={callNote} onChange={e => setCallNote(e.target.value)} placeholder="Ghi chú cuộc gọi xác nhận..." rows={2} className="w-full border rounded-lg px-3 py-2 text-base resize-none mb-3" />
               <div className="flex gap-3">
                 <button onClick={() => saveCall(selected.id, true)} className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm hover:bg-green-600">✓ Đã gọi & xác nhận</button>
                 <button onClick={() => saveCall(selected.id, false)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-300">Lưu ghi chú</button>

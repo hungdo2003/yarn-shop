@@ -170,20 +170,20 @@ function OrderModal({ order, onClose, onSave }) {
                       <label className="text-xs font-medium text-gray-600 mb-1 block">Giá báo (đ) *</label>
                       <input type="number" min="0" value={form.quotedPrice}
                         onChange={e => setForm(f => ({ ...f, quotedPrice: e.target.value }))}
-                        placeholder="VD: 250000" className="input w-full text-sm" required />
+                        placeholder="VD: 250000" className="input w-full text-base" required />
                     </div>
                     <div>
                       <label className="text-xs font-medium text-gray-600 mb-1 block">Đặt cọc (đ)</label>
                       <input type="number" min="0" value={form.depositAmount}
                         onChange={e => setForm(f => ({ ...f, depositAmount: e.target.value }))}
-                        placeholder="Để trống = thanh toán đủ" className="input w-full text-sm" />
+                        placeholder="Để trống = thanh toán đủ" className="input w-full text-base" />
                     </div>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 mb-1 block">Thời gian dự kiến (ngày)</label>
                     <input type="number" min="1" value={form.estimatedDays}
                       onChange={e => setForm(f => ({ ...f, estimatedDays: e.target.value }))}
-                      placeholder="VD: 7" className="input w-full text-sm" />
+                      placeholder="VD: 7" className="input w-full text-base" />
                   </div>
                   <p className="text-xs text-purple-600 flex items-center gap-1">
                     <FiAlertCircle size={11} />
@@ -196,7 +196,7 @@ function OrderModal({ order, onClose, onSave }) {
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Ghi chú cho khách hàng</label>
                 <textarea value={form.staffNote} onChange={e => setForm(f => ({ ...f, staffNote: e.target.value }))}
-                  rows={2} placeholder="Thêm ghi chú nếu cần..." className="input w-full text-sm resize-none" />
+                  rows={2} placeholder="Thêm ghi chú nếu cần..." className="input w-full text-base resize-none" />
               </div>
 
               <div className="flex gap-3 pt-1">
@@ -256,11 +256,15 @@ export default function CustomOrderManagement() {
 
       {loading ? <Spinner /> : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wide">
-                {['Mã đơn', 'Khách hàng', 'Mô tả', 'Giá báo', 'Trạng thái', 'Ngày tạo', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold">{h}</th>
+                {[
+                  ['Mã đơn', ''], ['Khách hàng', ''], ['Mô tả', 'hidden md:table-cell'],
+                  ['Giá báo', 'hidden md:table-cell'], ['Trạng thái', ''], ['Ngày tạo', 'hidden md:table-cell'], ['', '']
+                ].map(([h, cls]) => (
+                  <th key={h} className={`text-left px-4 py-3 font-semibold ${cls}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -278,7 +282,7 @@ export default function CustomOrderManagement() {
                       <p className="font-semibold text-gray-800">{order.User?.fullName}</p>
                       <p className="text-xs text-gray-400">{order.User?.phone}</p>
                     </td>
-                    <td className="px-4 py-3 max-w-[200px]">
+                    <td className="px-4 py-3 max-w-[200px] hidden md:table-cell">
                       <p className="line-clamp-2 text-xs text-gray-600">{order.description}</p>
                       {(order.yarnColor || order.size) && (
                         <p className="text-[10px] text-gray-400 mt-0.5">
@@ -286,7 +290,7 @@ export default function CustomOrderManagement() {
                         </p>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       {order.quotedPrice
                         ? <span className="font-bold text-purple-700">{formatCurrency(order.quotedPrice)}</span>
                         : <span className="text-gray-300 text-xs">—</span>}
@@ -300,7 +304,7 @@ export default function CustomOrderManagement() {
                         {isPaid && <span className="text-[10px] text-emerald-600 flex items-center gap-1"><FiCheckCircle size={10} /> Đã TT</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(order.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs hidden md:table-cell">{formatDate(order.createdAt)}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => setSelected(order)}
                         className="flex items-center gap-1.5 text-xs font-medium text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg transition">
@@ -312,6 +316,7 @@ export default function CustomOrderManagement() {
               })}
             </tbody>
           </table>
+          </div>
           <div className="px-4 pb-3">
             <Pagination pagination={data?.pagination} onPageChange={setPage} />
           </div>

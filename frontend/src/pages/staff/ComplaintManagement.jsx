@@ -33,7 +33,7 @@ export default function ComplaintManagement() {
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Khiếu Nại & Đổi Trả</h1>
 
       <div className="bg-white rounded-xl shadow p-4 mb-4">
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-sm">
             <option value="">Tất cả trạng thái</option>
             {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -51,8 +51,8 @@ export default function ComplaintManagement() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {['Mã', 'Khách hàng', 'Đơn hàng', 'Loại', 'Lý do', 'Trạng thái', 'Ngày tạo', 'Hành động'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase whitespace-nowrap">{h}</th>
+                {[['Mã', ''], ['Khách hàng', ''], ['Đơn hàng', 'hidden md:table-cell'], ['Loại', ''], ['Lý do', 'hidden md:table-cell'], ['Trạng thái', ''], ['Ngày tạo', 'hidden md:table-cell'], ['Hành động', '']].map(([h, cls]) => (
+                  <th key={h} className={`text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase whitespace-nowrap ${cls}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -63,11 +63,11 @@ export default function ComplaintManagement() {
                   <tr key={r.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3"><code className="text-xs font-mono text-gray-500">{r.code}</code></td>
                     <td className="px-4 py-3 font-medium">{r.User?.fullName}</td>
-                    <td className="px-4 py-3 text-xs text-rose-600">{r.Order?.orderCode}</td>
+                    <td className="px-4 py-3 text-xs text-rose-600 hidden md:table-cell">{r.Order?.orderCode}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full ${r.type === 'return' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>{r.type === 'return' ? 'Trả hàng' : 'Đổi hàng'}</span></td>
-                    <td className="px-4 py-3 text-xs text-gray-600 max-w-[160px] truncate">{r.reason}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600 max-w-[160px] truncate hidden md:table-cell">{r.reason}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[r.status]}`}>{statusLabel[r.status]}</span></td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => { setSelected(r); setNote(r.staffNote || ''); }} className="text-xs border px-2 py-1 rounded hover:bg-gray-50">Xử lý</button>
                     </td>
@@ -106,7 +106,7 @@ export default function ComplaintManagement() {
             )}
             <div className="mb-4">
               <label className="text-sm text-gray-600 block mb-1">Phản hồi / ghi chú</label>
-              <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm resize-none" placeholder="Nhập phản hồi cho khách..." />
+              <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} className="w-full border rounded-lg px-3 py-2 text-base resize-none" placeholder="Nhập phản hồi cho khách..." />
             </div>
             {selected.status === 'pending' && (
               <div className="flex gap-3">

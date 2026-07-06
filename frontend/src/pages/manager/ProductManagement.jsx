@@ -82,25 +82,25 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Name *</label>
-              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className="input mt-1" />
+              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className="input mt-1 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium">Category *</label>
-              <select value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))} required className="input mt-1">
+              <select value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))} required className="input mt-1 text-base">
                 <option value="">Select...</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="text-sm font-medium">Status</label>
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input mt-1">
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input mt-1 text-base">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
             <div>
               <label className="text-sm font-medium">Giá gốc (VND) *</label>
-              <input type="number" value={form.price} onChange={e => handlePriceChange(e.target.value)} required className="input mt-1" />
+              <input type="number" value={form.price} onChange={e => handlePriceChange(e.target.value)} required className="input mt-1 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium">% Giảm giá</label>
@@ -109,14 +109,14 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
                   type="number" min="0" max="99" value={discountPct}
                   onChange={e => handleDiscountChange(e.target.value)}
                   placeholder="0"
-                  className="input pr-7"
+                  className="input pr-7 text-base"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
               </div>
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Giá khuyến mãi (VND)</label>
-              <input type="number" value={form.salePrice} onChange={e => handleSalePriceChange(e.target.value)} className="input mt-1" placeholder="Để trống nếu không giảm giá" />
+              <input type="number" value={form.salePrice} onChange={e => handleSalePriceChange(e.target.value)} className="input mt-1 text-base" placeholder="Để trống nếu không giảm giá" />
             </div>
             {showPreview && (
               <div className="sm:col-span-2 flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl px-4 py-3">
@@ -128,23 +128,23 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
             )}
             <div>
               <label className="text-sm font-medium">Color</label>
-              <input value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="input mt-1" />
+              <input value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium">Size</label>
-              <input value={form.size} onChange={e => setForm(f => ({ ...f, size: e.target.value }))} className="input mt-1" />
+              <input value={form.size} onChange={e => setForm(f => ({ ...f, size: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium">Weight (g)</label>
-              <input type="number" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} className="input mt-1" />
+              <input type="number" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium">Initial Stock</label>
-              <input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} className="input mt-1" />
+              <input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Description</label>
-              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className="input mt-1" />
+              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className="input mt-1 text-base" />
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Ảnh sản phẩm</label>
@@ -218,21 +218,24 @@ const ProductManagement = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1>Product Management</h1>
-        <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2"><FiPlus /> New Product</button>
+        <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2 self-start sm:self-auto"><FiPlus /> New Product</button>
       </div>
       <div className="card mb-4">
         <div className="relative">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input placeholder="Search products..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input pl-9" />
+          <input placeholder="Search products..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input pl-9 text-base" />
         </div>
       </div>
       {loading ? <Spinner /> : (
         <div className="card overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
-              <tr>{['Sản phẩm', 'Danh mục', 'Giá', 'Tồn kho', 'Trạng thái', ''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
+              <tr>{[
+                ['Sản phẩm', ''], ['Danh mục', 'hidden md:table-cell'], ['Giá', ''],
+                ['Tồn kho', 'hidden sm:table-cell'], ['Trạng thái', ''], ['', '']
+              ].map(([h, cls]) => <th key={h} className={`text-left px-4 py-3 font-semibold text-gray-600 ${cls}`}>{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y">
               {data?.items?.map(p => (
@@ -246,7 +249,7 @@ const ProductManagement = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{p.Category?.name}</td>
+                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{p.Category?.name}</td>
                   <td className="px-4 py-3">
                     {p.salePrice && parseFloat(p.salePrice) < parseFloat(p.price) ? (() => {
                       const pct = Math.round((1 - parseFloat(p.salePrice) / parseFloat(p.price)) * 100);
@@ -261,12 +264,12 @@ const ProductManagement = () => {
                       );
                     })() : <p className="font-medium text-gray-800">{formatCurrency(p.price)}</p>}
                   </td>
-                  <td className="px-4 py-3"><span className={`font-medium ${p.stock < 5 ? 'text-red-600' : 'text-gray-900'}`}>{p.stock}</span></td>
+                  <td className="px-4 py-3 hidden sm:table-cell"><span className={`font-medium ${p.stock < 5 ? 'text-red-600' : 'text-gray-900'}`}>{p.stock}</span></td>
                   <td className="px-4 py-3"><span className={`badge ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{p.status}</span></td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button onClick={() => setModal(p)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg"><FiEdit2 size={15} /></button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><FiTrash2 size={15} /></button>
+                      <button onClick={() => setModal(p)} className="w-11 h-11 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg"><FiEdit2 size={15} /></button>
+                      <button onClick={() => handleDelete(p.id)} className="w-11 h-11 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg"><FiTrash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>

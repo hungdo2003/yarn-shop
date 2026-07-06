@@ -36,8 +36,16 @@ export default function ContentManagement() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Quản Lý Nội Dung Website</h1>
-      <div className="flex gap-6 min-h-[600px]">
-        <aside className="w-56 shrink-0">
+      {/* Mobile page selector */}
+      <div className="md:hidden mb-4">
+        <select value={active} onChange={e => setActive(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-base bg-white shadow-sm">
+          {PAGES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+        </select>
+      </div>
+
+      <div className="md:flex md:gap-6 md:min-h-[600px]">
+        <aside className="hidden md:block w-56 shrink-0">
           <nav className="bg-white rounded-xl shadow p-3 space-y-1">
             {PAGES.map(p => (
               <button key={p.key} onClick={() => setActive(p.key)}
@@ -48,16 +56,16 @@ export default function ContentManagement() {
           </nav>
         </aside>
 
-        <main className="flex-1 bg-white rounded-xl shadow p-6">
+        <main className="flex-1 bg-white rounded-xl shadow p-4 xs:p-6 md:p-8">
           {loading ? <div className="text-center py-16 text-gray-400">Đang tải...</div> : (
             <>
               <div className="mb-4">
                 <label className="text-sm text-gray-600 block mb-1">Tiêu đề trang</label>
-                <input value={title} onChange={e => setTitle(e.target.value)} className="w-full border rounded-lg px-3 py-2 font-medium" />
+                <input value={title} onChange={e => setTitle(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-base font-medium" />
               </div>
               <div className="mb-4">
                 <label className="text-sm text-gray-600 block mb-1">Nội dung (HTML)</label>
-                <textarea value={content} onChange={e => setContent(e.target.value)} rows={18} className="w-full border rounded-lg px-3 py-2 text-sm font-mono resize-y" placeholder="<h2>Tiêu đề</h2><p>Nội dung...</p>" />
+                <textarea value={content} onChange={e => setContent(e.target.value)} rows={18} className="w-full border rounded-lg px-3 py-2 text-base font-mono resize-y" placeholder="<h2>Tiêu đề</h2><p>Nội dung...</p>" />
               </div>
               <div className="flex items-center gap-4">
                 <button onClick={save} disabled={saving} className="bg-rose-500 text-white px-6 py-2 rounded-lg hover:bg-rose-600 font-medium disabled:opacity-50">{saving ? 'Đang lưu...' : 'Lưu nội dung'}</button>

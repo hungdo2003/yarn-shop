@@ -137,20 +137,22 @@ export default function Reports() {
         </div>
         <div className="flex items-center gap-2">
           <select value={selYear} onChange={e => setSelYear(Number(e.target.value))}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white">
+            className="border border-gray-200 rounded-xl px-3 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white">
             {[year - 1, year, year + 1].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${tab === t.id ? 'bg-white shadow text-rose-600' : 'text-gray-500 hover:text-gray-700'}`}>
-            {t.label}
-          </button>
-        ))}
+      <div className="overflow-x-auto pb-1">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit min-w-max">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${tab === t.id ? 'bg-white shadow text-rose-600' : 'text-gray-500 hover:text-gray-700'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -285,10 +287,10 @@ export default function Reports() {
                       <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                         <th className="px-5 py-3 text-left">Tháng</th>
                         <th className="px-5 py-3 text-right">Doanh thu</th>
-                        <th className="px-5 py-3 text-right">Năm trước</th>
-                        <th className="px-5 py-3 text-right">Tăng trưởng</th>
-                        <th className="px-5 py-3 text-right">Số đơn</th>
-                        <th className="px-5 py-3 text-right">Đơn TB</th>
+                        <th className="px-5 py-3 text-right hidden md:table-cell">Năm trước</th>
+                        <th className="px-5 py-3 text-right hidden md:table-cell">Tăng trưởng</th>
+                        <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn</th>
+                        <th className="px-5 py-3 text-right hidden md:table-cell">Đơn TB</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -298,12 +300,12 @@ export default function Reports() {
                           <tr key={i} className="hover:bg-gray-50 transition">
                             <td className="px-5 py-3 font-medium text-gray-800">{r.name}/{selYear}</td>
                             <td className="px-5 py-3 text-right font-semibold text-rose-600">{fmt(r.revenue)}</td>
-                            <td className="px-5 py-3 text-right text-gray-400">{fmt(r.prevRevenue)}</td>
-                            <td className="px-5 py-3 text-right">
+                            <td className="px-5 py-3 text-right text-gray-400 hidden md:table-cell">{fmt(r.prevRevenue)}</td>
+                            <td className="px-5 py-3 text-right hidden md:table-cell">
                               {growth !== null ? <Trend value={parseFloat(growth)} /> : <span className="text-gray-300">—</span>}
                             </td>
-                            <td className="px-5 py-3 text-right text-gray-600">{r.orderCount}</td>
-                            <td className="px-5 py-3 text-right text-gray-500">{r.orderCount > 0 ? fmt(r.avgOrder) : '—'}</td>
+                            <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.orderCount}</td>
+                            <td className="px-5 py-3 text-right text-gray-500 hidden md:table-cell">{r.orderCount > 0 ? fmt(r.avgOrder) : '—'}</td>
                           </tr>
                         );
                       })}
@@ -312,8 +314,8 @@ export default function Reports() {
                       <tr className="bg-rose-50 font-bold text-rose-700">
                         <td className="px-5 py-3">Tổng {selYear}</td>
                         <td className="px-5 py-3 text-right">{fmt(revenue.reduce((s, r) => s + r.revenue, 0))}</td>
-                        <td className="px-5 py-3 text-right text-gray-400">{fmt(revenue.reduce((s, r) => s + r.prevRevenue, 0))}</td>
-                        <td colSpan={3} />
+                        <td className="px-5 py-3 text-right text-gray-400 hidden md:table-cell">{fmt(revenue.reduce((s, r) => s + r.prevRevenue, 0))}</td>
+                        <td className="hidden md:table-cell" /><td className="hidden sm:table-cell" /><td className="hidden md:table-cell" />
                       </tr>
                     </tfoot>
                   </table>
@@ -337,11 +339,11 @@ export default function Reports() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-                          <th className="px-5 py-3 text-left w-8">#</th>
+                          <th className="px-5 py-3 text-left w-8 hidden sm:table-cell">#</th>
                           <th className="px-5 py-3 text-left">Sản phẩm</th>
                           <th className="px-5 py-3 text-right">Đã bán</th>
                           <th className="px-5 py-3 text-right">Doanh thu</th>
-                          <th className="px-5 py-3 text-left w-40">Tỷ lệ</th>
+                          <th className="px-5 py-3 text-left w-40 hidden md:table-cell">Tỷ lệ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -350,7 +352,7 @@ export default function Reports() {
                           const pct = Math.max(4, (p.unitsSold / maxSold) * 100);
                           return (
                             <tr key={p.id} className="hover:bg-gray-50 transition">
-                              <td className="px-5 py-3 text-gray-300 font-bold text-base">{i + 1}</td>
+                              <td className="px-5 py-3 text-gray-300 font-bold text-base hidden sm:table-cell">{i + 1}</td>
                               <td className="px-5 py-3">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
@@ -363,7 +365,7 @@ export default function Reports() {
                               </td>
                               <td className="px-5 py-3 text-right font-bold text-gray-700">{p.unitsSold.toLocaleString()}</td>
                               <td className="px-5 py-3 text-right font-semibold text-rose-600">{fmt(p.revenue)}</td>
-                              <td className="px-5 py-3">
+                              <td className="px-5 py-3 hidden md:table-cell">
                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-32">
                                   <div className="h-full bg-rose-400 rounded-full" style={{ width: `${pct}%` }} />
                                 </div>
@@ -501,11 +503,11 @@ export default function Reports() {
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                           <th className="px-5 py-3 text-left">Sản phẩm</th>
                           <th className="px-5 py-3 text-right">Bán trong kỳ</th>
-                          <th className="px-5 py-3 text-right">Tổng bán</th>
+                          <th className="px-5 py-3 text-right hidden md:table-cell">Tổng bán</th>
                           <th className="px-5 py-3 text-right">Tồn kho</th>
-                          <th className="px-5 py-3 text-right">Giá</th>
-                          <th className="px-5 py-3 text-left">Danh mục</th>
-                          <th className="px-5 py-3 text-right">Tuổi SP</th>
+                          <th className="px-5 py-3 text-right hidden sm:table-cell">Giá</th>
+                          <th className="px-5 py-3 text-left hidden md:table-cell">Danh mục</th>
+                          <th className="px-5 py-3 text-right hidden md:table-cell">Tuổi SP</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -526,13 +528,13 @@ export default function Reports() {
                                 {p.soldInPeriod}
                               </span>
                             </td>
-                            <td className="px-5 py-3 text-right text-gray-500">{p.totalSold}</td>
+                            <td className="px-5 py-3 text-right text-gray-500 hidden md:table-cell">{p.totalSold}</td>
                             <td className="px-5 py-3 text-right">
                               <span className={`font-medium ${p.stock === 0 ? 'text-red-400' : p.stock <= 5 ? 'text-orange-400' : 'text-gray-600'}`}>{p.stock}</span>
                             </td>
-                            <td className="px-5 py-3 text-right text-gray-600">{fmt(p.price)}</td>
-                            <td className="px-5 py-3 text-gray-500 text-xs">{p.category || '—'}</td>
-                            <td className="px-5 py-3 text-right text-gray-400 text-xs">{p.daysOld} ngày</td>
+                            <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{fmt(p.price)}</td>
+                            <td className="px-5 py-3 text-gray-500 text-xs hidden md:table-cell">{p.category || '—'}</td>
+                            <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">{p.daysOld} ngày</td>
                           </tr>
                         ))}
                       </tbody>
@@ -575,10 +577,10 @@ export default function Reports() {
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                           <th className="px-5 py-3 text-left w-8">#</th>
                           <th className="px-5 py-3 text-left">Khách hàng</th>
-                          <th className="px-5 py-3 text-right">Số đơn</th>
+                          <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn</th>
                           <th className="px-5 py-3 text-right">Tổng chi tiêu</th>
-                          <th className="px-5 py-3 text-right">Điểm tích lũy</th>
-                          <th className="px-5 py-3 text-left w-36">Mức chi tiêu</th>
+                          <th className="px-5 py-3 text-right hidden md:table-cell">Điểm tích lũy</th>
+                          <th className="px-5 py-3 text-left w-36 hidden md:table-cell">Mức chi tiêu</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -600,10 +602,10 @@ export default function Reports() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-5 py-3 text-right font-medium text-gray-700">{c.totalOrders}</td>
+                              <td className="px-5 py-3 text-right font-medium text-gray-700 hidden sm:table-cell">{c.totalOrders}</td>
                               <td className="px-5 py-3 text-right font-bold text-emerald-600">{fmt(c.totalSpent)}</td>
-                              <td className="px-5 py-3 text-right text-amber-500 font-medium">{(c.loyaltyPoints || 0).toLocaleString()} ✦</td>
-                              <td className="px-5 py-3">
+                              <td className="px-5 py-3 text-right text-amber-500 font-medium hidden md:table-cell">{(c.loyaltyPoints || 0).toLocaleString()} ✦</td>
+                              <td className="px-5 py-3 hidden md:table-cell">
                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-28">
                                   <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${pct}%` }} />
                                 </div>

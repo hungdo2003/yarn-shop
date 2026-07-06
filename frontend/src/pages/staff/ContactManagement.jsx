@@ -70,10 +70,10 @@ export default function ContactManagement() {
             value={search} onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && fetchMessages()}
             placeholder="Tìm theo tên, email..."
-            className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none"
+            className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-base focus:ring-2 focus:ring-rose-300 focus:outline-none"
           />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded-xl px-4 py-2.5 text-sm focus:outline-none">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded-xl px-4 py-2.5 text-base focus:outline-none">
           <option value="">Tất cả trạng thái</option>
           <option value="new">Mới</option>
           <option value="read">Đã đọc</option>
@@ -131,7 +131,7 @@ export default function ContactManagement() {
               <textarea
                 value={replyNote} onChange={e => setReplyNote(e.target.value)}
                 rows={4} placeholder="Nhập nội dung phản hồi..."
-                className="w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none resize-none"
+                className="w-full border rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none resize-none"
               />
             </div>
 

@@ -45,17 +45,17 @@ export default function BannerManagement() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Quản Lý Banner</h1>
-        <button onClick={openAdd} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 font-medium">+ Thêm Banner</button>
+        <button onClick={openAdd} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 font-medium self-start sm:self-auto">+ Thêm Banner</button>
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <select value={filter.position} onChange={e => setFilter({ ...filter, position: e.target.value })} className="border rounded-lg px-3 py-2 text-sm">
+      <div className="flex flex-wrap gap-3 mb-6">
+        <select value={filter.position} onChange={e => setFilter({ ...filter, position: e.target.value })} className="border rounded-lg px-3 py-2 text-base">
           <option value="">Tất cả vị trí</option>
           {Object.entries(positions).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <select value={filter.isActive} onChange={e => setFilter({ ...filter, isActive: e.target.value })} className="border rounded-lg px-3 py-2 text-sm">
+        <select value={filter.isActive} onChange={e => setFilter({ ...filter, isActive: e.target.value })} className="border rounded-lg px-3 py-2 text-base">
           <option value="">Tất cả trạng thái</option>
           <option value="true">Đang hiện</option>
           <option value="false">Đã ẩn</option>
@@ -92,41 +92,41 @@ export default function BannerManagement() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Tiêu đề *</label>
-                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Phụ đề</label>
-                <input value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Hình ảnh</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="w-full text-sm mb-1" />
-                {form.imageUrl && !imageFile && <img src={form.imageUrl} className="h-20 rounded mt-1 object-cover" />}
+                {form.imageUrl && !imageFile && <img src={form.imageUrl} className="h-20 max-w-full rounded mt-1 object-cover" />}
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Link URL</label>
-                <input value={form.linkUrl} onChange={e => setForm({ ...form, linkUrl: e.target.value })} placeholder="/san-pham" className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input value={form.linkUrl} onChange={e => setForm({ ...form, linkUrl: e.target.value })} placeholder="/san-pham" className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Vị trí</label>
-                  <select value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm">
+                  <select value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base">
                     {Object.entries(positions).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Thứ tự</label>
-                  <input type="number" value={form.sortOrder} onChange={e => setForm({ ...form, sortOrder: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" value={form.sortOrder} onChange={e => setForm({ ...form, sortOrder: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Ngày bắt đầu</label>
-                  <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Ngày kết thúc</label>
-                  <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
