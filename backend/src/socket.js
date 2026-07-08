@@ -2,7 +2,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const { ChatConversation, ChatMessage, User, Role, Livestream, LivestreamComment } = require('./models');
 const { botReply } = require('./controllers/chat.controller');
-const { notifyByRole } = require('./services/notificationService');
+const { notifyByRole, setIo } = require('./services/notificationService');
 
 const onlineStaff = new Set();
 // livestreamId -> socketId of broadcaster
@@ -19,6 +19,7 @@ function initSocket(server) {
       credentials: true,
     },
   });
+  setIo(io);
 
   // Auth middleware — optional (guests allowed with role 'guest')
   io.use(async (socket, next) => {
@@ -42,6 +43,10 @@ function initSocket(server) {
 
   io.on('connection', (socket) => {
     const { user, role } = socket;
+
+    if (user) {
+      socket.join(`user:${user.id}`);
+    }
 
     if (role === 'staff' || role === 'admin') {
       onlineStaff.add(socket.id);

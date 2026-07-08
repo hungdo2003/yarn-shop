@@ -8,7 +8,9 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.ENUM(
       'order_paid', 'order_status', 'order_cancelled',
       'wallet_topup', 'wallet_payment', 'wallet_refund', 'system',
-      'tier_upgrade'
+      'tier_upgrade',
+      'custom_order_quoted', 'custom_order_production',
+      'custom_order_delivered', 'custom_order_paid'
     ),
     allowNull: false,
   },
