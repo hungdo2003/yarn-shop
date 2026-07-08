@@ -89,7 +89,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="border-t border-gray-800 text-center py-4 text-xs text-gray-500">
-        © {new Date().getFullYear()} YarnShop. Tất cả quyền được bảo lưu.
+        {`© ${new Date().getFullYear()} YarnShop. Tất cả quyền được bảo lưu.`}
       </div>
     </footer>
   );

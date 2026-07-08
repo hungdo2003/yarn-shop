@@ -4,13 +4,16 @@ import { FiAlertTriangle, FiInfo, FiX } from 'react-icons/fi';
 const ConfirmModal = ({
   title,
   message,
-  confirmLabel = 'Xác nhận',
-  cancelLabel = 'Huỷ',
+  confirmLabel,
+  cancelLabel,
   variant = 'danger',
   onConfirm,
   onCancel,
   loading = false,
 }) => {
+  const resolvedConfirmLabel = confirmLabel ?? 'Xác nhận';
+  const resolvedCancelLabel = cancelLabel ?? 'Hủy';
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onCancel(); };
     window.addEventListener('keydown', onKey);
@@ -61,14 +64,14 @@ const ConfirmModal = ({
             disabled={loading}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-50"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-60 ${confirmCls}`}
           >
-            {loading ? 'Đang xử lý...' : confirmLabel}
+            {loading ? 'Đang xử lý...' : resolvedConfirmLabel}
           </button>
         </div>
       </div>

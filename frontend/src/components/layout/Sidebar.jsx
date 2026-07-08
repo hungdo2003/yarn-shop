@@ -11,63 +11,8 @@ import {
 import NotificationBell from '../common/NotificationBell';
 import api from '../../services/api';
 
-const MENUS = {
-  admin: [
-    {
-      title: 'Tổng quan',
-      items: [
-        { label: 'Dashboard', icon: FiHome, to: '/manager' },
-      ]
-    },
-    {
-      title: 'Kinh doanh',
-      items: [
-        { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
-        { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
-        { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
-        { label: 'Sự kiện KM', icon: FiTag, to: '/admin/sale-events' },
-      ]
-    },
-    {
-      title: 'Vận hành',
-      items: [
-        { label: 'Đơn hàng', icon: FiPackage, to: '/manager/orders' },
-        { label: 'Kho hàng', icon: FiTool, to: '/manager/inventory' },
-        { label: 'Báo cáo', icon: FiBarChart2, to: '/manager/reports' },
-      ]
-    },
-    {
-      title: 'Hệ thống',
-      items: [
-        { label: 'Quản lý tài khoản', icon: FiUsers, to: '/admin/users' },
-        { label: 'Quản lý banner', icon: FiImage, to: '/admin/banners' },
-        { label: 'Nội dung website', icon: FiFileText, to: '/admin/content' },
-        { label: 'Nhật ký hệ thống', icon: FiActivity, to: '/admin/logs' },
-      ]
-    }
-  ],
-  staff: [
-    {
-      title: 'Công việc',
-      items: [
-        { label: 'Quản lý đơn hàng', icon: FiPackage, to: '/staff/orders' },
-        { label: 'Đặt hàng tùy chỉnh', icon: FiList, to: '/staff/custom-orders' },
-      ]
-    },
-    {
-      title: 'Hỗ trợ khách hàng',
-      items: [
-        { label: 'Chat trực tiếp', icon: FiMessageCircle, to: '/staff/chat' },
-        { label: 'Đổi trả / Khiếu nại', icon: FiRefreshCw, to: '/staff/complaints' },
-        { label: 'Tin nhắn liên hệ', icon: FiMessageSquare, to: '/staff/contacts' },
-      ]
-    }
-  ]
-};
-
 const ROLE_CONFIG = {
   admin: {
-    label: 'Quản trị viên',
     badge: 'ADMIN',
     gradient: 'from-slate-800 via-slate-900 to-slate-950',
     avatarBg: 'bg-violet-500',
@@ -77,7 +22,6 @@ const ROLE_CONFIG = {
     onlineDot: 'bg-violet-400',
   },
   staff: {
-    label: 'Nhân viên',
     badge: 'STAFF',
     gradient: 'from-blue-600 via-blue-700 to-indigo-800',
     avatarBg: 'bg-blue-400',
@@ -95,6 +39,60 @@ const Sidebar = () => {
   const [lowStockCount, setLowStockCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const MENUS = {
+    admin: [
+      {
+        title: 'Tổng quan',
+        items: [
+          { label: 'Dashboard', icon: FiHome, to: '/manager' },
+        ]
+      },
+      {
+        title: 'Kinh doanh',
+        items: [
+          { label: 'Sản phẩm', icon: FiShoppingBag, to: '/manager/products' },
+          { label: 'Danh mục', icon: FiGrid, to: '/manager/categories' },
+          { label: 'Voucher', icon: FiTag, to: '/manager/vouchers' },
+          { label: 'Sự kiện KM', icon: FiTag, to: '/admin/sale-events' },
+        ]
+      },
+      {
+        title: 'Vận hành',
+        items: [
+          { label: 'Đơn hàng', icon: FiPackage, to: '/manager/orders' },
+          { label: 'Kho hàng', icon: FiTool, to: '/manager/inventory' },
+          { label: 'Báo cáo', icon: FiBarChart2, to: '/manager/reports' },
+        ]
+      },
+      {
+        title: 'Hệ thống',
+        items: [
+          { label: 'Quản lý tài khoản', icon: FiUsers, to: '/admin/users' },
+          { label: 'Quản lý banner', icon: FiImage, to: '/admin/banners' },
+          { label: 'Nội dung website', icon: FiFileText, to: '/admin/content' },
+          { label: 'Nhật ký hệ thống', icon: FiActivity, to: '/admin/logs' },
+        ]
+      }
+    ],
+    staff: [
+      {
+        title: 'Công việc',
+        items: [
+          { label: 'Quản lý đơn hàng', icon: FiPackage, to: '/staff/orders' },
+          { label: 'Đặt hàng tùy chỉnh', icon: FiList, to: '/staff/custom-orders' },
+        ]
+      },
+      {
+        title: 'Hỗ trợ khách hàng',
+        items: [
+          { label: 'Chat trực tiếp', icon: FiMessageCircle, to: '/staff/chat' },
+          { label: 'Đổi trả / Khiếu nại', icon: FiRefreshCw, to: '/staff/complaints' },
+          { label: 'Tin nhắn liên hệ', icon: FiMessageSquare, to: '/staff/contacts' },
+        ]
+      }
+    ]
+  };
+
   useEffect(() => {
     if (role === 'admin') {
       api.get('/inventory/low-stock-count').then(r => setLowStockCount(r.data.count || 0)).catch(() => {});
@@ -106,6 +104,8 @@ const Sidebar = () => {
   const initials = user?.fullName
     ? user.fullName.trim().split(/\s+/).map(w => w[0]).slice(-2).join('').toUpperCase()
     : '?';
+
+  const roleLabel = role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
 
   const handleLogout = () => {
     logout();
@@ -169,7 +169,7 @@ const Sidebar = () => {
               <p className="text-white font-semibold text-[13px] truncate leading-snug">{user?.fullName}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`w-1.5 h-1.5 rounded-full ${cfg.onlineDot} shrink-0`} />
-                <span className="text-white/55 text-[11px]">{cfg.label}</span>
+                <span className="text-white/55 text-[11px]">{roleLabel}</span>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">

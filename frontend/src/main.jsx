@@ -7,7 +7,6 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ChatProvider } from './context/ChatContext';
-import { WishlistProvider } from './context/WishlistContext';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -17,7 +16,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <NotificationProvider>
         <ChatProvider>
         <CartProvider>
-        <WishlistProvider>
           <App />
           <Toaster
             position="top-right"
@@ -44,7 +42,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               },
             }}
           />
-        </WishlistProvider>
         </CartProvider>
         </ChatProvider>
         </NotificationProvider>

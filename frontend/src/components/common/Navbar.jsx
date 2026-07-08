@@ -1,9 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { FiShoppingCart, FiUser, FiMenu, FiX, FiSearch, FiLogOut, FiPackage, FiSettings, FiTag, FiPhone, FiHeart } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiMenu, FiX, FiSearch, FiLogOut, FiPackage, FiSettings, FiTag, FiPhone } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
 import NotificationBell from './NotificationBell';
 import TierBadge from './TierBadge';
 import api from '../../services/api';
@@ -11,7 +10,6 @@ import api from '../../services/api';
 const Navbar = () => {
   const { user, logout, isRole } = useAuth();
   const { itemCount } = useCart();
-  const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -26,10 +24,12 @@ const Navbar = () => {
     }
   }, [user]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (search.trim()) { navigate(`/products?search=${encodeURIComponent(search.trim())}`); setMenuOpen(false); }
-  };
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (search.trim()) navigate(`/products?search=${encodeURIComponent(search.trim())}`);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const handleLogout = () => { logout(); navigate('/'); setUserMenuOpen(false); setMenuOpen(false); };
 
@@ -72,37 +72,21 @@ const Navbar = () => {
           </div>
 
           {/* Desktop search */}
-          <form onSubmit={handleSearch} className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center">
             <div className="relative">
+              <FiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Tìm kiếm sản phẩm..."
-                className="border border-gray-300 rounded-l-lg px-3 py-1.5 text-base focus:outline-none focus:ring-1 focus:ring-rose-400 w-52"
+                className="border border-gray-300 rounded-lg pl-9 pr-3 py-1.5 text-base focus:outline-none focus:ring-1 focus:ring-rose-400 w-52"
               />
-              <button type="submit" className="bg-rose-500 text-white px-3 py-1.5 rounded-r-lg hover:bg-rose-600 active:scale-95 transition-all h-full">
-                <FiSearch />
-              </button>
             </div>
-          </form>
+          </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1 xs:gap-2">
+          <div className="flex items-center gap-2 xs:gap-3">
             {user && isRole('customer') && <NotificationBell />}
-            {user && isRole('customer') && (
-              <Link
-                to="/wishlist"
-                className="relative w-11 h-11 flex items-center justify-center text-gray-600 hover:text-rose-600 active:scale-95 transition-all rounded-lg"
-                title="Danh sách yêu thích"
-              >
-                <FiHeart size={21} />
-                {wishlistCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                    {wishlistCount > 99 ? '99+' : wishlistCount}
-                  </span>
-                )}
-              </Link>
-            )}
             <Link
               to={user && isRole('customer') ? '/cart' : '/login'}
               className="relative w-11 h-11 flex items-center justify-center text-gray-600 hover:text-rose-600 active:scale-95 transition-all rounded-lg"
@@ -114,6 +98,8 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
+            <div className="hidden xs:block w-px h-5 bg-gray-200 mx-1" />
 
             {user ? (
               <div className="relative">
@@ -143,10 +129,6 @@ const Navbar = () => {
                       <FiSettings size={16} /> Dashboard
                     </Link>
                     {isRole('customer') && <>
-                      <Link to="/wishlist" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-rose-50 active:bg-rose-100">
-                        <span className="flex items-center gap-2 min-w-0"><FiHeart size={15} className="text-rose-400 shrink-0" /> <span className="truncate">Yêu thích của tôi</span></span>
-                        {wishlistCount > 0 && <span className="text-xs font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full ml-1 shrink-0">{wishlistCount}</span>}
-                      </Link>
                       <Link to="/wallet" onClick={() => setUserMenuOpen(false)} className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 active:bg-green-100">
                         <span className="flex items-center gap-2">💰 Ví của tôi</span>
                         {walletBalance !== null && (
@@ -182,7 +164,7 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Hamburger — 44px touch target */}
+            {/* Hamburger */}
             <button
               className="md:hidden w-11 h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 active:scale-95 transition-all rounded-lg"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -197,18 +179,27 @@ const Navbar = () => {
       {menuOpen && (
         <div className="md:hidden border-t bg-white px-4 py-3 space-y-1 max-h-[80vh] overflow-y-auto">
           {/* Mobile search */}
-          <form onSubmit={handleSearch} className="flex mb-3">
+          <div className="relative mb-3">
+            <FiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm kiếm..."
-              className="border rounded-l-lg px-3 py-2.5 text-base flex-1 focus:outline-none focus:ring-1 focus:ring-rose-400 min-w-0"
+              className="border rounded-lg pl-9 pr-3 py-2.5 text-base w-full focus:outline-none focus:ring-1 focus:ring-rose-400"
             />
-            <button type="submit" className="bg-rose-500 text-white px-3 rounded-r-lg active:scale-95 transition-all"><FiSearch /></button>
-          </form>
+          </div>
 
           {/* Nav links */}
-          {[['/', 'Trang chủ'], ['/products', 'Shop'], ['/flash-sale', '⚡ Flash Sale'], ['/promotions', 'Khuyến mãi'], ['/how-to-buy', 'Hướng dẫn mua'], ['/policies', 'Chính sách'], ['/contact', 'Liên hệ'], ['/custom-order', 'Đặt theo yêu cầu']].map(([to, label]) => (
+          {[
+            ['/', 'Trang chủ'],
+            ['/products', 'Shop'],
+            ['/flash-sale', '⚡ Flash Sale'],
+            ['/promotions', 'Khuyến mãi'],
+            ['/how-to-buy', 'Hướng dẫn mua'],
+            ['/policies', 'Chính sách'],
+            ['/contact', 'Liên hệ'],
+            ['/custom-order', 'Đặt theo yêu cầu'],
+          ].map(([to, label]) => (
             <Link
               key={to}
               to={to}
