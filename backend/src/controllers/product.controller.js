@@ -117,7 +117,10 @@ const getFeatured = async (req, res) => {
   try {
     const products = await Product.findAll({
       where: { status: 'active' },
-      include: [{ model: ProductImage, limit: 1 }],
+      include: [
+        { model: ProductImage, limit: 1 },
+        { model: Category, attributes: ['name'] },
+      ],
       order: [['sold', 'DESC']],
       limit: 8
     });

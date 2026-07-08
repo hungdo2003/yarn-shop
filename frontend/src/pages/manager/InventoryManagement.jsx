@@ -6,15 +6,16 @@ import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
 import { FiArrowUp, FiSettings, FiAlertTriangle, FiSearch } from 'react-icons/fi';
 
-const TX_TYPE = {
-  import:     { label: 'Nhập hàng',    color: 'bg-green-100 text-green-700',  icon: '📦' },
-  adjustment: { label: 'Điều chỉnh',   color: 'bg-blue-100 text-blue-700',    icon: '⚙️' },
-  sale:       { label: 'Bán hàng',     color: 'bg-rose-100 text-rose-700',    icon: '🛒' },
+const TX_COLOR = {
+  import:     'bg-green-100 text-green-700',
+  adjustment: 'bg-blue-100 text-blue-700',
+  sale:       'bg-rose-100 text-rose-700',
 };
 
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const InventoryManagement = () => {
+  const TX_ICON = { import: '📦', adjustment: '⚙️', sale: '🛒' };
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState('products');
   const [importModal, setImportModal] = useState(null);
@@ -60,7 +61,7 @@ const InventoryManagement = () => {
         {lowCount > 0 && (
           <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-2 rounded-xl text-sm font-semibold">
             <FiAlertTriangle size={15} />
-            {lowCount} sản phẩm sắp hết hàng
+            {`${lowCount} sản phẩm sắp hết hàng`}
             <button onClick={() => { setFilterLow(true); setTab('products'); }}
               className="ml-1 text-orange-800 underline text-xs">Xem ngay</button>
           </div>
@@ -68,9 +69,9 @@ const InventoryManagement = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4 items-center">
-        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô'], ['history', 'Lịch sử']].map(([t, l]) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${tab === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
+        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô'], ['history', 'Lịch sử']].map(([tabId, l]) => (
+          <button key={tabId} onClick={() => setTab(tabId)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${tab === tabId ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
             {l}
           </button>
         ))}
@@ -186,7 +187,8 @@ const InventoryManagement = () => {
                   {!histData?.items?.length
                     ? <tr><td colSpan={8} className="text-center py-12 text-gray-400">Chưa có lịch sử</td></tr>
                     : histData.items.map(tx => {
-                      const cfg = TX_TYPE[tx.type] || { label: tx.type, color: 'bg-gray-100 text-gray-600', icon: '•' };
+                      const txLabelMap = { import: 'Nhập hàng', adjustment: 'Điều chỉnh', sale: 'Bán hàng' };
+                      const cfg = { label: txLabelMap[tx.type] || tx.type, color: TX_COLOR[tx.type] || 'bg-gray-100 text-gray-600', icon: TX_ICON[tx.type] || '•' };
                       const isPos = tx.quantity > 0;
                       return (
                         <tr key={tx.id} className="hover:bg-gray-50">
@@ -227,12 +229,12 @@ const InventoryManagement = () => {
       {importModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <form onSubmit={handleImport} className="bg-white rounded-2xl w-80 p-6 space-y-4">
-            <h3 className="font-bold">Import Stock: {importModal.name}</h3>
-            <div><label className="text-sm font-medium">Quantity *</label><input name="quantity" type="number" min="1" required className="input mt-1 text-base" /></div>
-            <div><label className="text-sm font-medium">Note</label><input name="note" className="input mt-1 text-base" /></div>
+            <h3 className="font-bold">{`Import Stock: ${importModal.name}`}</h3>
+            <div><label className="text-sm font-medium">Số lượng *</label><input name="quantity" type="number" min="1" required className="input mt-1 text-base" /></div>
+            <div><label className="text-sm font-medium">Ghi chú</label><input name="note" className="input mt-1 text-base" /></div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setImportModal(null)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" className="btn-primary flex-1">Import</button>
+              <button type="button" onClick={() => setImportModal(null)} className="btn-secondary flex-1">Hủy</button>
+              <button type="submit" className="btn-primary flex-1">Nhập hàng</button>
             </div>
           </form>
         </div>
@@ -241,13 +243,13 @@ const InventoryManagement = () => {
       {adjustModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <form onSubmit={handleAdjust} className="bg-white rounded-2xl w-80 p-6 space-y-4">
-            <h3 className="font-bold">Adjust Stock: {adjustModal.name}</h3>
-            <p className="text-sm text-gray-500">Current: {adjustModal.Inventory?.quantity}</p>
-            <div><label className="text-sm font-medium">New Quantity *</label><input name="quantity" type="number" min="0" required defaultValue={adjustModal.Inventory?.quantity} className="input mt-1 text-base" /></div>
-            <div><label className="text-sm font-medium">Reason</label><input name="note" required className="input mt-1 text-base" /></div>
+            <h3 className="font-bold">{`Adjust Stock: ${adjustModal.name}`}</h3>
+            <p className="text-sm text-gray-500">{`Hiện tại: ${adjustModal.Inventory?.quantity}`}</p>
+            <div><label className="text-sm font-medium">Số lượng mới *</label><input name="quantity" type="number" min="0" required defaultValue={adjustModal.Inventory?.quantity} className="input mt-1 text-base" /></div>
+            <div><label className="text-sm font-medium">Lý do</label><input name="note" required className="input mt-1 text-base" /></div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setAdjustModal(null)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" className="btn-primary flex-1">Adjust</button>
+              <button type="button" onClick={() => setAdjustModal(null)} className="btn-secondary flex-1">Hủy</button>
+              <button type="submit" className="btn-primary flex-1">Điều chỉnh</button>
             </div>
           </form>
         </div>

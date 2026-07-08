@@ -2,17 +2,16 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-const PAGES = [
-  { key: 'policies', label: 'Chính Sách Chung' },
-  { key: 'shipping_policy', label: 'Chính Sách Giao Hàng' },
-  { key: 'return_policy', label: 'Chính Sách Đổi Trả' },
-  { key: 'privacy_policy', label: 'Chính Sách Bảo Mật' },
-  { key: 'how_to_buy', label: 'Hướng Dẫn Mua Hàng' },
-  { key: 'contact_info', label: 'Thông Tin Liên Hệ' },
-  { key: 'about_us', label: 'Giới Thiệu' },
-];
-
 export default function ContentManagement() {
+  const PAGES = [
+    { key: 'policies', label: 'Chính Sách Chung' },
+    { key: 'shipping_policy', label: 'Chính Sách Giao Hàng' },
+    { key: 'return_policy', label: 'Chính Sách Đổi Trả' },
+    { key: 'privacy_policy', label: 'Chính Sách Bảo Mật' },
+    { key: 'how_to_buy', label: 'Hướng Dẫn Mua Hàng' },
+    { key: 'contact_info', label: 'Thông Tin Liên Hệ' },
+    { key: 'about_us', label: 'Giới Thiệu' },
+  ];
   const [active, setActive] = useState('policies');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -65,7 +64,7 @@ export default function ContentManagement() {
               </div>
               <div className="mb-4">
                 <label className="text-sm text-gray-600 block mb-1">Nội dung (HTML)</label>
-                <textarea value={content} onChange={e => setContent(e.target.value)} rows={18} className="w-full border rounded-lg px-3 py-2 text-base font-mono resize-y" placeholder="<h2>Tiêu đề</h2><p>Nội dung...</p>" />
+                <textarea value={content} onChange={e => setContent(e.target.value)} rows={18} className="w-full border rounded-lg px-3 py-2 text-base font-mono resize-y" placeholder="<h2>Title</h2><p>Content...</p>" />
               </div>
               <div className="flex items-center gap-4">
                 <button onClick={save} disabled={saving} className="bg-rose-500 text-white px-6 py-2 rounded-lg hover:bg-rose-600 font-medium disabled:opacity-50">{saving ? 'Đang lưu...' : 'Lưu nội dung'}</button>

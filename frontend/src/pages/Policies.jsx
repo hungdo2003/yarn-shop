@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
-const PAGES = [
-  { key: 'policies', label: 'Chính Sách' },
-  { key: 'shipping_policy', label: 'Chính Sách Giao Hàng' },
-  { key: 'return_policy', label: 'Chính Sách Đổi Trả' },
-  { key: 'privacy_policy', label: 'Bảo Mật' },
-];
-
 export default function Policies() {
   const [active, setActive] = useState('policies');
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const PAGES = [
+    { key: 'policies', label: 'Chính Sách' },
+    { key: 'shipping_policy', label: 'Chính Sách Giao Hàng' },
+    { key: 'return_policy', label: 'Chính Sách Đổi Trả' },
+    { key: 'privacy_policy', label: 'Bảo Mật' },
+  ];
 
   useEffect(() => {
     setLoading(true);

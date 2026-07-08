@@ -8,14 +8,21 @@ const PER_PAGE = 10;
 const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+const TOPUP_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
+
 const TX_TYPE = {
-  topup:            { label: 'Nạp tiền',         color: 'text-green-600', bg: 'bg-green-50', icon: '⬆️' },
-  payment:          { label: 'Thanh toán đơn',   color: 'text-red-500',   bg: 'bg-red-50',   icon: '🛒' },
-  refund:           { label: 'Hoàn tiền',         color: 'text-blue-600',  bg: 'bg-blue-50',  icon: '↩️' },
-  admin_adjustment: { label: 'Điều chỉnh',        color: 'text-gray-500',  bg: 'bg-gray-50',  icon: '⚙️' },
+  topup:            { label: 'Nạp tiền',        color: 'text-green-600', bg: 'bg-green-50', icon: '⬆️' },
+  payment:          { label: 'Thanh toán đơn',  color: 'text-red-500',   bg: 'bg-red-50',   icon: '🛒' },
+  refund:           { label: 'Hoàn tiền',        color: 'text-blue-600',  bg: 'bg-blue-50',  icon: '↩️' },
+  admin_adjustment: { label: 'Điều chỉnh',       color: 'text-gray-500',  bg: 'bg-gray-50',  icon: '⚙️' },
 };
 
-const TOPUP_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
+const TABS = [
+  { key: 'all',     label: 'Tất cả' },
+  { key: 'topup',   label: 'Nạp tiền' },
+  { key: 'payment', label: 'Thanh toán' },
+  { key: 'refund',  label: 'Hoàn tiền' },
+];
 
 export default function Wallet() {
   const [balance, setBalance] = useState(0);
@@ -116,12 +123,7 @@ export default function Wallet() {
         <div className="px-5 pt-5 pb-3 border-b">
           <h2 className="font-bold text-gray-800 text-lg mb-3">Lịch sử giao dịch</h2>
           <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
-            {[
-              { key: 'all', label: 'Tất cả' },
-              { key: 'topup', label: 'Nạp tiền' },
-              { key: 'payment', label: 'Thanh toán' },
-              { key: 'refund', label: 'Hoàn tiền' },
-            ].map(({ key, label }) => (
+            {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => { setTab(key); setPage(1); }}

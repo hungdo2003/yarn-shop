@@ -8,12 +8,10 @@ import { FiGift } from 'react-icons/fi';
 
 const fmt = (n) => Number(n).toLocaleString('vi-VN') + 'đ';
 
-// All orders now pay via PayOS — no method selection needed
-
 const SHIPPING_METHODS = [
   { value: 'standard', label: 'Tiêu chuẩn', desc: '3–5 ngày', fee: 30000, freeThreshold: 500000 },
-  { value: 'express', label: 'Hỏa tốc', desc: '1–2 ngày', fee: 50000, freeThreshold: null },
-  { value: 'economy', label: 'Tiết kiệm', desc: '5–7 ngày', fee: 15000, freeThreshold: null },
+  { value: 'express',  label: 'Hỏa tốc',    desc: '1–2 ngày', fee: 50000, freeThreshold: null },
+  { value: 'economy',  label: 'Tiết kiệm',   desc: '5–7 ngày', fee: 15000, freeThreshold: null },
 ];
 
 const Checkout = ({ guest }) => {
@@ -109,8 +107,6 @@ const Checkout = ({ guest }) => {
     // Step 1: Create order
     const tid = toast.loading('Đang tạo đơn hàng...');
     try {
-      const payload = { ...form, shippingMethod, voucherCode: voucher?.code }; // kept for guest path
-
       const payload2 = { ...form, shippingMethod, voucherCode: voucher?.code, paymentMethod, pointsToRedeem: usePoints ? pointsToRedeem : 0 };
       if (guest) {
         payload2.items = cartItems.map(i => ({ productId: i.productId, quantity: i.quantity }));
@@ -173,12 +169,18 @@ const Checkout = ({ guest }) => {
           Thanh toán {cartItems.length} sản phẩm đã chọn. Các sản phẩm còn lại vẫn ở trong giỏ hàng.
         </div>
       )}
-      {guest && <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm text-amber-800 mb-6">Bạn đang đặt hàng với tư cách khách. <a href="/login" className="underline font-medium">Đăng nhập</a> để theo dõi đơn hàng dễ hơn.</div>}
+      {guest && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm text-amber-800 mb-6">
+          Bạn đang đặt hàng với tư cách khách.{' '}
+          <a href="/login" className="underline font-medium">Đăng nhập</a>
+          {' '}để theo dõi đơn hàng dễ hơn.
+        </div>
+      )}
 
       <form id="checkout-form" onSubmit={handleSubmit}>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-5">
-            {/* Address selection — required */}
+            {/* Address selection */}
             <div className="bg-white rounded-xl shadow p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Địa Chỉ Giao Hàng</h3>
@@ -220,7 +222,7 @@ const Checkout = ({ guest }) => {
                   })}
                 </div>
               )}
-              {/* Guest: keep manual entry */}
+              {/* Guest: manual entry */}
               {guest && (
                 <div className="grid sm:grid-cols-2 gap-4 mt-3">
                   <div>
@@ -241,7 +243,7 @@ const Checkout = ({ guest }) => {
                   </div>
                 </div>
               )}
-              {/* Note always available */}
+              {/* Note */}
               <div className="mt-3">
                 <label className="block text-xs text-gray-500 mb-1">Ghi chú đơn hàng</label>
                 <input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Yêu cầu đặc biệt, ghi chú giao hàng..." className="w-full border rounded-lg px-3 py-2 text-base" />
@@ -282,7 +284,7 @@ const Checkout = ({ guest }) => {
                     <span className="text-xl shrink-0">💰</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-gray-800">Ví YarnShop</p>
-                      <p className="text-xs text-gray-500">Số dư: <span className={`font-bold ${walletBalance >= total ? 'text-green-600' : 'text-red-500'}`}>{walletBalance.toLocaleString('vi-VN')}đ</span></p>
+                      <p className="text-xs text-gray-500">Số dư: {walletBalance.toLocaleString('vi-VN')}đ</p>
                     </div>
                     {walletBalance < total && (
                       <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full shrink-0">Không đủ</span>
@@ -299,7 +301,11 @@ const Checkout = ({ guest }) => {
                   </label>
                 </div>
                 {paymentMethod === 'wallet' && walletBalance < total && (
-                  <p className="text-xs text-red-500 mt-2">Số dư ví không đủ. <a href="/wallet" className="underline font-medium">Nạp thêm tiền</a> hoặc chọn thanh toán PayOS.</p>
+                  <p className="text-xs text-red-500 mt-2">
+                    Số dư ví không đủ.{' '}
+                    <a href="/wallet" className="underline font-medium">Nạp thêm tiền</a>{' '}
+                    hoặc chọn thanh toán PayOS.
+                  </p>
                 )}
               </div>
             )}
@@ -388,7 +394,7 @@ const Checkout = ({ guest }) => {
               <div className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between text-gray-600"><span>Tạm tính</span><span>{fmt(subtotal)}</span></div>
                 <div className="flex justify-between text-gray-600"><span>Phí vận chuyển</span><span className={shippingFee === 0 ? 'text-green-600' : ''}>{shippingFee === 0 ? 'Miễn phí' : fmt(shippingFee)}</span></div>
-                {discountAmt > 0 && <div className="flex justify-between text-green-600"><span>Voucher</span><span>-{fmt(discountAmt)}</span></div>}
+                {discountAmt > 0 && <div className="flex justify-between text-green-600"><span>Mã giảm giá</span><span>-{fmt(discountAmt)}</span></div>}
                 {usePoints && pointsToRedeem > 0 && <div className="flex justify-between text-amber-600"><span>Điểm tích lũy ({pointsToRedeem.toLocaleString()} đ.)</span><span>-{fmt(pointsDiscount)}</span></div>}
                 <hr />
                 <div className="flex justify-between font-bold text-base"><span>Tổng cộng</span><span className="text-rose-600">{fmt(total)}</span></div>
@@ -399,7 +405,7 @@ const Checkout = ({ guest }) => {
                   </div>
                 )}
               </div>
-              {/* Desktop submit — mobile uses sticky bottom bar */}
+              {/* Desktop submit */}
               <button
                 type="submit"
                 disabled={loading || !cartItems.length || (!guest && !form.shippingAddress) || (!guest && addresses.length === 0) || (paymentMethod === 'wallet' && walletBalance < total)}
@@ -420,7 +426,7 @@ const Checkout = ({ guest }) => {
       {/* Mobile sticky checkout bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 pt-3 pb-5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-500 min-w-0 truncate">{cartItems.length} sản phẩm</span>
+          <span className="text-xs text-gray-500 min-w-0 truncate">Sản phẩm ({cartItems.length})</span>
           <span className="font-bold text-rose-500 text-sm shrink-0 ml-2">{fmt(total)}</span>
         </div>
         <button

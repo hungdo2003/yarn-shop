@@ -6,65 +6,6 @@ import Spinner from '../components/common/Spinner';
 import toast from 'react-hot-toast';
 import { useCountdown } from '../hooks/useCountdown';
 
-/* ─────────── Hero slides ─────────── */
-const SLIDES = [
-  {
-    bg: 'from-rose-400 via-pink-400 to-fuchsia-500',
-    tag: '🆕 Bộ sưu tập mới',
-    title: 'Len Cotton Mềm Mại\nChất Lượng Cao',
-    desc: 'Hơn 50 màu sắc đa dạng, phù hợp cho đan móc thủ công và làm quà tặng',
-    cta: { label: 'Khám phá ngay', to: '/products?type=raw_material' },
-    cta2: { label: 'Xem khuyến mãi', to: '/promotions' },
-    emoji: '🧶', floats: ['🎀', '✨', '🌸'],
-  },
-  {
-    bg: 'from-violet-500 via-purple-500 to-indigo-500',
-    tag: '🔥 Bán chạy nhất',
-    title: 'Gấu Bông Handmade\nĐộc Đáo & Đáng Yêu',
-    desc: 'Mỗi sản phẩm được làm thủ công tỉ mỉ, là món quà ý nghĩa cho mọi dịp',
-    cta: { label: 'Mua ngay', to: '/products?type=finished_product' },
-    cta2: { label: 'Đặt theo yêu cầu', to: '/custom-order' },
-    emoji: '🧸', floats: ['💜', '⭐', '🎁'],
-  },
-  {
-    bg: 'from-amber-400 via-orange-400 to-rose-400',
-    tag: '🎟️ Ưu đãi đặc biệt',
-    title: 'Phụ Kiện Đan Móc\nĐầy Đủ & Tiện Lợi',
-    desc: 'Kim đan, móc, mắt thú, bông nhồi — tất cả trong một cửa hàng',
-    cta: { label: 'Mua phụ kiện', to: '/products?type=accessory' },
-    cta2: { label: 'Nhận voucher', to: '/promotions' },
-    emoji: '🪡', floats: ['🧡', '🌟', '💫'],
-  },
-];
-
-/* ─────────── Category cards ─────────── */
-const CATS = [
-  { icon: '🧶', label: 'Len Cotton', desc: 'Cotton, acrylic, bamboo...', type: 'raw_material', color: 'from-rose-100 to-pink-100 border-rose-200' },
-  { icon: '🪡', label: 'Phụ Kiện Đan', desc: 'Kim, móc, bông nhồi...', type: 'accessory', color: 'from-purple-100 to-violet-100 border-purple-200' },
-  { icon: '🧸', label: 'Gấu & Thú Bông', desc: 'Handmade 100% từ len', link: '/products?type=finished_product&categoryId=7', color: 'from-amber-100 to-yellow-100 border-amber-200' },
-  { icon: '👜', label: 'Túi Handmade', desc: 'Túi móc, ví len...', link: '/products?type=finished_product&categoryId=8', color: 'from-teal-100 to-cyan-100 border-teal-200' },
-  { icon: '🌸', label: 'Hoa Len', desc: 'Hoa giả, phụ kiện trang trí', link: '/products?type=accessory', color: 'from-pink-100 to-fuchsia-100 border-pink-200' },
-  { icon: '✨', label: 'Đặt Hàng Riêng', desc: 'Thiết kế theo yêu cầu', link: '/custom-order', color: 'from-slate-100 to-gray-100 border-slate-200' },
-];
-
-/* ─────────── Testimonials ─────────── */
-const REVIEWS = [
-  { name: 'Nguyễn Thị Lan', avatar: '👩', rating: 5, text: 'Len rất mềm và màu đẹp như hình, giao hàng nhanh. Mình đã mua lần thứ 3 rồi!' },
-  { name: 'Trần Minh Huy', avatar: '👨', rating: 5, text: 'Gấu bông handmade đẹp hơn mình tưởng, tặng bạn gái ai cũng khen. Sẽ ủng hộ tiếp!' },
-  { name: 'Phạm Thu Hà', avatar: '👩‍🦱', rating: 5, text: 'Shop tư vấn nhiệt tình, len chất lượng tốt, giá cả hợp lý. Rất hài lòng!' },
-  { name: 'Lê Văn Thành', avatar: '🧑', rating: 5, text: 'Đặt gấu theo yêu cầu, shop làm đúng theo hình mẫu, đóng gói cẩn thận.' },
-];
-
-/* ─────────── Trust badges ─────────── */
-const BADGES = [
-  { icon: '🚚', title: 'Miễn Phí Ship', desc: 'Đơn hàng từ 500.000đ' },
-  { icon: '💝', title: '100% Handmade', desc: 'Từng sản phẩm thủ công' },
-  { icon: '🎨', title: 'Đặt Theo Yêu Cầu', desc: 'Thiết kế riêng của bạn' },
-  { icon: '🔄', title: 'Đổi Trả Dễ Dàng', desc: 'Trong vòng 7 ngày' },
-  { icon: '⭐', title: 'Chất Lượng Cao', desc: 'Kiểm tra kỹ trước khi giao' },
-  { icon: '📞', title: 'Hỗ Trợ Tận Tâm', desc: '8:00 – 20:00 mỗi ngày' },
-];
-
 const Stars = ({ n }) => <span className="text-amber-400">{'★'.repeat(n)}{'☆'.repeat(5 - n)}</span>;
 
 function MiniCountdown({ endDate }) {
@@ -87,6 +28,65 @@ export default function Home() {
   const [flashSale, setFlashSale] = useState(null);
   const navigate = useNavigate();
   const timerRef = useRef(null);
+
+  /* ─────────── Hero slides ─────────── */
+  const SLIDES = [
+    {
+      bg: 'from-rose-400 via-pink-400 to-fuchsia-500',
+      tag: '🆕 Bộ sưu tập mới',
+      title: 'Len Cotton Mềm Mại\nChất Lượng Cao',
+      desc: 'Hơn 50 màu sắc đa dạng, phù hợp cho đan móc thủ công và làm quà tặng',
+      cta: { label: 'Khám phá ngay', to: '/products?type=raw_material' },
+      cta2: { label: 'Xem khuyến mãi', to: '/promotions' },
+      emoji: '🧶', floats: ['🎀', '✨', '🌸'],
+    },
+    {
+      bg: 'from-violet-500 via-purple-500 to-indigo-500',
+      tag: '🔥 Bán chạy nhất',
+      title: 'Gấu Bông Handmade\nĐộc Đáo & Đáng Yêu',
+      desc: 'Mỗi sản phẩm được làm thủ công tỉ mỉ, là món quà ý nghĩa cho mọi dịp',
+      cta: { label: 'Mua ngay', to: '/products?type=finished_product' },
+      cta2: { label: 'Đặt theo yêu cầu', to: '/custom-order' },
+      emoji: '🧸', floats: ['💜', '⭐', '🎁'],
+    },
+    {
+      bg: 'from-amber-400 via-orange-400 to-rose-400',
+      tag: '🎟️ Ưu đãi đặc biệt',
+      title: 'Phụ Kiện Đan Móc\nĐầy Đủ & Tiện Lợi',
+      desc: 'Kim đan, móc, mắt thú, bông nhồi — tất cả trong một cửa hàng',
+      cta: { label: 'Mua phụ kiện', to: '/products?type=accessory' },
+      cta2: { label: 'Nhận voucher', to: '/promotions' },
+      emoji: '🪡', floats: ['🧡', '🌟', '💫'],
+    },
+  ];
+
+  /* ─────────── Category cards ─────────── */
+  const CATS = [
+    { icon: '🧶', label: 'Len Cotton', desc: 'Cotton, acrylic, bamboo...', type: 'raw_material', color: 'from-rose-100 to-pink-100 border-rose-200' },
+    { icon: '🪡', label: 'Phụ Kiện Đan', desc: 'Kim, móc, bông nhồi...', type: 'accessory',    color: 'from-purple-100 to-violet-100 border-purple-200' },
+    { icon: '🧸', label: 'Gấu & Thú Bông', desc: 'Handmade 100% từ len', link: '/products?type=finished_product&categoryId=7', color: 'from-amber-100 to-yellow-100 border-amber-200' },
+    { icon: '👜', label: 'Túi Handmade', desc: 'Túi móc, ví len...', link: '/products?type=finished_product&categoryId=8', color: 'from-teal-100 to-cyan-100 border-teal-200' },
+    { icon: '🌸', label: 'Hoa Len', desc: 'Hoa giả, phụ kiện trang trí', link: '/products?type=accessory', color: 'from-pink-100 to-fuchsia-100 border-pink-200' },
+    { icon: '✨', label: 'Đặt Hàng Riêng', desc: 'Thiết kế theo yêu cầu', link: '/custom-order',  color: 'from-slate-100 to-gray-100 border-slate-200' },
+  ];
+
+  /* ─────────── Testimonials ─────────── */
+  const REVIEWS = [
+    { name: 'Nguyễn Thị Lan', avatar: '👩', rating: 5, text: 'Len rất mềm và màu đẹp như hình, giao hàng nhanh. Mình đã mua lần thứ 3 rồi!' },
+    { name: 'Trần Minh Huy', avatar: '👨', rating: 5, text: 'Gấu bông handmade đẹp hơn mình tưởng, tặng bạn gái ai cũng khen. Sẽ ủng hộ tiếp!' },
+    { name: 'Phạm Thu Hà', avatar: '👩‍🦱', rating: 5, text: 'Shop tư vấn nhiệt tình, len chất lượng tốt, giá cả hợp lý. Rất hài lòng!' },
+    { name: 'Lê Văn Thành', avatar: '🧑', rating: 5, text: 'Đặt gấu theo yêu cầu, shop làm đúng theo hình mẫu, đóng gói cẩn thận.' },
+  ];
+
+  /* ─────────── Trust badges ─────────── */
+  const BADGES = [
+    { icon: '🚚', title: 'Miễn Phí Ship', desc: 'Đơn hàng từ 500.000đ' },
+    { icon: '💝', title: '100% Handmade', desc: 'Từng sản phẩm thủ công' },
+    { icon: '🎨', title: 'Đặt Theo Yêu Cầu', desc: 'Thiết kế riêng của bạn' },
+    { icon: '🔄', title: 'Đổi Trả Dễ Dàng', desc: 'Trong vòng 7 ngày' },
+    { icon: '⭐', title: 'Chất Lượng Cao', desc: 'Kiểm tra kỹ trước khi giao' },
+    { icon: '📞', title: 'Hỗ Trợ Tận Tâm', desc: '8:00 – 20:00 mỗi ngày' },
+  ];
 
   useEffect(() => {
     Promise.all([
@@ -127,12 +127,6 @@ export default function Home() {
     <div className="bg-white">
 
       {/* ── HERO CAROUSEL ── */}
-      {/*
-        < 360px (cũ/rẻ)  : py-10, text-2xl, 1 col
-        360px+ (Samsung A, Redmi, Oppo): py-12, text-3xl
-        640px+ (máy lớn)  : py-20, text-4xl
-        768px+ (iPad)     : py-28, text-5xl, 2 col (emoji xuất hiện)
-      */}
       <section className={`relative bg-gradient-to-br ${cur.bg} overflow-hidden transition-all duration-700`}>
         <div className="max-w-7xl mx-auto px-4 py-10 xs:py-12 sm:py-20 md:py-28 flex flex-col md:flex-row items-center gap-6 md:gap-10">
           <div className="flex-1 text-white z-10">
@@ -160,7 +154,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          {/* Emoji decoration — ẩn trên phone, hiện từ iPad */}
+          {/* Emoji decoration */}
           <div className="hidden md:flex flex-1 items-center justify-center relative">
             <div className="text-[10rem] select-none animate-bounce">{cur.emoji}</div>
             {cur.floats.map((f, i) => (
@@ -169,7 +163,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Slide dots — h-3 w-3 = 12px, đủ tap trên touch */}
+        {/* Slide dots */}
         <div className="absolute bottom-3 xs:bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {SLIDES.map((_, i) => (
             <button
@@ -179,7 +173,7 @@ export default function Home() {
             />
           ))}
         </div>
-        {/* Nav arrows — 44px = chuẩn tap target Apple HIG / Android Material */}
+        {/* Nav arrows */}
         <button
           onClick={() => goSlide((slide - 1 + SLIDES.length) % SLIDES.length)}
           className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl transition"
@@ -190,11 +184,7 @@ export default function Home() {
         >›</button>
       </section>
 
-      {/* ── TRUST BADGES ──
-        < 360px : 2 col, chỉ title (ẩn desc)
-        360px+  : 3 col, hiện desc
-        768px+  : 6 col (iPad — 1 hàng ngang)
-      */}
+      {/* ── TRUST BADGES ── */}
       <section className="bg-rose-50 border-y border-rose-100">
         <div className="max-w-7xl mx-auto px-4 py-3 xs:py-4 sm:py-6 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-6 gap-2 xs:gap-3 sm:gap-4">
           {BADGES.map((b, i) => (
@@ -218,7 +208,7 @@ export default function Home() {
               <div>
                 <p className="font-black text-sm xs:text-base sm:text-lg leading-tight">FLASH SALE ĐANG DIỄN RA!</p>
                 <p className="text-orange-100 text-[10px] xs:text-xs">
-                  Giảm đến {Math.max(...(flashSale.products?.map(p => Math.round((1 - p.salePrice/p.price)*100)) || [0]))}% — Số lượng có hạn
+                  {`Giảm đến ${Math.max(...(flashSale.products?.map(p => Math.round((1 - p.salePrice/p.price)*100)) || [0]))}% — Số lượng có hạn`}
                 </p>
               </div>
             </div>
@@ -237,11 +227,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── CATEGORY SHOWCASE ──
-        < 360px : 2 col (3 hàng × 2 = 6 items)
-        360px+  : 3 col (2 hàng × 3 = 6 items) — Samsung A, Redmi, Oppo
-        768px+  : 6 col (1 hàng) — iPad
-      */}
+      {/* ── CATEGORY SHOWCASE ── */}
       <section className="max-w-7xl mx-auto px-4 py-8 xs:py-10 sm:py-16">
         <div className="text-center mb-6 xs:mb-7 sm:mb-10">
           <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold text-gray-800 mb-1 xs:mb-2">Khám Phá Danh Mục</h2>
@@ -262,11 +248,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── NEW ARRIVALS ──
-        Phone: 2 col
-        Samsung S / iPhone Pro Max (412px+): 2 col vẫn đẹp
-        iPad (768px+): 4 col
-      */}
+      {/* ── NEW ARRIVALS ── */}
       <section className="bg-gradient-to-br from-rose-50 to-pink-50 py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-5 xs:mb-6 sm:mb-8">
@@ -292,17 +274,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PROMO BANNER ──
-        < 360px : 1 col
-        360px+  : 1 col (đủ rộng để đọc)
-        640px+  : 3 col ngang
-      */}
+      {/* ── PROMO BANNER ── */}
       <section className="max-w-7xl mx-auto px-4 py-6 xs:py-8 sm:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
-            { bg: 'from-rose-500 to-pink-500', icon: '🎟️', title: 'Giảm 10% đơn đầu', desc: 'Mã: WELCOME10', to: '/promotions' },
+            { bg: 'from-rose-500 to-pink-500',     icon: '🎟️', title: 'Giảm 10% đơn đầu', desc: 'Mã: WELCOME10', to: '/promotions' },
             { bg: 'from-violet-500 to-purple-600', icon: '🚚', title: 'Miễn phí vận chuyển', desc: 'Đơn từ 500.000đ', to: '/products' },
-            { bg: 'from-amber-500 to-orange-500', icon: '✨', title: 'Đặt hàng theo yêu cầu', desc: 'Thiết kế riêng của bạn', to: '/custom-order' },
+            { bg: 'from-amber-500 to-orange-500',  icon: '✨', title: 'Đặt hàng theo yêu cầu', desc: 'Thiết kế riêng của bạn', to: '/custom-order' },
           ].map((b, i) => (
             <Link
               key={i}
@@ -356,11 +334,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ──
-        < 360px : 1 col
-        360px+  : 2 col — Samsung A, Redmi, Oppo
-        768px+  : 4 col — iPad
-      */}
+      {/* ── TESTIMONIALS ── */}
       <section className="bg-white py-10 sm:py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-6 xs:mb-7 sm:mb-10">
@@ -382,16 +356,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── STATS ──
-        2 col trên tất cả phone, 4 col từ iPad
-      */}
+      {/* ── STATS ── */}
       <section className="bg-rose-500 py-8 xs:py-10 sm:py-12 px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 xs:gap-5 sm:gap-6 text-center text-white">
           {[
             { num: '5,000+', label: 'Khách hàng hài lòng' },
-            { num: '200+', label: 'Sản phẩm đa dạng' },
+            { num: '200+',   label: 'Sản phẩm đa dạng' },
             { num: '10,000+', label: 'Đơn hàng đã giao' },
-            { num: '4.9⭐', label: 'Đánh giá trung bình' },
+            { num: '4.9⭐',   label: 'Đánh giá trung bình' },
           ].map((s, i) => (
             <div key={i}>
               <p className="text-2xl xs:text-3xl sm:text-4xl font-bold mb-1">{s.num}</p>
@@ -401,10 +373,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BLOG / TIPS ──
-        Phone: 1 col
-        640px+: 3 col (Samsung lớn ở landscape, iPad)
-      */}
+      {/* ── BLOG / TIPS ── */}
       <section className="max-w-7xl mx-auto px-4 py-10 sm:py-16">
         <div className="text-center mb-6 xs:mb-7 sm:mb-10">
           <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold text-gray-800 mb-1 xs:mb-2">Mẹo & Hướng Dẫn Đan Móc</h2>
@@ -434,11 +403,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── NEWSLETTER ──
-        < 360px: input + button xếp dọc (tránh quá chật)
-        360px+: cùng hàng ngang
-        Fix iOS auto-zoom: text-base (16px) trên input
-      */}
+      {/* ── NEWSLETTER ── */}
       <section className="bg-gradient-to-r from-rose-600 to-pink-600 py-10 xs:py-12 sm:py-16 px-4">
         <div className="max-w-2xl mx-auto text-center text-white">
           <div className="text-4xl xs:text-4xl sm:text-5xl mb-3 xs:mb-4">📬</div>

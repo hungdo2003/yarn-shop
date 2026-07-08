@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-const positions = { home_hero: 'Hero Banner', home_banner: 'Banner Trang Chủ', popup: 'Popup', sidebar: 'Thanh Bên' };
-
 export default function BannerManagement() {
+  const positions = {
+    home_hero: 'Hero Banner',
+    home_banner: 'Banner Trang Chủ',
+    popup: 'Popup',
+    sidebar: 'Thanh Bên',
+  };
   const [banners, setBanners] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -28,7 +32,7 @@ export default function BannerManagement() {
       else await api.post('/banners', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success(editing ? 'Đã cập nhật banner' : 'Đã thêm banner');
       setShowForm(false); load();
-    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
+    } catch (err) { toast.error(err.response?.data?.message || 'Thao tác thất bại'); }
   };
 
   const toggleActive = async (b) => {
@@ -57,8 +61,8 @@ export default function BannerManagement() {
         </select>
         <select value={filter.isActive} onChange={e => setFilter({ ...filter, isActive: e.target.value })} className="border rounded-lg px-3 py-2 text-base">
           <option value="">Tất cả trạng thái</option>
-          <option value="true">Đang hiện</option>
-          <option value="false">Đã ẩn</option>
+          <option value="true">Hiện</option>
+          <option value="false">Ẩn</option>
         </select>
       </div>
 
@@ -134,7 +138,7 @@ export default function BannerManagement() {
                 <span className="text-sm text-gray-700">Hiển thị banner</span>
               </label>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border py-2 rounded-lg hover:bg-gray-50">Huỷ</button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border py-2 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" className="flex-1 bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-medium">Lưu</button>
               </div>
             </form>

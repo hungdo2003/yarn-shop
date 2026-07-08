@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-const typeOptions = [
-  { value: 'raw_material', label: 'Len/Sợi' },
-  { value: 'accessory', label: 'Phụ kiện' },
-  { value: 'finished_product', label: 'Sản phẩm hoàn thiện' },
-];
-
 const empty = { name: '', type: 'raw_material', description: '', parentId: '', isActive: true };
 
 export default function CategoryManagement() {
+  const typeOptions = [
+    { value: 'raw_material', label: 'Len/Sợi' },
+    { value: 'accessory', label: 'Phụ kiện' },
+    { value: 'finished_product', label: 'Sản phẩm hoàn thiện' },
+  ];
   const [cats, setCats] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -31,13 +30,13 @@ export default function CategoryManagement() {
       else await api.post('/categories', payload);
       toast.success(editing ? 'Đã cập nhật danh mục' : 'Đã thêm danh mục');
       setShowForm(false); load();
-    } catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
+    } catch (err) { toast.error(err.response?.data?.message || 'Thao tác thất bại'); }
   };
 
   const del = async (id) => {
     if (!window.confirm('Xóa danh mục này?')) return;
     try { await api.delete(`/categories/${id}`); toast.success('Đã xóa'); load(); }
-    catch (err) { toast.error(err.response?.data?.message || 'Lỗi'); }
+    catch (err) { toast.error(err.response?.data?.message || 'Thao tác thất bại'); }
   };
 
   const typeBg = { raw_material: 'bg-blue-100 text-blue-700', accessory: 'bg-purple-100 text-purple-700', finished_product: 'bg-green-100 text-green-700' };
@@ -84,7 +83,7 @@ export default function CategoryManagement() {
                 <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{c.parent?.name || '–'}</td>
                 <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{c.Products?.length || 0}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${c.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{c.isActive !== false ? 'Hoạt động' : 'Ẩn'}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${c.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{c.isActive !== false ? 'Đang bán' : 'Dừng bán'}</span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
@@ -94,7 +93,7 @@ export default function CategoryManagement() {
                 </td>
               </tr>
             ))}
-            {cats.length === 0 && <tr><td colSpan={7} className="text-center py-12 text-gray-400">Không có danh mục</td></tr>}
+            {cats.length === 0 && <tr><td colSpan={7} className="text-center py-12 text-gray-400">Chưa có danh mục nào</td></tr>}
           </tbody>
         </table>
       </div>
@@ -130,7 +129,7 @@ export default function CategoryManagement() {
                 <span className="text-sm">Hiển thị</span>
               </label>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border py-2 rounded-lg hover:bg-gray-50">Huỷ</button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border py-2 rounded-lg hover:bg-gray-50">Hủy</button>
                 <button type="submit" className="flex-1 bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-medium">Lưu</button>
               </div>
             </form>

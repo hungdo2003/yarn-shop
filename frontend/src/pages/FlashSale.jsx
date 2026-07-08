@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiZap, FiCopy, FiShoppingCart } from 'react-icons/fi';
+import { FiZap, FiCopy, FiShoppingCart, FiClock } from 'react-icons/fi';
 import api from '../services/api';
 import { useCountdown } from '../hooks/useCountdown';
 import { useCart } from '../context/CartContext';
@@ -24,23 +24,26 @@ function CountBlock({ value, label }) {
 function Countdown({ endDate }) {
   const { days, hours, minutes, seconds, expired } = useCountdown(endDate);
   if (expired) return (
-    <div className="text-center py-4 text-gray-500 font-semibold">Flash Sale đã kết thúc</div>
+    <div className="text-center py-4 text-gray-500 font-semibold">{'Flash Sale đã kết thúc'}</div>
   );
   return (
     <div className="flex items-end gap-2 justify-center">
-      {days > 0 && <><CountBlock value={days} label="Ngày" /><span className="text-3xl font-black text-gray-400 mb-4">:</span></>}
-      <CountBlock value={hours} label="Giờ" />
+      {days > 0 && <><CountBlock value={days} label={'Ngày'} /><span className="text-3xl font-black text-gray-400 mb-4">:</span></>}
+      <CountBlock value={hours} label={'Giờ'} />
       <span className="text-3xl font-black text-gray-400 mb-4">:</span>
-      <CountBlock value={minutes} label="Phút" />
+      <CountBlock value={minutes} label={'Phút'} />
       <span className="text-3xl font-black text-gray-400 mb-4">:</span>
-      <CountBlock value={seconds} label="Giây" />
+      <CountBlock value={seconds} label={'Giây'} />
     </div>
   );
 }
 
 /* ── Voucher card ── */
 function VoucherCard({ voucher }) {
-  const copy = () => { navigator.clipboard.writeText(voucher.code); toast.success(`Đã sao chép mã ${voucher.code}!`); };
+  const copy = () => {
+    navigator.clipboard.writeText(voucher.code);
+    toast.success(`Đã sao chép mã ${voucher.code}!`);
+  };
   const remaining = voucher.usageLimit ? voucher.usageLimit - voucher.usedCount : null;
   const pctUsed = voucher.usageLimit ? Math.round((voucher.usedCount / voucher.usageLimit) * 100) : 0;
 
@@ -49,7 +52,7 @@ function VoucherCard({ voucher }) {
       <div className="bg-gradient-to-r from-orange-500 to-red-500 px-5 py-4 text-white">
         <div className="flex items-center gap-2 mb-1">
           <FiZap size={16} className="fill-white" />
-          <span className="text-xs font-bold uppercase tracking-wider">Flash Sale</span>
+          <span className="text-xs font-bold uppercase tracking-wider">{'Flash Sale'}</span>
         </div>
         <p className="text-2xl font-black">
           {voucher.type === 'percentage'
@@ -59,7 +62,7 @@ function VoucherCard({ voucher }) {
             : 'Miễn phí vận chuyển'}
         </p>
         {voucher.maxDiscountAmount && voucher.type === 'percentage' && (
-          <p className="text-xs text-orange-100 mt-0.5">Tối đa {formatCurrency(voucher.maxDiscountAmount)}</p>
+          <p className="text-xs text-orange-100 mt-0.5">{`Tối đa ${formatCurrency(voucher.maxDiscountAmount)}`}</p>
         )}
       </div>
       <div className="px-5 py-4">
@@ -68,18 +71,18 @@ function VoucherCard({ voucher }) {
             {voucher.code}
           </code>
           <button onClick={copy} className="flex items-center gap-1 bg-orange-500 text-white px-3 h-11 rounded-lg text-sm hover:bg-orange-600 active:scale-95 transition shrink-0">
-            <FiCopy size={14} /> Sao chép
+            <FiCopy size={14} /> {'Sao chép'}
           </button>
         </div>
         {voucher.minOrderAmount > 0 && (
-          <p className="text-xs text-gray-500 mb-1">Đơn tối thiểu: {formatCurrency(voucher.minOrderAmount)}</p>
+          <p className="text-xs text-gray-500 mb-1">{`Đơn tối thiểu: ${formatCurrency(voucher.minOrderAmount)}`}</p>
         )}
         {remaining !== null && (
           <div className="mt-2">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>Đã dùng: {voucher.usedCount}/{voucher.usageLimit}</span>
+              <span>{`Đã dùng: ${voucher.usedCount}/${voucher.usageLimit}`}</span>
               <span className={remaining <= 10 ? 'text-red-500 font-bold' : 'text-gray-400'}>
-                Còn {remaining} lượt
+                {`Còn ${remaining} lượt`}
               </span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -93,12 +96,32 @@ function VoucherCard({ voucher }) {
   );
 }
 
+/* ── Countdown overlay for sale cards ── */
+function SaleCardCountdown({ endDate }) {
+  const { days, hours, minutes, seconds, expired } = useCountdown(endDate);
+  if (expired) return null;
+  const pad = v => String(v).padStart(2, '0');
+  return (
+    <span className="absolute top-2 right-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-white bg-orange-500 shadow px-1.5 py-0.5 rounded-full leading-none">
+      <FiClock size={8} className="shrink-0" />
+      {days > 0 && <span>{days}d </span>}
+      <span className="tabular-nums">{pad(hours)}:{pad(minutes)}:{pad(seconds)}</span>
+    </span>
+  );
+}
+
 /* ── Sale product card ── */
 function SaleProductCard({ product }) {
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
   const image = product.thumbnailImage || product.ProductImages?.[0]?.imageUrl;
-  const discount = Math.round((1 - product.salePrice / product.price) * 100);
+
+  const now = new Date();
+  const saleActive = product.salePrice && product.salePrice < product.price
+    && (!product.saleStartDate || new Date(product.saleStartDate) <= now)
+    && (!product.saleEndDate || new Date(product.saleEndDate) > now);
+  const displayPrice = saleActive ? product.salePrice : product.price;
+  const discount = saleActive ? Math.round((1 - product.salePrice / product.price) * 100) : 0;
 
   const handleCart = async (e) => {
     e.preventDefault();
@@ -113,12 +136,15 @@ function SaleProductCard({ product }) {
         {image
           ? <img src={image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           : <div className="w-full h-full flex items-center justify-center text-5xl">🧶</div>}
-        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-full shadow">
-          -{discount}%
-        </span>
+        {saleActive && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-full shadow">
+            -{discount}%
+          </span>
+        )}
+        {saleActive && product.saleEndDate && <SaleCardCountdown endDate={product.saleEndDate} />}
         {product.stock <= 5 && (
           <span className="absolute bottom-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            Còn {product.stock} cái
+            {`Còn ${product.stock} cái`}
           </span>
         )}
       </div>
@@ -127,8 +153,8 @@ function SaleProductCard({ product }) {
         <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-2">{product.name}</h3>
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-base font-black text-red-500">{formatCurrency(product.salePrice)}</p>
-            <p className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</p>
+            <p className={`text-base font-black ${saleActive ? 'text-red-500' : 'text-gray-800'}`}>{formatCurrency(displayPrice)}</p>
+            {saleActive && <p className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</p>}
           </div>
           {product.stock > 0 && (
             <button onClick={handleCart}
@@ -156,7 +182,9 @@ export default function FlashSale() {
 
   const hasVouchers = data?.vouchers?.length > 0;
   const hasProducts = data?.products?.length > 0;
-  const endDate = data?.endDate;
+  const endDate = data?.endDate
+    ?? data?.products?.filter(p => p.saleEndDate).sort((a, b) => new Date(a.saleEndDate) - new Date(b.saleEndDate))[0]?.saleEndDate
+    ?? null;
 
   if (loading) return (
     <div className="min-h-[60vh] flex items-center justify-center"><Spinner size="lg" /></div>
@@ -175,15 +203,15 @@ export default function FlashSale() {
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight">FLASH SALE</h1>
             <FiZap size={28} className="fill-yellow-300 text-yellow-300" />
           </div>
-          <p className="text-orange-100 text-base sm:text-lg mb-6">Ưu đãi sốc — Số lượng có hạn — Nhanh tay kẻo hết!</p>
+          <p className="text-orange-100 text-base sm:text-lg mb-6">{'Ưu đãi sốc — Số lượng có hạn — Nhanh tay kẻo hết!'}</p>
 
           {endDate ? (
             <div>
-              <p className="text-orange-200 text-sm mb-3 font-medium uppercase tracking-wider">Kết thúc sau</p>
+              <p className="text-orange-200 text-sm mb-3 font-medium uppercase tracking-wider">{'Kết thúc sau'}</p>
               <Countdown endDate={endDate} />
             </div>
           ) : (
-            <p className="text-orange-200 italic">Sản phẩm đang giảm giá</p>
+            <p className="text-orange-200 italic">{'Sản phẩm đang giảm giá'}</p>
           )}
         </div>
       </div>
@@ -194,7 +222,7 @@ export default function FlashSale() {
         {hasVouchers && (
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="text-orange-500">🎟️</span> Mã giảm giá Flash Sale
+              <span className="text-orange-500">🎟️</span> {'Mã giảm giá Flash Sale'}
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {data.vouchers.map(v => <VoucherCard key={v.id} voucher={v} />)}
@@ -207,10 +235,10 @@ export default function FlashSale() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <span className="text-red-500">🔥</span> Sản phẩm giảm giá
+                <span className="text-red-500">🔥</span> {'Sản phẩm giảm giá'}
                 <span className="bg-red-100 text-red-600 text-sm font-bold px-2.5 py-0.5 rounded-full">{data.products.length}</span>
               </h2>
-              <Link to="/products" className="text-sm text-rose-500 hover:underline font-medium">Xem tất cả →</Link>
+              <Link to="/products" className="text-sm text-rose-500 hover:underline font-medium">{'Xem tất cả →'}</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {data.products.map(p => <SaleProductCard key={p.id} product={p} />)}
@@ -220,10 +248,10 @@ export default function FlashSale() {
           !hasVouchers && (
             <div className="text-center py-24">
               <div className="text-6xl mb-4">⚡</div>
-              <h2 className="text-xl font-bold text-gray-700 mb-2">Chưa có Flash Sale nào</h2>
-              <p className="text-gray-500 mb-6">Theo dõi để không bỏ lỡ ưu đãi tiếp theo nhé!</p>
+              <h2 className="text-xl font-bold text-gray-700 mb-2">{'Chưa có Flash Sale nào'}</h2>
+              <p className="text-gray-500 mb-6">{'Theo dõi để không bỏ lỡ ưu đãi tiếp theo nhé!'}</p>
               <Link to="/products" className="inline-block bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition">
-                Xem tất cả sản phẩm
+                {'Xem tất cả sản phẩm'}
               </Link>
             </div>
           )

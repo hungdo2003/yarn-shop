@@ -41,8 +41,8 @@ export default function WalletTopupResult() {
           <>
             <div className="text-5xl mb-3">✅</div>
             <h2 className="text-xl font-bold text-green-600 mb-1">Nạp tiền thành công!</h2>
-            {amount && <p className="text-gray-500 text-sm mb-1">Đã nạp <strong>{fmt(amount)}</strong> vào ví</p>}
-            {balance !== null && <p className="text-gray-500 text-sm">Số dư hiện tại: <strong className="text-green-600">{fmt(balance)}</strong></p>}
+            {amount && <p className="text-gray-500 text-sm mb-1">{`Đã nạp ${fmt(amount)} vào ví`}</p>}
+            {balance !== null && <p className="text-gray-500 text-sm">{`Số dư hiện tại: ${fmt(balance)}`}</p>}
           </>
         )}
         {status === 'failed' && (

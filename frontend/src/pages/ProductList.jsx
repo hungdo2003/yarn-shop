@@ -7,29 +7,29 @@ import Spinner from '../components/common/Spinner';
 import { FiFilter, FiX, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const SORT_OPTIONS = [
-  { value: '', label: 'Mới nhất' },
-  { value: 'sold', label: 'Bán chạy nhất' },
-  { value: 'rating', label: 'Đánh giá cao nhất' },
+  { value: '',          label: 'Mới nhất' },
+  { value: 'sold',      label: 'Bán chạy nhất' },
+  { value: 'rating',    label: 'Đánh giá cao nhất' },
   { value: 'price_asc', label: 'Giá: Thấp đến cao' },
-  { value: 'price_desc', label: 'Giá: Cao đến thấp' }
+  { value: 'price_desc',label: 'Giá: Cao đến thấp' },
 ];
 
 const QUICK_FILTERS = [
-  { label: 'Tất cả', params: {} },
-  { label: '🆕 Mới về', params: { isNew: 'true' } },
-  { label: '🔥 Bán chạy', params: { sortBy: 'sold' } },
+  { label: 'Tất cả',          params: {} },
+  { label: '🆕 Mới về',       params: { isNew: 'true' } },
+  { label: '🔥 Bán chạy',     params: { sortBy: 'sold' } },
   { label: '⭐ Đánh giá cao', params: { sortBy: 'rating', minRating: '4' } },
-  { label: '🏷️ Len & Sợi', params: { type: 'raw_material' } },
-  { label: '🛠️ Phụ kiện', params: { type: 'accessory' } },
-  { label: '🧸 Handmade', params: { type: 'finished_product' } },
+  { label: '🏷️ Len & Sợi',    params: { type: 'raw_material' } },
+  { label: '🛠️ Phụ kiện',     params: { type: 'accessory' } },
+  { label: '🧸 Handmade',     params: { type: 'finished_product' } },
 ];
 
 const PRICE_RANGES = [
-  { label: 'Tất cả', min: '', max: '' },
-  { label: 'Dưới 50.000đ', min: '', max: '50000' },
-  { label: '50.000 – 200.000đ', min: '50000', max: '200000' },
-  { label: '200.000 – 500.000đ', min: '200000', max: '500000' },
-  { label: 'Trên 500.000đ', min: '500000', max: '' },
+  { label: 'Tất cả',              min: '', max: '' },
+  { label: 'Dưới 50.000đ',        min: '', max: '50000' },
+  { label: '50.000 – 200.000đ',   min: '50000', max: '200000' },
+  { label: '200.000 – 500.000đ',  min: '200000', max: '500000' },
+  { label: 'Trên 500.000đ',       min: '500000', max: '' },
 ];
 
 const FilterSection = ({ title, children, defaultOpen = true }) => {
@@ -116,7 +116,12 @@ const ProductList = () => {
   const FilterPanel = () => (
     <div>
       <FilterSection title="Loại sản phẩm">
-        {[['', 'Tất cả'], ['raw_material', 'Len & Sợi'], ['accessory', 'Phụ kiện'], ['finished_product', 'Handmade']].map(([v, l]) => (
+        {[
+          ['', 'Tất cả'],
+          ['raw_material', 'Len & Sợi'],
+          ['accessory', 'Phụ kiện'],
+          ['finished_product', 'Handmade'],
+        ].map(([v, l]) => (
           <label key={v} className="flex items-center gap-2 mb-2 cursor-pointer text-sm">
             <input type="radio" name="type" checked={filters.type === v} onChange={() => setFilter('type', v)} className="accent-rose-500" />
             {l}
@@ -153,7 +158,11 @@ const ProductList = () => {
       </FilterSection>
 
       <FilterSection title="Đánh giá" defaultOpen={false}>
-        {[['', 'Tất cả'], ['4', '4★ trở lên'], ['3', '3★ trở lên']].map(([v, l]) => (
+        {[
+          ['', 'Tất cả'],
+          ['4', '4★ trở lên'],
+          ['3', '3★ trở lên'],
+        ].map(([v, l]) => (
           <label key={v} className="flex items-center gap-2 mb-2 cursor-pointer text-sm">
             <input type="radio" name="rating" checked={filters.minRating === v} onChange={() => setFilter('minRating', v)} className="accent-rose-500" />
             {l}
@@ -182,13 +191,14 @@ const ProductList = () => {
     </div>
   );
 
-  const pageTitle = filters.search ? `Kết quả tìm kiếm: "${filters.search}"` :
-    filters.isNew === 'true' ? 'Hàng Mới Về' :
-    filters.sortBy === 'sold' ? 'Sản Phẩm Bán Chạy' :
-    filters.type === 'raw_material' ? 'Len & Sợi' :
-    filters.type === 'accessory' ? 'Phụ Kiện' :
-    filters.type === 'finished_product' ? 'Sản Phẩm Handmade' :
-    'Tất Cả Sản Phẩm';
+  const pageTitle = filters.search
+    ? `Kết quả tìm kiếm: "${filters.search}"`
+    : filters.isNew === 'true' ? 'Hàng Mới Về'
+    : filters.sortBy === 'sold' ? 'Sản Phẩm Bán Chạy'
+    : filters.type === 'raw_material' ? 'Len & Sợi'
+    : filters.type === 'accessory' ? 'Phụ Kiện'
+    : filters.type === 'finished_product' ? 'Sản Phẩm Handmade'
+    : 'Tất Cả Sản Phẩm';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">

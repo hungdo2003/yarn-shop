@@ -79,7 +79,7 @@ const ForgotPassword = () => {
       navigate('/login');
     } catch (err) {
       toast.dismiss(id);
-      const msg = err?.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+      const msg = err?.response?.data?.message || 'OTP không hợp lệ hoặc đã hết hạn';
       toast.error(msg, { duration: 4000 });
       if (msg.toLowerCase().includes('otp') || msg.toLowerCase().includes('hết hạn') || msg.toLowerCase().includes('sử dụng')) {
         setOtp(['', '', '', '']);
@@ -101,11 +101,13 @@ const ForgotPassword = () => {
       otpRefs[0].current?.focus();
     } catch (err) {
       toast.dismiss(id);
-      toast.error(err?.response?.data?.message || 'Không thể gửi lại. Vui lòng thử lại.', { duration: 4000 });
+      toast.error(err?.response?.data?.message || 'Gửi lại thất bại. Vui lòng thử lại.', { duration: 4000 });
     } finally {
       setLoading(false);
     }
   };
+
+  const stepSubtitles = ['', 'Nhập email để nhận mã xác nhận', 'Nhập mã OTP đã gửi đến email của bạn', 'Tạo mật khẩu mới cho tài khoản'];
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 bg-gradient-to-br from-rose-50 to-pink-50">
@@ -115,11 +117,7 @@ const ForgotPassword = () => {
             <div className="text-5xl mb-3">🧶</div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-800">Quên Mật Khẩu</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {step === 1 && 'Nhập email để nhận mã xác nhận'}
-            {step === 2 && 'Nhập mã OTP đã gửi đến email của bạn'}
-            {step === 3 && 'Tạo mật khẩu mới cho tài khoản'}
-          </p>
+          <p className="text-gray-500 text-sm mt-1">{stepSubtitles[step]}</p>
         </div>
 
         {/* Step indicator */}

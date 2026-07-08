@@ -7,28 +7,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 
-const REG_STATUS = {
-  pending_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-700' },
-  paid:            { label: 'Đã thanh toán',   color: 'bg-blue-100 text-blue-700' },
-  confirmed:       { label: 'Đã xác nhận',     color: 'bg-indigo-100 text-indigo-700' },
-  preparing:       { label: 'Đang chuẩn bị',   color: 'bg-purple-100 text-purple-700' },
-  shipping:        { label: 'Đang giao',        color: 'bg-cyan-100 text-cyan-700' },
-  delivered:       { label: 'Đã giao',          color: 'bg-green-100 text-green-700' },
-  cancelled:       { label: 'Đã hủy',           color: 'bg-red-100 text-red-700' },
-};
-
-const CUS_STATUS = {
-  submitted:     { label: 'Mới gửi',      color: 'bg-gray-100 text-gray-600' },
-  reviewing:     { label: 'Đang xét',     color: 'bg-blue-100 text-blue-700' },
-  quoted:        { label: 'Chờ thanh toán', color: 'bg-amber-100 text-amber-700' },
-  deposit_paid:  { label: 'Đã đặt cọc',   color: 'bg-indigo-100 text-indigo-700' },
-  in_production: { label: 'Đang làm',     color: 'bg-purple-100 text-purple-700' },
-  completed:     { label: 'Hoàn thành',   color: 'bg-teal-100 text-teal-700' },
-  delivered:     { label: 'Đã giao',      color: 'bg-green-100 text-green-700' },
-  remaining_paid:{ label: 'Thanh toán xong', color: 'bg-green-100 text-green-700' },
-  cancelled:     { label: 'Đã hủy',       color: 'bg-red-100 text-red-700' },
-};
-
 const StatusBadge = ({ status, map }) => {
   const cfg = map[status] || { label: status, color: 'bg-gray-100 text-gray-600' };
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>{cfg.label}</span>;
@@ -60,6 +38,28 @@ const StatCard = ({ title, value, icon, color, sub }) => (
 
 const OrdersSection = () => {
   const [tab, setTab] = useState('regular');
+
+  const REG_STATUS = {
+    pending_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-700' },
+    paid:            { label: 'Đã thanh toán',  color: 'bg-blue-100 text-blue-700' },
+    confirmed:       { label: 'Đã xác nhận',    color: 'bg-indigo-100 text-indigo-700' },
+    preparing:       { label: 'Đang chuẩn bị',  color: 'bg-purple-100 text-purple-700' },
+    shipping:        { label: 'Đang giao hàng', color: 'bg-cyan-100 text-cyan-700' },
+    delivered:       { label: 'Đã giao hàng',   color: 'bg-green-100 text-green-700' },
+    cancelled:       { label: 'Đã hủy',         color: 'bg-red-100 text-red-700' },
+  };
+
+  const CUS_STATUS = {
+    submitted:      { label: 'Đã gửi yêu cầu',   color: 'bg-gray-100 text-gray-600' },
+    reviewing:      { label: 'Đang xem xét',      color: 'bg-blue-100 text-blue-700' },
+    quoted:         { label: 'Đã báo giá',        color: 'bg-amber-100 text-amber-700' },
+    deposit_paid:   { label: 'Đã thanh toán cọc', color: 'bg-indigo-100 text-indigo-700' },
+    in_production:  { label: 'Đang sản xuất',     color: 'bg-purple-100 text-purple-700' },
+    completed:      { label: 'Hoàn thành',        color: 'bg-teal-100 text-teal-700' },
+    delivered:      { label: 'Đã giao hàng',      color: 'bg-green-100 text-green-700' },
+    remaining_paid: { label: 'Đã thanh toán đủ',  color: 'bg-green-100 text-green-700' },
+    cancelled:      { label: 'Đã hủy',            color: 'bg-red-100 text-red-700' },
+  };
 
   const [regPage, setRegPage] = useState(1);
   const [regStatus, setRegStatus] = useState('');
@@ -235,6 +235,15 @@ const ManagerDashboard = () => {
 
   if (loading) return <div className="flex-1 flex items-center justify-center min-h-[400px]"><Spinner size="lg" /></div>;
 
+  const QUICK_ACCESS = [
+    { label: 'Quản lý sản phẩm',   link: '/manager/products',      icon: '🧶' },
+    { label: 'Đơn hàng',           link: '/manager/orders',        icon: '📦' },
+    { label: 'Kho hàng',           link: '/manager/inventory',     icon: '📊' },
+    { label: 'Voucher',            link: '/manager/vouchers',      icon: '🎟️' },
+    { label: 'Đặt hàng tùy chỉnh', link: '/manager/custom-orders', icon: '✨' },
+    { label: 'Báo cáo',            link: '/manager/reports',       icon: '📈' },
+  ];
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -251,7 +260,7 @@ const ManagerDashboard = () => {
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Doanh thu theo tháng ({new Date().getFullYear()})</h3>
+          <h3 className="font-semibold text-gray-800 mb-4">{`Doanh thu theo tháng (${new Date().getFullYear()})`}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenue}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -274,7 +283,7 @@ const ManagerDashboard = () => {
                   : <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-base">🧶</div>}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 line-clamp-1">{p.name}</p>
-                  <p className="text-xs text-gray-400">Đã bán: {p.sold}</p>
+                  <p className="text-xs text-gray-400">{`Đã bán: ${p.sold}`}</p>
                 </div>
                 <p className="text-sm font-semibold text-rose-500 shrink-0">{formatCurrency(p.price)}</p>
               </div>
@@ -288,14 +297,7 @@ const ManagerDashboard = () => {
       <div>
         <h3 className="font-semibold text-gray-800 mb-3">Truy cập nhanh</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[
-            { label: 'Quản lý sản phẩm', link: '/manager/products', icon: '🧶' },
-            { label: 'Đơn hàng', link: '/manager/orders', icon: '📦' },
-            { label: 'Kho hàng', link: '/manager/inventory', icon: '📊' },
-            { label: 'Voucher', link: '/manager/vouchers', icon: '🎟️' },
-            { label: 'Đặt hàng tùy chỉnh', link: '/manager/custom-orders', icon: '✨' },
-            { label: 'Báo cáo', link: '/manager/reports', icon: '📈' },
-          ].map((item) => (
+          {QUICK_ACCESS.map((item) => (
             <Link key={item.link} to={item.link} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center hover:shadow-md hover:border-rose-200 transition-all group">
               <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{item.icon}</div>
               <p className="font-medium text-sm text-gray-700 group-hover:text-rose-600">{item.label}</p>

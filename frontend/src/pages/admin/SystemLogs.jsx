@@ -49,7 +49,7 @@ export default function SystemLogs() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b gap-3 flex-wrap">
           <span className="text-sm text-gray-500">
-            Tổng: <strong>{total}</strong> bản ghi
+            Tổng: {total} bản ghi
             {totalPages > 1 && <span className="ml-1 text-gray-400">· Trang {page}/{totalPages}</span>}
           </span>
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -90,7 +90,7 @@ export default function SystemLogs() {
                   <td className="px-4 py-2 text-xs text-gray-500 hidden md:table-cell">{log.resourceId || '–'}</td>
                   <td className="px-4 py-2 text-xs text-gray-500 hidden md:table-cell">{log.ipAddress || '–'}</td>
                   <td className="px-4 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBg[log.status]}`}>{log.status === 'success' ? 'OK' : 'Lỗi'}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBg[log.status]}`}>{log.status === 'success' ? 'Thành công' : 'Thất bại'}</span>
                   </td>
                 </tr>
               ))}

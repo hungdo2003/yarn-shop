@@ -6,8 +6,21 @@ import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw, FiGift, FiTrendingUp } from 'react-icons/fi';
 import TierBadge from '../components/common/TierBadge';
 
-const roleLabel = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' };
 const roleBg = { admin: 'bg-red-100 text-red-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
+
+const roleLabel = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' };
+
+const TABS = [
+  { id: 'profile',  icon: FiUser, label: 'Thông tin' },
+  { id: 'password', icon: FiLock, label: 'Mật khẩu' },
+];
+
+const TIER_LIST = [
+  { name: 'bronze', emoji: '🥉', label: 'Đồng',  min: '0đ' },
+  { name: 'silver', emoji: '🥈', label: 'Bạc',   min: '1M' },
+  { name: 'gold',   emoji: '🥇', label: 'Vàng',  min: '5M' },
+  { name: 'VIP',    emoji: '💎', label: 'VIP',   min: '20M' },
+];
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -44,9 +57,9 @@ const Profile = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword.length < 6) return toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) return toast.error('Mật khẩu xác nhận không khớp');
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) return toast.error('Mật khẩu không khớp');
     setLoading(true);
-    const tid = toast.loading('Đang đổi mật khẩu...');
+    const tid = toast.loading('Đang đổi...');
     try {
       await api.put('/auth/change-password', { currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
       toast.dismiss(tid);
@@ -63,11 +76,6 @@ const Profile = () => {
     } finally { setLoading(false); }
   };
 
-  const TABS = [
-    { id: 'profile', icon: FiUser, label: 'Thông tin' },
-    { id: 'password', icon: FiLock, label: 'Mật khẩu' },
-  ];
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Tài Khoản Của Tôi</h1>
@@ -81,7 +89,7 @@ const Profile = () => {
           <p className="text-xl font-bold truncate">{user?.fullName}</p>
           <p className="text-rose-100 text-sm">{user?.email}</p>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white`}>{roleLabel[role] || role}</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white">{roleLabel[role] || role}</span>
             {role === 'customer' && membership?.tier && (
               <TierBadge tier={membership.tier} size="sm" />
             )}
@@ -139,9 +147,7 @@ const Profile = () => {
                 <p className="text-xs text-amber-100">Giá trị quy đổi</p>
               </div>
             </div>
-            <p className="text-xs text-amber-100 mt-3 text-center">
-              Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng
-            </p>
+            <p className="text-xs text-amber-100 mt-3 text-center">Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng</p>
           </div>
 
           {/* Membership Tier Card */}
@@ -156,9 +162,9 @@ const Profile = () => {
               </div>
               <div className="mb-3">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Tổng chi tiêu: <b>{membership.totalSpent.toLocaleString('vi-VN')}đ</b></span>
+                  <span>Tổng chi tiêu: <b>{membership.totalSpent.toLocaleString('vi-VN')}</b></span>
                   {membership.nextTier && (
-                    <span>Còn <b>{membership.remaining.toLocaleString('vi-VN')}đ</b> lên hạng {membership.nextTier.emoji || ''} {membership.nextTier.label}</span>
+                    <span>Còn <b>{membership.remaining.toLocaleString('vi-VN')}</b> lên hạng {membership.nextTier.emoji || ''} {membership.nextTier.label}</span>
                   )}
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
@@ -167,16 +173,11 @@ const Profile = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 text-center text-xs">
-                {[
-                  { name: 'bronze', emoji: '🥉', label: 'Đồng', min: '0đ' },
-                  { name: 'silver', emoji: '🥈', label: 'Bạc',  min: '1M' },
-                  { name: 'gold',   emoji: '🥇', label: 'Vàng', min: '5M' },
-                  { name: 'VIP',    emoji: '💎', label: 'VIP',  min: '20M' },
-                ].map(t => (
-                  <div key={t.name} className={`rounded-xl py-2 ${membership.tier.name === t.name ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
-                    <p className="text-base">{t.emoji}</p>
-                    <p className={`font-semibold ${membership.tier.name === t.name ? 'text-purple-700' : 'text-gray-500'}`}>{t.label}</p>
-                    <p className="text-gray-400">{t.min}</p>
+                {TIER_LIST.map(tier => (
+                  <div key={tier.name} className={`rounded-xl py-2 ${membership.tier.name === tier.name ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
+                    <p className="text-base">{tier.emoji}</p>
+                    <p className={`font-semibold ${membership.tier.name === tier.name ? 'text-purple-700' : 'text-gray-500'}`}>{tier.label}</p>
+                    <p className="text-gray-400">{tier.min}</p>
                   </div>
                 ))}
               </div>

@@ -166,18 +166,18 @@ export default function Reports() {
             <div className="space-y-6">
               {/* KPI cards */}
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <KpiCard icon="💰" label="Doanh thu tháng này" value={fmtM(summary?.thisMonthRevenue)} sub={`Cả năm: ${fmtM(summary?.totalRevenue)}`} trend={summary?.revTrend} color="rose" />
-                <KpiCard icon="📦" label="Đơn hàng tháng này" value={summary?.thisMonthOrders?.toLocaleString()} sub={`Tổng: ${summary?.totalOrders?.toLocaleString()}`} trend={summary?.orderTrend} color="blue" />
-                <KpiCard icon="🛒" label="Giá trị đơn TB" value={fmtM(summary?.avgOrder)} sub="Trên các đơn hoàn thành" color="violet" />
-                <KpiCard icon="👥" label="Khách hàng" value={summary?.totalCustomers?.toLocaleString()} sub={`+${summary?.newThisMonth} tháng này`} color="emerald" />
-                <KpiCard icon="📦" label="Sản phẩm đang bán" value={summary?.totalProducts?.toLocaleString()} sub={summary?.lowStock ? `⚠️ ${summary.lowStock} sắp hết hàng` : 'Tất cả còn hàng'} color="amber" />
-                <KpiCard icon="❌" label="Đơn bị hủy" value={summary?.cancelledOrders?.toLocaleString()} sub="Tổng từ trước đến nay" color="rose" />
+                <KpiCard icon="💰" label='Doanh thu tháng này' value={fmtM(summary?.thisMonthRevenue)} sub={`Tổng năm: ${fmtM(summary?.totalRevenue)}`} trend={summary?.revTrend} color="rose" />
+                <KpiCard icon="📦" label='Đơn hàng tháng này' value={summary?.thisMonthOrders?.toLocaleString()} sub={`Tổng: ${summary?.totalOrders?.toLocaleString()}`} trend={summary?.orderTrend} color="blue" />
+                <KpiCard icon="🛒" label='Giá trị đơn TB' value={fmtM(summary?.avgOrder)} sub='Giá trị đơn hàng trung bình' color="violet" />
+                <KpiCard icon="👥" label='Khách hàng' value={summary?.totalCustomers?.toLocaleString()} sub={`+${summary?.newThisMonth} tháng này`} color="emerald" />
+                <KpiCard icon="📦" label='Sản phẩm đang bán' value={summary?.totalProducts?.toLocaleString()} sub={summary?.lowStock ? `⚠️ ${summary.lowStock} sp sắp hết hàng` : 'Tất cả còn hàng'} color="amber" />
+                <KpiCard icon="❌" label='Đơn bị hủy' value={summary?.cancelledOrders?.toLocaleString()} sub='Tất cả thời gian' color="rose" />
               </div>
 
               {/* Revenue area chart */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-gray-800">Doanh thu theo tháng — {selYear}</h2>
+                  <h2 className="font-bold text-gray-800">{`Doanh thu theo tháng ${selYear}`}</h2>
                 </div>
                 <ResponsiveContainer width="100%" height={260}>
                   <AreaChart data={revenue} margin={{ left: 0, right: 8 }}>
@@ -249,7 +249,7 @@ export default function Reports() {
                         </div>
                       );
                     })}
-                    {categories.length === 0 && <p className="text-sm text-gray-400 py-4 text-center">Chưa có dữ liệu</p>}
+                    {categories.length === 0 && <p className="text-sm text-gray-400 py-4 text-center">Chưa có</p>}
                   </div>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function Reports() {
             <div className="space-y-5">
               {/* Bar + order count dual axis */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h2 className="font-bold text-gray-800 mb-4">Doanh thu & số đơn theo tháng</h2>
+                <h2 className="font-bold text-gray-800 mb-4">Doanh thu & Đơn hàng</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={revenue} margin={{ left: 0, right: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -270,8 +270,8 @@ export default function Reports() {
                     <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={36} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar yAxisId="left" dataKey="revenue" name="Doanh thu" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                    <Bar yAxisId="right" dataKey="orderCount" name="Số đơn" fill="#c4b5fd" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="left" dataKey="revenue" name='Doanh thu tháng này' fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="orderCount" name='Số đơn hàng' fill="#c4b5fd" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -289,8 +289,8 @@ export default function Reports() {
                         <th className="px-5 py-3 text-right">Doanh thu</th>
                         <th className="px-5 py-3 text-right hidden md:table-cell">Năm trước</th>
                         <th className="px-5 py-3 text-right hidden md:table-cell">Tăng trưởng</th>
-                        <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn</th>
-                        <th className="px-5 py-3 text-right hidden md:table-cell">Đơn TB</th>
+                        <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn hàng</th>
+                        <th className="px-5 py-3 text-right hidden md:table-cell">TB/đơn</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -312,7 +312,7 @@ export default function Reports() {
                     </tbody>
                     <tfoot>
                       <tr className="bg-rose-50 font-bold text-rose-700">
-                        <td className="px-5 py-3">Tổng {selYear}</td>
+                        <td className="px-5 py-3">{`Tổng năm ${selYear}`}</td>
                         <td className="px-5 py-3 text-right">{fmt(revenue.reduce((s, r) => s + r.revenue, 0))}</td>
                         <td className="px-5 py-3 text-right text-gray-400 hidden md:table-cell">{fmt(revenue.reduce((s, r) => s + r.prevRevenue, 0))}</td>
                         <td className="hidden md:table-cell" /><td className="hidden sm:table-cell" /><td className="hidden md:table-cell" />
@@ -330,10 +330,10 @@ export default function Reports() {
               {/* Best selling table */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b">
-                  <h2 className="font-bold text-gray-800">Sản phẩm bán chạy — {selYear}</h2>
+                  <h2 className="font-bold text-gray-800">{`Sản phẩm bán chạy nhất ${selYear}`}</h2>
                 </div>
                 {bestSelling.length === 0 ? (
-                  <div className="py-12 text-center text-gray-400">Chưa có dữ liệu bán hàng</div>
+                  <div className="py-12 text-center text-gray-400">Chưa có dữ liệu</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -341,9 +341,9 @@ export default function Reports() {
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                           <th className="px-5 py-3 text-left w-8 hidden sm:table-cell">#</th>
                           <th className="px-5 py-3 text-left">Sản phẩm</th>
-                          <th className="px-5 py-3 text-right">Đã bán</th>
+                          <th className="px-5 py-3 text-right">Số lượng bán</th>
                           <th className="px-5 py-3 text-right">Doanh thu</th>
-                          <th className="px-5 py-3 text-left w-40 hidden md:table-cell">Tỷ lệ</th>
+                          <th className="px-5 py-3 text-left w-40 hidden md:table-cell">Tỉ lệ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -389,7 +389,7 @@ export default function Reports() {
                       <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={fmtM} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#374151' }} axisLine={false} tickLine={false} width={100} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="revenue" name="Doanh thu" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="revenue" name='Doanh thu' radius={[0, 4, 4, 0]}>
                         {categories.map((_, i) => {
                           const cs = ['#f43f5e','#8b5cf6','#3b82f6','#10b981','#f59e0b','#06b6d4'];
                           return <Cell key={i} fill={cs[i % cs.length]} />;
@@ -397,7 +397,7 @@ export default function Reports() {
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
-                ) : <p className="text-sm text-gray-400 py-6 text-center">Chưa có dữ liệu</p>}
+                ) : <p className="text-sm text-gray-400 py-6 text-center">Chưa có</p>}
               </div>
             </div>
           )}
@@ -425,11 +425,11 @@ export default function Reports() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-400 -mt-2">* Chi phí ước tính 60% giá gốc sản phẩm (COGS). Cập nhật tỷ lệ thực tế cho chính xác hơn.</p>
+              <p className="text-xs text-gray-400 -mt-2">Chi phí ước tính = 60% doanh thu</p>
 
               {/* Profit bar chart */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h2 className="font-bold text-gray-800 mb-4">Doanh thu & Lợi nhuận theo tháng — {selYear}</h2>
+                <h2 className="font-bold text-gray-800 mb-4">{`Doanh thu & Lợi nhuận theo tháng ${selYear}`}</h2>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={profit.monthly.map((m, i) => ({ ...m, name: MONTH_NAMES[i] }))} margin={{ left: 0, right: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -437,9 +437,9 @@ export default function Reports() {
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={fmtM} width={56} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="revenue" name="Doanh thu" fill="#f43f5e" radius={[4,4,0,0]} />
-                    <Bar dataKey="cogs" name="Chi phí (ước)" fill="#fca5a5" radius={[4,4,0,0]} />
-                    <Bar dataKey="profit" name="Lợi nhuận" fill="#10b981" radius={[4,4,0,0]} />
+                    <Bar dataKey="revenue" name='Doanh thu' fill="#f43f5e" radius={[4,4,0,0]} />
+                    <Bar dataKey="cogs" name='Chi phí (60%)' fill="#fca5a5" radius={[4,4,0,0]} />
+                    <Bar dataKey="profit" name='Lợi nhuận gộp' fill="#10b981" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -453,9 +453,9 @@ export default function Reports() {
                         <th className="px-5 py-3 text-left">Tháng</th>
                         <th className="px-5 py-3 text-right">Doanh thu</th>
                         <th className="px-5 py-3 text-right">Chi phí</th>
-                        <th className="px-5 py-3 text-right">Lợi nhuận</th>
+                        <th className="px-5 py-3 text-right">Lợi nhuận gộp</th>
                         <th className="px-5 py-3 text-right">Biên LN</th>
-                        <th className="px-5 py-3 text-right">Số đơn</th>
+                        <th className="px-5 py-3 text-right">Số đơn hàng</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -484,15 +484,15 @@ export default function Reports() {
                 {[7, 14, 30, 60, 90].map(d => (
                   <button key={d} onClick={() => setSlowDays(d)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${slowDays === d ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                    {d} ngày
+                    {`${d} ngày`}
                   </button>
                 ))}
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b flex items-center justify-between">
-                  <h2 className="font-bold text-gray-800">Sản phẩm bán chậm ({slowDays} ngày qua)</h2>
-                  <span className="text-xs text-gray-400">Sắp xếp theo số bán ít nhất</span>
+                  <h2 className="font-bold text-gray-800">{`Sản phẩm bán chậm (${slowDays} ngày)`}</h2>
+                  <span className="text-xs text-gray-400">Xếp theo số lượng bán ít nhất</span>
                 </div>
                 {slowSelling.length === 0 ? (
                   <div className="py-12 text-center text-gray-400">Đang tải...</div>
@@ -503,11 +503,11 @@ export default function Reports() {
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                           <th className="px-5 py-3 text-left">Sản phẩm</th>
                           <th className="px-5 py-3 text-right">Bán trong kỳ</th>
-                          <th className="px-5 py-3 text-right hidden md:table-cell">Tổng bán</th>
+                          <th className="px-5 py-3 text-right hidden md:table-cell">Tổng đã bán</th>
                           <th className="px-5 py-3 text-right">Tồn kho</th>
                           <th className="px-5 py-3 text-right hidden sm:table-cell">Giá</th>
                           <th className="px-5 py-3 text-left hidden md:table-cell">Danh mục</th>
-                          <th className="px-5 py-3 text-right hidden md:table-cell">Tuổi SP</th>
+                          <th className="px-5 py-3 text-right hidden md:table-cell">Tuổi sản phẩm</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -534,7 +534,7 @@ export default function Reports() {
                             </td>
                             <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{fmt(p.price)}</td>
                             <td className="px-5 py-3 text-gray-500 text-xs hidden md:table-cell">{p.category || '—'}</td>
-                            <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">{p.daysOld} ngày</td>
+                            <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">{`${p.daysOld} ngày`}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -546,15 +546,15 @@ export default function Reports() {
               <div className="grid sm:grid-cols-3 gap-4 text-center text-sm">
                 <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                   <p className="text-2xl font-bold text-red-600">{slowSelling.filter(p => p.soldInPeriod === 0).length}</p>
-                  <p className="text-red-500 mt-1">Sản phẩm chưa bán được</p>
+                  <p className="text-red-500 mt-1">Sản phẩm chưa bán</p>
                 </div>
                 <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
                   <p className="text-2xl font-bold text-orange-500">{slowSelling.filter(p => p.soldInPeriod > 0 && p.soldInPeriod < 3).length}</p>
-                  <p className="text-orange-400 mt-1">Bán rất ít (1-2 sp)</p>
+                  <p className="text-orange-400 mt-1">Bán rất ít ({"<"} 3)</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                   <p className="text-2xl font-bold text-gray-500">{slowSelling.filter(p => p.stock > 20 && p.soldInPeriod === 0).length}</p>
-                  <p className="text-gray-400 mt-1">Tồn kho cao, chưa bán</p>
+                  <p className="text-gray-400 mt-1">Tồn nhiều, chưa bán</p>
                 </div>
               </div>
             </div>
@@ -565,11 +565,11 @@ export default function Reports() {
             <div className="space-y-5">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b flex items-center justify-between">
-                  <h2 className="font-bold text-gray-800">Khách hàng thân thiết — {selYear}</h2>
+                  <h2 className="font-bold text-gray-800">{`Khách hàng thân thiết ${selYear}`}</h2>
                   <span className="text-xs text-gray-400">Xếp theo doanh thu</span>
                 </div>
                 {topCustomers.length === 0 ? (
-                  <div className="py-12 text-center text-gray-400">Chưa có dữ liệu</div>
+                  <div className="py-12 text-center text-gray-400">Chưa có</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -577,7 +577,7 @@ export default function Reports() {
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                           <th className="px-5 py-3 text-left w-8">#</th>
                           <th className="px-5 py-3 text-left">Khách hàng</th>
-                          <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn</th>
+                          <th className="px-5 py-3 text-right hidden sm:table-cell">Số đơn hàng</th>
                           <th className="px-5 py-3 text-right">Tổng chi tiêu</th>
                           <th className="px-5 py-3 text-right hidden md:table-cell">Điểm tích lũy</th>
                           <th className="px-5 py-3 text-left w-36 hidden md:table-cell">Mức chi tiêu</th>
@@ -623,7 +623,7 @@ export default function Reports() {
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
                   <p className="text-3xl font-bold text-gray-800">{summary?.totalCustomers?.toLocaleString() || 0}</p>
-                  <p className="text-sm text-gray-500 mt-1">Tổng khách hàng</p>
+                  <p className="text-sm text-gray-500 mt-1">Khách hàng</p>
                 </div>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
                   <p className="text-3xl font-bold text-emerald-600">+{summary?.newThisMonth || 0}</p>
@@ -631,7 +631,7 @@ export default function Reports() {
                 </div>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
                   <p className="text-3xl font-bold text-rose-500">{fmt(summary?.avgOrder)}</p>
-                  <p className="text-sm text-gray-500 mt-1">Giá trị đơn hàng TB</p>
+                  <p className="text-sm text-gray-500 mt-1">Giá trị đơn TB</p>
                 </div>
               </div>
             </div>

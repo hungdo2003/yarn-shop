@@ -3,21 +3,20 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useWishlist } from '../context/WishlistContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
 import ProductCard from '../components/common/ProductCard';
 import toast from 'react-hot-toast';
 import {
-  FiShoppingCart, FiMinus, FiPlus, FiStar, FiHeart,
+  FiShoppingCart, FiMinus, FiPlus,
   FiChevronLeft, FiChevronRight, FiCamera, FiX, FiCheck,
   FiPackage, FiTruck, FiRefreshCw,
 } from 'react-icons/fi';
-import { SaleCountdownFull } from '../components/common/SaleCountdown';
+import { SaleCountdownInline } from '../components/common/SaleCountdown';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-const STAR_LABELS = ['', 'Rất tệ', 'Không tốt', 'Bình thường', 'Tốt', 'Tuyệt vời'];
 const STAR_COLORS = ['', '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
+const STAR_LABELS = ['', 'Rất tệ', 'Không tốt', 'Bình thường', 'Tốt', 'Tuyệt vời'];
 
 function Stars({ rating, size = 14, className = '' }) {
   return (
@@ -35,6 +34,7 @@ function Stars({ rating, size = 14, className = '' }) {
 function InteractiveStars({ rating, onRate }) {
   const [hovered, setHovered] = useState(0);
   const active = hovered || rating;
+
   return (
     <div className="flex items-center gap-1">
       {[1,2,3,4,5].map(s => (
@@ -278,7 +278,6 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
-  const { toggle, isWishlisted } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -362,15 +361,6 @@ export default function ProductDetail() {
   const hasDiscount = saleActive;
   const discountPct = hasDiscount ? Math.round((1 - product.salePrice / product.price) * 100) : 0;
   const stockLow = product.stock > 0 && product.stock <= 10;
-
-  const wishlisted = product ? isWishlisted(product.id) : false;
-
-  const handleWishlist = async () => {
-    if (!user) return toast.error('Vui lòng đăng nhập để lưu yêu thích');
-    if (!isRole('customer')) return;
-    const res = await toggle(product.id);
-    if (res) toast.success(res.message);
-  };
 
   const handleAddToCart = async () => {
     if (!user) { toast.error('Vui lòng đăng nhập để mua hàng', { icon: '🔒' }); return; }
@@ -508,9 +498,12 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* Sale countdown */}
-          {hasDiscount && product.saleEndDate && (
-            <SaleCountdownFull endDate={product.saleEndDate} />
+          {/* Discount badge + countdown on same row */}
+          {hasDiscount && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-white bg-rose-500 px-2.5 py-1 rounded-full">-{discountPct}%</span>
+              {product.saleEndDate && <SaleCountdownInline endDate={product.saleEndDate} />}
+            </div>
           )}
 
           {/* Color swatches */}
@@ -533,7 +526,7 @@ export default function ProductDetail() {
                           : 'border-gray-200 text-gray-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500'
                       }`}
                     >
-                      {v.color}{v.stock === 0 && <span className="ml-1 text-[10px]">(hết)</span>}
+                      {v.color}{v.stock === 0 && <span className="ml-1 text-[10px]">(Hết hàng)</span>}
                     </Link>
                   ))}
                 </div>
@@ -552,14 +545,14 @@ export default function ProductDetail() {
             <div className="flex gap-2">
               <span className="text-gray-500 w-24 shrink-0">Tình trạng</span>
               {product.stock > 0
-                ? <span className="font-semibold text-emerald-600">Còn hàng{stockLow && ` (chỉ còn ${product.stock}!)`}</span>
+                ? <span className="font-semibold text-emerald-600">{stockLow ? `Còn hàng (chỉ còn ${product.stock}!)` : 'Còn hàng'}</span>
                 : <span className="font-semibold text-red-500">Hết hàng</span>}
             </div>
           </div>
 
           {stockLow && product.stock > 0 && (
             <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-              <span>⚡</span> Chỉ còn {product.stock} sản phẩm — Đặt hàng sớm!
+              ⚡ Chỉ còn {product.stock} sản phẩm — Đặt hàng sớm!
             </div>
           )}
 
@@ -567,7 +560,7 @@ export default function ProductDetail() {
             <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
           )}
 
-          {/* Add to cart */}
+          {/* Add to cart / out of stock */}
           {product.stock > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -581,12 +574,6 @@ export default function ProductDetail() {
                   </button>
                 </div>
                 <span className="text-xs text-gray-400">Còn {product.stock} sản phẩm</span>
-                <button onClick={handleWishlist}
-                  className={`ml-auto w-11 h-11 flex items-center justify-center rounded-xl border-2 transition-all active:scale-95 ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'}`}
-                  title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
-                >
-                  <FiHeart size={20} className={wishlisted ? 'fill-rose-500' : ''} />
-                </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={handleAddToCart} disabled={addingToCart}
@@ -606,19 +593,17 @@ export default function ProductDetail() {
               </Link>
             </div>
           ) : (
-            <button onClick={handleWishlist}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-400'}`}>
-              <FiHeart size={18} className={wishlisted ? 'fill-rose-500' : ''} />
-              {wishlisted ? 'Đã lưu vào yêu thích' : 'Lưu vào yêu thích'}
-            </button>
+            <div className="w-full flex items-center justify-center py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-semibold">
+              Hết hàng
+            </div>
           )}
 
           {/* Trust badges */}
           <div className="grid grid-cols-3 gap-2 xs:gap-3 pt-2">
             {[
-              { icon: FiTruck, label: 'Giao hàng nhanh', sub: 'Toàn quốc' },
-              { icon: FiRefreshCw, label: 'Đổi trả 7 ngày', sub: 'Dễ dàng' },
-              { icon: FiPackage, label: 'Hàng chính hãng', sub: '100%' },
+              { icon: FiTruck,      label: 'Giao hàng nhanh',  sub: 'Toàn quốc' },
+              { icon: FiRefreshCw,  label: 'Đổi trả 7 ngày',   sub: 'Dễ dàng' },
+              { icon: FiPackage,    label: 'Hàng chính hãng',  sub: '100%' },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex flex-col items-center text-center gap-1 p-3 bg-gray-50 rounded-xl">
                 <Icon size={16} className="text-rose-500" />
@@ -659,9 +644,6 @@ export default function ProductDetail() {
                   {s} ★
                 </button>
               ))}
-              {ratingFilter > 0 && (
-                <span className="text-xs text-gray-400 ml-1">{reviewMeta.total} kết quả</span>
-              )}
             </div>
           </div>
         )}

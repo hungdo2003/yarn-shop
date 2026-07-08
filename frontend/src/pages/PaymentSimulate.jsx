@@ -47,6 +47,12 @@ export default function PaymentSimulate() {
     }
   };
 
+  const methods = [
+    { icon: '🏦', label: 'Chuyển khoản ngân hàng', sub: 'Vietcombank, BIDV, Techcombank...' },
+    { icon: '💳', label: 'Thẻ ATM / Debit', sub: 'Napas' },
+    { icon: '📱', label: 'Ví điện tử', sub: 'MoMo, ZaloPay, VNPay' },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
@@ -80,11 +86,7 @@ export default function PaymentSimulate() {
               {/* Fake bank selection */}
               <div>
                 <p className="text-xs text-gray-500 mb-2 font-medium">Chọn phương thức</p>
-                {[
-                  { icon: '🏦', label: 'Chuyển khoản ngân hàng', sub: 'Vietcombank, BIDV, Techcombank...' },
-                  { icon: '💳', label: 'Thẻ ATM / Debit', sub: 'Napas' },
-                  { icon: '📱', label: 'Ví điện tử', sub: 'MoMo, ZaloPay, VNPay' },
-                ].map((m, i) => (
+                {methods.map((m, i) => (
                   <label
                     key={i}
                     className={`flex items-center gap-3 border rounded-xl px-4 py-3.5 mb-2 cursor-pointer transition active:scale-95 ${
@@ -106,7 +108,7 @@ export default function PaymentSimulate() {
                 disabled={paying}
                 className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition text-sm disabled:opacity-60"
               >
-                Xác nhận thanh toán {formatCurrency(amount)}
+                {`Xác nhận thanh toán ${formatCurrency(amount)}`}
               </button>
               <button
                 onClick={handleCancel}

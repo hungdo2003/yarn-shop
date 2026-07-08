@@ -19,24 +19,24 @@ const STEPS = [
   { key: 'remaining_paid' },
 ];
 
-const FILTER_TABS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'submitted', label: 'Mới gửi' },
-  { value: 'reviewing', label: 'Đang xét' },
-  { value: 'quoted', label: 'Cần thanh toán' },
-  { value: 'deposit_paid', label: 'Đã cọc' },
-  { value: 'in_production', label: 'Đang làm' },
-  { value: 'delivered', label: 'Đã nhận' },
-  { value: 'remaining_paid', label: 'Hoàn tất' },
-  { value: 'cancelled', label: 'Đã hủy' },
-];
-
 export default function MyCustomOrders() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const { data, loading } = useFetch('/custom-orders/my', { status: statusFilter, page, limit: PER_PAGE });
   const orders = data?.items || [];
   const pagination = data?.pagination;
+
+  const FILTER_TABS = [
+    { value: '', label: 'Tất cả' },
+    { value: 'submitted', label: 'Mới gửi' },
+    { value: 'reviewing', label: 'Đang xét' },
+    { value: 'quoted', label: 'Cần thanh toán' },
+    { value: 'deposit_paid', label: 'Đã cọc' },
+    { value: 'in_production', label: 'Đang làm' },
+    { value: 'delivered', label: 'Đã nhận' },
+    { value: 'remaining_paid', label: 'Hoàn tất' },
+    { value: 'cancelled', label: 'Đã hủy' },
+  ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">

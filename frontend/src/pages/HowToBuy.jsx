@@ -1,21 +1,21 @@
 import { Link } from 'react-router-dom';
 
-const steps = [
-  { num: '01', title: 'Chọn sản phẩm', desc: 'Duyệt qua danh mục hoặc tìm kiếm sản phẩm bạn muốn mua. Xem thông tin chi tiết, hình ảnh và đánh giá từ khách hàng khác.' },
-  { num: '02', title: 'Thêm vào giỏ hàng', desc: 'Nhấn "Thêm vào giỏ" hoặc "Mua ngay". Bạn có thể tiếp tục mua sắm hoặc tiến hành thanh toán ngay.' },
-  { num: '03', title: 'Điền thông tin giao hàng', desc: 'Nhập tên, số điện thoại và địa chỉ giao hàng. Khách hàng đã đăng nhập có thể chọn địa chỉ đã lưu.' },
-  { num: '04', title: 'Chọn phương thức vận chuyển', desc: 'Tiêu chuẩn (3-5 ngày): 30.000đ | Hỏa tốc (1-2 ngày): 50.000đ | Tiết kiệm (5-7 ngày): 15.000đ. Miễn phí giao hàng tiêu chuẩn cho đơn từ 500.000đ.' },
-  { num: '05', title: 'Thanh toán', desc: 'Chọn thanh toán khi nhận hàng (COD) hoặc chuyển khoản ngân hàng. Áp dụng mã giảm giá nếu có.' },
-  { num: '06', title: 'Xác nhận đơn hàng', desc: 'Nhân viên sẽ gọi điện xác nhận đơn hàng và địa chỉ giao hàng trong vòng 2-4 giờ (trong giờ làm việc).' },
-  { num: '07', title: 'Nhận hàng', desc: 'Theo dõi trạng thái đơn hàng qua tài khoản. Kiểm tra hàng trước khi thanh toán (với COD).' },
-];
-
-const payments = [
-  { icon: '💵', name: 'Thanh toán khi nhận hàng (COD)', desc: 'Trả tiền mặt khi nhận hàng. Kiểm tra sản phẩm trước khi thanh toán.' },
-  { icon: '🏦', name: 'Chuyển khoản ngân hàng', desc: 'Vietcombank | Techcombank | Momo. Đơn hàng xử lý sau khi xác nhận thanh toán.' },
-];
-
 export default function HowToBuy() {
+  const steps = [
+    { num: '01', title: 'Chọn sản phẩm', desc: 'Duyệt qua danh mục hoặc tìm kiếm sản phẩm bạn muốn mua. Xem thông tin chi tiết, hình ảnh và đánh giá từ khách hàng khác.' },
+    { num: '02', title: 'Thêm vào giỏ hàng', desc: 'Nhấn "Thêm vào giỏ" hoặc "Mua ngay". Bạn có thể tiếp tục mua sắm hoặc tiến hành thanh toán ngay.' },
+    { num: '03', title: 'Điền thông tin giao hàng', desc: 'Nhập tên, số điện thoại và địa chỉ giao hàng. Khách hàng đã đăng nhập có thể chọn địa chỉ đã lưu.' },
+    { num: '04', title: 'Chọn phương thức vận chuyển', desc: 'Tiêu chuẩn (3-5 ngày): 30.000đ | Hỏa tốc (1-2 ngày): 50.000đ | Tiết kiệm (5-7 ngày): 15.000đ. Miễn phí giao hàng tiêu chuẩn cho đơn từ 500.000đ.' },
+    { num: '05', title: 'Thanh toán', desc: 'Chọn thanh toán khi nhận hàng (COD) hoặc chuyển khoản ngân hàng. Áp dụng mã giảm giá nếu có.' },
+    { num: '06', title: 'Xác nhận đơn hàng', desc: 'Nhân viên sẽ gọi điện xác nhận đơn hàng và địa chỉ giao hàng trong vòng 2-4 giờ (trong giờ làm việc).' },
+    { num: '07', title: 'Nhận hàng', desc: 'Theo dõi trạng thái đơn hàng qua tài khoản. Kiểm tra hàng trước khi thanh toán (với COD).' },
+  ];
+
+  const payments = [
+    { icon: '💵', name: 'Thanh toán khi nhận hàng (COD)', desc: 'Trả tiền mặt khi nhận hàng. Kiểm tra sản phẩm trước khi thanh toán.' },
+    { icon: '🏦', name: 'Chuyển khoản ngân hàng', desc: 'Vietcombank | Techcombank | Momo. Đơn hàng xử lý sau khi xác nhận thanh toán.' },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <h1 className="text-2xl sm:text-3xl font-bold text-rose-600 mb-2">Hướng Dẫn Mua Hàng</h1>

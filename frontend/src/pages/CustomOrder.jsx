@@ -29,15 +29,15 @@ const CustomOrder = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return toast.error('Please login first');
-    if (!isRole('customer')) return toast.error('Only customers can submit custom orders');
+    if (!user) return toast.error('Vui lòng đăng nhập trước');
+    if (!isRole('customer')) return toast.error('Chỉ khách hàng mới có thể gửi đơn đặt hàng theo yêu cầu');
     setLoading(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       images.forEach(f => fd.append('images', f));
-      const res = await api.post('/custom-orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success('Custom order submitted! We will contact you soon.');
+      await api.post('/custom-orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success('Đơn đặt hàng đã được gửi! Chúng tôi sẽ liên hệ sớm.');
       navigate('/custom-orders/my');
     } finally { setLoading(false); }
   };
@@ -46,25 +46,25 @@ const CustomOrder = () => {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <div className="text-5xl mb-3">✨</div>
-        <h1>Custom Knit/Crochet Order</h1>
-        <p className="text-gray-500 mt-2">Tell us your vision and we'll bring it to life!</p>
+        <h1>Đặt Hàng Thủ Công Theo Yêu Cầu</h1>
+        <p className="text-gray-500 mt-2">Hãy cho chúng tôi biết ý tưởng của bạn, chúng tôi sẽ hiện thực hóa nó!</p>
       </div>
 
       {!user ? (
         <div className="card text-center py-8">
-          <p className="text-gray-600 mb-4">Please login to submit a custom order</p>
-          <Link to="/login" className="btn-primary">Login</Link>
+          <p className="text-gray-600 mb-4">Vui lòng đăng nhập để gửi đơn đặt hàng theo yêu cầu</p>
+          <Link to="/login" className="btn-primary">Đăng nhập</Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="card space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reference Images (up to 5)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh tham khảo (tối đa 5)</label>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary transition-colors">
               <input type="file" accept="image/*" multiple onChange={handleImages} className="hidden" id="img-upload" />
               <label htmlFor="img-upload" className="cursor-pointer">
                 <FiUpload size={28} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">Click to upload reference images</p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB each</p>
+                <p className="text-sm text-gray-500">Nhấp để tải lên hình ảnh tham khảo</p>
+                <p className="text-xs text-gray-400 mt-1">PNG, JPG tối đa 5MB mỗi file</p>
               </label>
             </div>
             {previews.length > 0 && (
@@ -82,47 +82,47 @@ const CustomOrder = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả *</label>
             <textarea
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              required rows={4} placeholder="Describe what you want: animal type, size, accessories, special features..."
+              required rows={4} placeholder="Mô tả sản phẩm bạn muốn: loại thú, kích cỡ, phụ kiện, tính năng đặc biệt..."
               className="input text-base"
             />
           </div>
 
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Yarn Color</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Màu len</label>
               <select value={form.yarnColor} onChange={e => setForm(f => ({ ...f, yarnColor: e.target.value }))} className="input text-base">
-                <option value="">Select color...</option>
+                <option value="">Chọn màu...</option>
                 {YARN_COLORS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Size / Dimensions</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kích cỡ / Kích thước</label>
               <input
                 value={form.size}
                 onChange={e => setForm(f => ({ ...f, size: e.target.value }))}
-                placeholder="e.g. 20cm tall, small, medium..."
+                placeholder="Vd: cao 20cm, nhỏ, vừa..."
                 className="input text-base"
               />
             </div>
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-            <strong>How it works:</strong> After submitting, our team will review your request and provide a price quote within 1-2 business days. You'll need to pay a 50% deposit to start production.
+            Cách thức: Sau khi gửi, đội ngũ của chúng tôi sẽ xem xét yêu cầu và báo giá trong vòng 1-2 ngày làm việc. Bạn sẽ cần thanh toán 50% đặt cọc để bắt đầu sản xuất.
           </div>
 
           <button type="submit" disabled={loading} className="btn-primary w-full xs:w-auto py-3 active:scale-95 transition-all">
-            {loading ? 'Submitting...' : 'Submit Custom Order'}
+            {loading ? 'Đang gửi...' : 'Gửi Đơn Đặt Hàng'}
           </button>
         </form>
       )}
 
       {user && (
         <p className="text-center text-sm text-gray-500 mt-4">
-          <Link to="/custom-orders/my" className="text-primary hover:underline">View my custom orders →</Link>
+          <Link to="/custom-orders/my" className="text-primary hover:underline">Xem đơn đặt hàng của tôi →</Link>
         </p>
       )}
     </div>

@@ -19,14 +19,6 @@ const NEXT_STATUSES = {
   cancelled:     [],
 };
 
-const STATUS_LABEL_VI = {
-  reviewing:     'Bắt đầu xem xét',
-  quoted:        'Gửi báo giá cho khách',
-  cancelled:     'Hủy đơn',
-  in_production: 'Bắt đầu sản xuất',
-  completed:     'Hoàn thành sản phẩm',
-  delivered:     'Đã giao hàng',
-};
 
 const STATUS_COLORS = {
   submitted: 'bg-blue-100 text-blue-700',
@@ -40,6 +32,14 @@ const STATUS_COLORS = {
 };
 
 function OrderModal({ order, onClose, onSave }) {
+  const STATUS_LABEL_VI = {
+    reviewing:     'Bắt đầu xem xét',
+    quoted:        'Gửi báo giá cho khách',
+    cancelled:     'Hủy đơn',
+    in_production: 'Bắt đầu sản xuất',
+    completed:     'Hoàn thành sản phẩm',
+    delivered:     'Đã giao hàng',
+  };
   const nextOptions = NEXT_STATUSES[order.status] || [];
   const [form, setForm] = useState({
     status: nextOptions[0] || order.status,
@@ -91,13 +91,13 @@ function OrderModal({ order, onClose, onSave }) {
           {isWaitingPayment && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
               <FiClock size={15} className="shrink-0" />
-              <span>Đã gửi báo giá — <strong>chờ khách hàng thanh toán</strong> để tiếp tục</span>
+              <span>Đã gửi báo giá — chờ khách hàng thanh toán</span>
             </div>
           )}
           {isPaid && (
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">
               <FiCheckCircle size={15} className="shrink-0" />
-              <span>Khách đã thanh toán — có thể <strong>bắt đầu sản xuất</strong></span>
+              <span>Khách đã thanh toán — có thể bắt đầu sản xuất</span>
             </div>
           )}
 
@@ -129,7 +129,7 @@ function OrderModal({ order, onClose, onSave }) {
               <p className="font-semibold text-purple-700">Báo giá hiện tại</p>
               <div className="flex justify-between"><span className="text-gray-600">Giá:</span><span className="font-bold text-purple-700">{formatCurrency(order.quotedPrice)}</span></div>
               {order.depositAmount && <div className="flex justify-between"><span className="text-gray-600">Đặt cọc:</span><span>{formatCurrency(order.depositAmount)}</span></div>}
-              {order.estimatedDays && <div className="flex justify-between"><span className="text-gray-600">Dự kiến:</span><span>{order.estimatedDays} ngày</span></div>}
+              {order.estimatedDays && <div className="flex justify-between"><span className="text-gray-600">Dự kiến:</span><span>{`${order.estimatedDays} ngày`}</span></div>}
               {order.depositPaidAt && <div className="flex justify-between"><span className="text-gray-600">Ngày TT:</span><span className="text-emerald-600 font-medium">{formatDate(order.depositPaidAt)}</span></div>}
             </div>
           )}
@@ -167,7 +167,7 @@ function OrderModal({ order, onClose, onSave }) {
                   <p className="text-sm font-semibold text-purple-700">Thông tin báo giá</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">Giá báo (đ) *</label>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">Giá (đ) *</label>
                       <input type="number" min="0" value={form.quotedPrice}
                         onChange={e => setForm(f => ({ ...f, quotedPrice: e.target.value }))}
                         placeholder="VD: 250000" className="input w-full text-base" required />
@@ -200,7 +200,7 @@ function OrderModal({ order, onClose, onSave }) {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button type="button" onClick={onClose} className="btn-secondary flex-1 text-sm">Đóng</button>
+                <button type="button" onClick={onClose} className="btn-secondary flex-1 text-sm">Hủy</button>
                 <button type="submit" disabled={loading}
                   className={`flex-1 text-sm py-2 rounded-xl font-semibold transition ${
                     form.status === 'cancelled'
@@ -226,12 +226,12 @@ export default function CustomOrderManagement() {
 
   const FILTER_TABS = [
     { value: '', label: 'Tất cả' },
-    { value: 'submitted', label: 'Mới gửi' },
+    { value: 'submitted', label: 'Đã gửi' },
     { value: 'reviewing', label: 'Đang xét' },
-    { value: 'quoted', label: 'Chờ thanh toán' },
-    { value: 'deposit_paid', label: 'Đã thanh toán' },
+    { value: 'quoted', label: 'Cần TT' },
+    { value: 'deposit_paid', label: 'Đã cọc' },
     { value: 'in_production', label: 'Sản xuất' },
-    { value: 'completed', label: 'Hoàn thành' },
+    { value: 'completed', label: 'Hoàn tất' },
     { value: 'delivered', label: 'Đã giao' },
     { value: 'cancelled', label: 'Đã hủy' },
   ];
@@ -270,7 +270,7 @@ export default function CustomOrderManagement() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {data?.items?.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Không có đơn hàng nào</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Không có đơn hàng</td></tr>
               )}
               {data?.items?.map(order => {
                 const isWaiting = order.status === 'quoted';
@@ -298,7 +298,7 @@ export default function CustomOrderManagement() {
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span className={`text-xs px-2.5 py-1 rounded-full font-semibold w-fit ${STATUS_COLORS[order.status]}`}>
-                          {CUSTOM_STATUS_LABEL[order.status]}
+                          {CUSTOM_STATUS_LABEL[order.status] || order.status}
                         </span>
                         {isWaiting && <span className="text-[10px] text-amber-600 flex items-center gap-1"><FiClock size={10} /> Chờ TT</span>}
                         {isPaid && <span className="text-[10px] text-emerald-600 flex items-center gap-1"><FiCheckCircle size={10} /> Đã TT</span>}

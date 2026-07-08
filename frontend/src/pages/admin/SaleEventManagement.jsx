@@ -24,23 +24,28 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOverride, setConfirmOverride] = useState(null);
 
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPagination(p => ({ ...p, page: 1 })); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const r = await api.get('/sale-events/available-products', {
-        params: { page: pagination.page, limit: 12, search },
+        params: { page: pagination.page, limit: 12, search: debouncedSearch },
       });
       setProducts(r.data.items ?? []);
       setPagination(p => ({ ...p, totalPages: r.data.pagination?.totalPages ?? 1, total: r.data.pagination?.total ?? 0 }));
     } catch { toast.error('Không tải được danh sách sản phẩm'); }
     finally { setLoading(false); }
-  }, [pagination.page, search]);
+  }, [pagination.page, debouncedSearch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -99,21 +104,16 @@ const AddProductsModal = ({ event, onClose, onAdded }) => {
           </button>
         </div>
 
-        <div className="px-6 py-3 border-b flex gap-2">
-          <div className="relative flex-1">
+        <div className="px-6 py-3 border-b">
+          <div className="relative">
             <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); } }}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Tìm sản phẩm..."
               className="input pl-8 text-sm w-full"
             />
           </div>
-          <button
-            onClick={() => { setSearch(searchInput); setPagination(p => ({ ...p, page: 1 })); }}
-            className="btn-primary px-4 text-sm"
-          >Tìm</button>
         </div>
 
         <div className="flex-1 overflow-y-auto">

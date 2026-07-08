@@ -109,26 +109,26 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Giá gốc (VND) *</label>
+              <label className="text-sm font-medium">{'Giá gốc (VND)'} *</label>
               <input type="number" value={form.price} onChange={e => handlePriceChange(e.target.value)} required className="input mt-1 text-base" />
             </div>
             <div>
-              <label className="text-sm font-medium">% Giảm giá</label>
+              <label className="text-sm font-medium">{'% Giảm giá'}</label>
               <div className="relative mt-1">
                 <input type="number" min="0" max="99" value={discountPct} onChange={e => handleDiscountChange(e.target.value)} placeholder="0" className="input pr-7 text-base" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
               </div>
             </div>
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Giá khuyến mãi (VND)</label>
+              <label className="text-sm font-medium">{'Giá khuyến mãi (VND)'}</label>
               <input type="number" value={form.salePrice} onChange={e => handleSalePriceChange(e.target.value)} className="input mt-1 text-base" placeholder="Để trống nếu không giảm giá" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Ngày bắt đầu KM {form.salePrice && <span className="text-rose-500">*</span>}</label>
+              <label className="text-sm font-medium text-gray-600">{'Ngày bắt đầu KM'} {form.salePrice && <span className="text-rose-500">*</span>}</label>
               <input type="date" value={form.saleStartDate} onChange={e => setForm(f => ({ ...f, saleStartDate: e.target.value }))} className="input mt-1 text-base" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Ngày kết thúc KM {form.salePrice && <span className="text-rose-500">*</span>}</label>
+              <label className="text-sm font-medium text-gray-600">{'Ngày kết thúc KM'} {form.salePrice && <span className="text-rose-500">*</span>}</label>
               <input type="date" value={form.saleEndDate} onChange={e => setForm(f => ({ ...f, saleEndDate: e.target.value }))} className="input mt-1 text-base" />
             </div>
             {showPreview && (
@@ -160,7 +160,7 @@ const ProductModal = ({ product, categories, onClose, onSave }) => {
               <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className="input mt-1 text-base" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Ảnh sản phẩm</label>
+              <label className="text-sm font-medium">{'Ảnh sản phẩm'}</label>
               <div onClick={() => fileInputRef.current?.click()} className="mt-1 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-rose-400 hover:bg-rose-50 transition-colors">
                 <p className="text-2xl mb-1">📷</p>
                 <p className="text-sm text-gray-500">Click để chọn ảnh từ máy tính</p>
@@ -256,7 +256,7 @@ const ReviewPanel = ({ product, onClose }) => {
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <FiMessageSquare size={16} className="text-indigo-500 shrink-0" />
-              <h3 className="font-bold text-gray-800 text-base truncate">Đánh giá: {product.name}</h3>
+              <h3 className="font-bold text-gray-800 text-base truncate">{`Đánh giá: ${product.name}`}</h3>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {avg ? (
@@ -266,7 +266,7 @@ const ReviewPanel = ({ product, onClose }) => {
                   <span className="text-gray-400 text-sm">({product.reviewCount || 0} đánh giá)</span>
                 </>
               ) : (
-                <span className="text-gray-400 text-sm">Chưa có đánh giá</span>
+                <span className="text-gray-400 text-sm">{'Chưa có đánh giá'}</span>
               )}
             </div>
           </div>
@@ -278,13 +278,13 @@ const ReviewPanel = ({ product, onClose }) => {
         {/* Filters */}
         <div className="px-5 py-3 border-b flex flex-wrap gap-2">
           <select value={filter.rating} onChange={e => { setFilter(f => ({ ...f, rating: e.target.value })); setPage(1); }} className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            <option value="">Tất cả sao</option>
-            {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{r} sao</option>)}
+            <option value="">{'Tất cả sao'}</option>
+            {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>{r}</option>)}
           </select>
           <select value={filter.isApproved} onChange={e => { setFilter(f => ({ ...f, isApproved: e.target.value })); setPage(1); }} className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            <option value="">Tất cả trạng thái</option>
-            <option value="true">Hiển thị</option>
-            <option value="false">Đã ẩn</option>
+            <option value="">{'Tất cả trạng thái'}</option>
+            <option value="true">{'Hiển thị'}</option>
+            <option value="false">{'Đã ẩn'}</option>
           </select>
           <span className="ml-auto text-sm text-gray-400 self-center">
             {pagination?.total ?? 0} đánh giá
@@ -298,7 +298,7 @@ const ReviewPanel = ({ product, onClose }) => {
           ) : reviews.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
               <FiMessageSquare size={32} className="mx-auto mb-2 opacity-30" />
-              <p>Không có đánh giá nào</p>
+              <p>{'Không có đánh giá nào'}</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -341,7 +341,7 @@ const ReviewPanel = ({ product, onClose }) => {
                       <button
                         onClick={() => handleToggle(review)}
                         disabled={toggling === review.id}
-                        title={review.isApproved ? 'Ẩn' : 'Hiện'}
+                        title={review.isApproved ? 'Đã ẩn' : 'Hiển thị'}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all active:scale-95 disabled:opacity-40 ${review.isApproved ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
                       >
                         {review.isApproved ? <FiEyeOff size={13} /> : <FiEye size={13} />}
@@ -349,13 +349,13 @@ const ReviewPanel = ({ product, onClose }) => {
 
                       {confirmDelete === review.id ? (
                         <div className="flex gap-1">
-                          <button onClick={() => handleDelete(review.id)} className="px-2 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all">Xóa?</button>
-                          <button onClick={() => setConfirmDelete(null)} className="px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 active:scale-95 transition-all">Hủy</button>
+                          <button onClick={() => handleDelete(review.id)} className="px-2 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all">{'Xóa?'}</button>
+                          <button onClick={() => setConfirmDelete(null)} className="px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 active:scale-95 transition-all">{'Hủy'}</button>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleDelete(review.id)}
-                          title="Xóa"
+                          title={'Xóa đánh giá'}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-500 hover:bg-red-200 transition-all active:scale-95"
                         >
                           <FiTrash2 size={13} />
@@ -506,7 +506,7 @@ const ProductManagement = () => {
                       <button
                         onClick={() => setViewProduct(p)}
                         className="group flex flex-col gap-0.5 hover:opacity-80 active:scale-95 transition-all text-left"
-                        title="Xem đánh giá"
+                        title={'Xem đánh giá'}
                       >
                         <Stars rating={parseFloat(p.averageRating || 0)} size={12} />
                         <span className="text-xs text-gray-500 group-hover:text-indigo-600 transition-colors">
@@ -514,7 +514,7 @@ const ProductManagement = () => {
                         </span>
                       </button>
                     ) : (
-                      <span className="text-xs text-gray-300">Chưa có</span>
+                      <span className="text-xs text-gray-300">{'Chưa có'}</span>
                     )}
                   </td>
 
@@ -528,14 +528,14 @@ const ProductManagement = () => {
                     <div className="flex gap-1">
                       <button
                         onClick={() => setViewProduct(p)}
-                        title="Xem đánh giá"
+                        title={'Xem đánh giá'}
                         className="w-9 h-9 flex items-center justify-center text-indigo-500 hover:bg-indigo-50 rounded-lg active:scale-95 transition-all"
                       >
                         <FiMessageSquare size={15} />
                       </button>
                       <button
                         onClick={() => setModal(p)}
-                        title="Chỉnh sửa"
+                        title={'Chỉnh sửa'}
                         className="w-9 h-9 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg active:scale-95 transition-all"
                       >
                         <FiEdit2 size={15} />
@@ -543,7 +543,7 @@ const ProductManagement = () => {
                       {p.status === 'active' ? (
                         <button
                           onClick={() => handleToggleStatus(p)}
-                          title="Dừng bán"
+                          title={'Dừng bán'}
                           className="w-9 h-9 flex items-center justify-center text-orange-500 hover:bg-orange-50 rounded-lg active:scale-95 transition-all"
                         >
                           <FiPauseCircle size={15} />
@@ -551,7 +551,7 @@ const ProductManagement = () => {
                       ) : (
                         <button
                           onClick={() => handleToggleStatus(p)}
-                          title="Bán lại"
+                          title={'Bán lại'}
                           className="w-9 h-9 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-lg active:scale-95 transition-all"
                         >
                           <FiPlayCircle size={15} />

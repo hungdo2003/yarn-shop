@@ -3,10 +3,14 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { FiMail, FiPhone, FiSearch, FiX, FiEye } from 'react-icons/fi';
 
-const STATUS_LABEL = { new: 'Mới', read: 'Đã đọc', replied: 'Đã trả lời' };
 const STATUS_COLOR = { new: 'bg-blue-100 text-blue-700', read: 'bg-gray-100 text-gray-600', replied: 'bg-green-100 text-green-700' };
 
 export default function ContactManagement() {
+  const STATUS_LABEL = {
+    new: 'Mới',
+    read: 'Đã đọc',
+    replied: 'Đã trả lời',
+  };
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -15,22 +19,23 @@ export default function ContactManagement() {
   const [replyNote, setReplyNote] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const fetchMessages = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
-      const res = await api.get('/contact', { params });
-      setMessages(res.data?.data || res.data || []);
-    } catch {
-      toast.error('Không thể tải danh sách tin nhắn');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchMessages(); }, [statusFilter]);
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (search) params.search = search;
+        if (statusFilter) params.status = statusFilter;
+        const res = await api.get('/contact', { params });
+        setMessages(res.data?.data || res.data || []);
+      } catch {
+        toast.error('Không thể tải danh sách tin nhắn');
+      } finally {
+        setLoading(false);
+      }
+    }, search ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [search, statusFilter]);
 
   const openMessage = async (msg) => {
     setSelected(msg);
@@ -52,7 +57,7 @@ export default function ContactManagement() {
       setMessages(prev => prev.map(m => m.id === selected.id ? { ...m, status: 'replied', replyNote } : m));
       setSelected(prev => ({ ...prev, status: 'replied', replyNote }));
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Lưu phản hồi thất bại');
+      toast.error(err?.response?.data?.message || 'Lưu thất bại');
     } finally {
       setSaving(false);
     }
@@ -68,7 +73,6 @@ export default function ContactManagement() {
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
           <input
             value={search} onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && fetchMessages()}
             placeholder="Tìm theo tên, email..."
             className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-base focus:ring-2 focus:ring-rose-300 focus:outline-none"
           />

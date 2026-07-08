@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Pagination from '../../components/common/Pagination';
+import { ORDER_STATUS_LABEL } from '../../utils/formatters';
 
 const statusColor = {
   pending_payment: 'bg-orange-100 text-orange-700', paid: 'bg-blue-100 text-blue-700',
@@ -9,17 +10,22 @@ const statusColor = {
   shipping: 'bg-cyan-100 text-cyan-700', delivered: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700', pending: 'bg-yellow-100 text-yellow-700', completed: 'bg-green-100 text-green-700'
 };
-const statusLabel = {
-  pending_payment: 'Chờ thanh toán', paid: 'Đã thanh toán', confirmed: 'Đã xác nhận',
-  preparing: 'Đang chuẩn bị', shipping: 'Đang giao', delivered: 'Đã giao',
-  cancelled: 'Đã hủy', pending: 'Chờ xác nhận', completed: 'Hoàn thành'
-};
 // Staff drives: paid → confirmed → preparing → shipping → delivered
 const nextStatus = { paid: 'confirmed', confirmed: 'preparing', preparing: 'shipping', shipping: 'delivered', pending: 'confirmed' };
-const nextLabel = { paid: '✅ Xác nhận đơn', confirmed: '📦 Chuẩn bị hàng', preparing: '🚚 Bàn giao vận chuyển', shipping: '🏠 Đã giao hàng', pending: '✅ Xác nhận đơn' };
-const shipLabel = { standard: 'Tiêu chuẩn', express: 'Hỏa tốc', economy: 'Tiết kiệm' };
 
 export default function StaffOrderManagement() {
+  const nextLabel = {
+    paid: '✅ Xác nhận đơn',
+    confirmed: '📦 Chuẩn bị hàng',
+    preparing: '🚚 Bàn giao vận chuyển',
+    shipping: '🏠 Đã giao hàng',
+    pending: '✅ Xác nhận đơn',
+  };
+  const shipLabel = {
+    standard: 'Tiêu chuẩn',
+    express: 'Hỏa tốc',
+    economy: 'Tiết kiệm',
+  };
   const [orders, setOrders] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -38,7 +44,7 @@ export default function StaffOrderManagement() {
 
   const updateStatus = async (id, status) => {
     await api.put(`/orders/${id}/status`, { status });
-    toast.success(`Cập nhật: ${statusLabel[status]}`);
+    toast.success(`Cập nhật: ${ORDER_STATUS_LABEL[status] || status}`);
     load();
     if (selected?.id === id) setSelected({ ...selected, status });
   };
@@ -65,7 +71,7 @@ export default function StaffOrderManagement() {
           <input placeholder="Tìm mã ĐH, tên, SĐT..." value={filter.search} onChange={e => { setFilter({ ...filter, search: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base col-span-2" />
           <select value={filter.status} onChange={e => { setFilter({ ...filter, status: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả trạng thái</option>
-            {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {['pending_payment','paid','confirmed','preparing','shipping','delivered','cancelled','pending','completed'].map(k => <option key={k} value={k}>{ORDER_STATUS_LABEL[k] || k}</option>)}
           </select>
           <select value={filter.shippingMethod} onChange={e => { setFilter({ ...filter, shippingMethod: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả vận chuyển</option>
@@ -75,7 +81,7 @@ export default function StaffOrderManagement() {
           </select>
           <select value={filter.callConfirmed} onChange={e => { setFilter({ ...filter, callConfirmed: e.target.value }); setPage(1); }} className="border rounded-lg px-3 py-2 text-base">
             <option value="">Tất cả cuộc gọi</option>
-            <option value="true">Đã gọi xác nhận</option>
+            <option value="true">Đã gọi</option>
             <option value="false">Chưa gọi</option>
           </select>
           <div className="col-span-2 md:col-span-1 flex items-center gap-1.5">
@@ -91,7 +97,7 @@ export default function StaffOrderManagement() {
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <span className="text-sm text-gray-500">Tổng: {total} đơn hàng</span>
+          <span className="text-sm text-gray-500">{`Tổng: ${total} đơn hàng`}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -117,7 +123,7 @@ export default function StaffOrderManagement() {
                     <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{shipLabel[o.shippingMethod]}</td>
                     <td className="px-4 py-3 font-medium">{parseFloat(o.total).toLocaleString()}đ</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[o.status]}`}>{statusLabel[o.status]}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[o.status]}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       {o.callConfirmed
@@ -157,7 +163,7 @@ export default function StaffOrderManagement() {
               <div><p className="text-gray-400 text-xs">Điện thoại</p><p className="font-medium text-rose-600">{selected.shippingPhone}</p></div>
               <div className="col-span-2"><p className="text-gray-400 text-xs">Địa chỉ</p><p className="font-medium">{selected.shippingAddress}</p></div>
               <div><p className="text-gray-400 text-xs">Vận chuyển</p><p>{shipLabel[selected.shippingMethod]}</p></div>
-              <div><p className="text-gray-400 text-xs">Trạng thái</p><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[selected.status]}`}>{statusLabel[selected.status]}</span></div>
+              <div><p className="text-gray-400 text-xs">Trạng thái</p><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[selected.status]}`}>{ORDER_STATUS_LABEL[selected.status] || selected.status}</span></div>
               <div><p className="text-gray-400 text-xs">Phí ship</p><p>{parseFloat(selected.shippingFee).toLocaleString()}đ</p></div>
               <div><p className="text-gray-400 text-xs">Tổng tiền</p><p className="font-bold text-rose-600">{parseFloat(selected.total).toLocaleString()}đ</p></div>
             </div>

@@ -8,23 +8,23 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { FiCreditCard, FiFileText, FiImage } from 'react-icons/fi';
 
-const STEPS = [
-  { key: 'submitted',      label: 'Đã gửi',    icon: '📝' },
-  { key: 'reviewing',      label: 'Đang xét',  icon: '🔍' },
-  { key: 'quoted',         label: 'Báo giá',   icon: '💰' },
-  { key: 'deposit_paid',   label: 'Đã cọc',    icon: '💳' },
-  { key: 'in_production',  label: 'Sản xuất',  icon: '🧶' },
-  { key: 'completed',      label: 'Xong',      icon: '✅' },
-  { key: 'delivered',      label: 'Đã giao',   icon: '🏠' },
-  { key: 'remaining_paid', label: 'Hoàn tất',  icon: '🎉' },
-];
-
 export default function CustomOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: order, loading, refetch } = useFetch(`/custom-orders/my/${id}`);
   const [paying, setPaying] = useState(false);
+
+  const STEPS = [
+    { key: 'submitted',      label: 'Đã gửi', icon: '📝' },
+    { key: 'reviewing',      label: 'Đang xét', icon: '🔍' },
+    { key: 'quoted',         label: 'Báo giá', icon: '💰' },
+    { key: 'deposit_paid',   label: 'Đã cọc', icon: '💳' },
+    { key: 'in_production',  label: 'Sản xuất', icon: '🧶' },
+    { key: 'completed',      label: 'Xong', icon: '✅' },
+    { key: 'delivered',      label: 'Đã giao', icon: '🏠' },
+    { key: 'remaining_paid', label: 'Hoàn tất', icon: '🎉' },
+  ];
 
   const handlePay = async () => {
     setPaying(true);
@@ -71,7 +71,7 @@ export default function CustomOrderDetail() {
       {/* Header */}
       <div className="flex items-start justify-between mt-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Đơn #{order.code}</h1>
+          <h1 className="text-xl font-bold text-gray-800">{`Đơn #${order.code}`}</h1>
           <p className="text-gray-400 text-sm mt-0.5">{formatDate(order.createdAt)}</p>
         </div>
         <span className={`text-sm px-3 py-1 rounded-full font-semibold shrink-0 ${CUSTOM_STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
@@ -79,14 +79,12 @@ export default function CustomOrderDetail() {
         </span>
       </div>
 
-      {/* Quoted — big CTA (mirrors pending_payment in OrderDetail) */}
+      {/* Quoted — big CTA */}
       {isQuoted && (
         <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-5 text-center">
           <div className="text-4xl mb-2">💳</div>
           <h3 className="font-bold text-amber-700 text-lg mb-1">Chờ thanh toán</h3>
-          <p className="text-amber-600 text-sm mb-1">
-            Đơn của bạn đã được báo giá. Vui lòng thanh toán để bắt đầu sản xuất.
-          </p>
+          <p className="text-amber-600 text-sm mb-1">Đơn của bạn đã được báo giá. Vui lòng thanh toán để bắt đầu sản xuất.</p>
           <p className="text-xs text-amber-500 mb-4">
             Số dư ví: <span className={`font-bold ${walletBalance >= payAmount ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(walletBalance)}</span>
             {walletBalance < payAmount && <> — cần thêm <span className="font-bold">{formatCurrency(payAmount - walletBalance)}</span>. <Link to="/wallet" className="underline">Nạp ví</Link></>}
@@ -103,9 +101,7 @@ export default function CustomOrderDetail() {
         <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-center">
           <div className="text-4xl mb-2">💰</div>
           <h3 className="font-bold text-teal-700 text-lg mb-1">Thanh toán phần còn lại</h3>
-          <p className="text-teal-600 text-sm mb-1">
-            Đơn hàng đã được giao. Vui lòng thanh toán phần còn lại để hoàn tất đơn.
-          </p>
+          <p className="text-teal-600 text-sm mb-1">Đơn hàng đã được giao. Vui lòng thanh toán phần còn lại để hoàn tất đơn.</p>
           <p className="text-xs text-teal-500 mb-4">
             Số dư ví: <span className={`font-bold ${walletBalance >= remainingAmount ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(walletBalance)}</span>
             {walletBalance < remainingAmount && <> — cần thêm <span className="font-bold">{formatCurrency(remainingAmount - walletBalance)}</span>. <Link to="/wallet" className="underline">Nạp ví</Link></>}
@@ -189,12 +185,12 @@ export default function CustomOrderDetail() {
             <div className="space-y-2 mt-1">
               <div>
                 <span className="text-xs px-2 py-1 rounded-full font-medium inline-block bg-blue-50 text-blue-600">Đã đặt cọc</span>
-                <p className="text-xs text-gray-400 mt-1">Lúc {formatDateTime(order.depositPaidAt)}</p>
+                <p className="text-xs text-gray-400 mt-1">{`Lúc ${formatDateTime(order.depositPaidAt)}`}</p>
               </div>
               {order.remainingPaidAt && (
                 <div>
                   <span className="text-xs px-2 py-1 rounded-full font-medium inline-block bg-teal-50 text-teal-600">Đã thanh toán đủ</span>
-                  <p className="text-xs text-gray-400 mt-1">Lúc {formatDateTime(order.remainingPaidAt)}</p>
+                  <p className="text-xs text-gray-400 mt-1">{`Lúc ${formatDateTime(order.remainingPaidAt)}`}</p>
                 </div>
               )}
             </div>
@@ -202,7 +198,7 @@ export default function CustomOrderDetail() {
         </div>
       )}
 
-      {/* Quote summary (mirrors Order summary) */}
+      {/* Quote summary */}
       {order.quotedPrice && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
           <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2"><FiCreditCard size={16} /> Tóm tắt báo giá</h3>

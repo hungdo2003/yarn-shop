@@ -14,7 +14,6 @@ export default function PaymentResult() {
 
   useEffect(() => {
     if (!orderId) { setLoading(false); return; }
-    // Poll a few times to let the webhook arrive
     let attempts = 0;
     const check = async () => {
       try {
@@ -50,7 +49,9 @@ export default function PaymentResult() {
           <>
             <div className="text-6xl xs:text-7xl mb-4 xs:mb-5 animate-bounce">🎉</div>
             <h1 className="text-xl xs:text-2xl font-bold text-green-600 mb-2">Thanh toán thành công!</h1>
-            <p className="text-gray-500 mb-3">Đơn hàng <span className="font-semibold text-gray-800">#{status?.orderCode}</span> đã được ghi nhận.</p>
+            <p className="text-gray-500 mb-3">
+              {`Đơn hàng #${status?.orderCode} đã được ghi nhận.`}
+            </p>
             {status?.total && <p className="text-lg font-bold text-rose-500 mb-6">{formatCurrency(status.total)}</p>}
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4 xs:p-5 mb-6 text-left space-y-2">
               <p className="text-sm text-green-700 font-medium">✅ Thanh toán đã được xác nhận</p>

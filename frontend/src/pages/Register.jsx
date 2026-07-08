@@ -17,8 +17,8 @@ const Register = () => {
 
   useEffect(() => {
     if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
+    const t2 = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t2);
   }, [countdown]);
 
   const handleSubmit = async (e) => {
