@@ -16,6 +16,7 @@ export default function StaffChat() {
   const { conversations, setConversations, activeConvId, activeMessages, setActiveMessages, joinStaffConversation, sendMessage, closeConversation } = useChat2();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
   const messagesEndRef = useRef(null);
 
   const fetchConversations = async () => {
@@ -44,6 +45,7 @@ export default function StaffChat() {
       const r = await api.get(`/chat/conversations/${conv.id}/messages`);
       setActiveMessages(r.data.messages || []);
       joinStaffConversation(conv.id);
+      setShowMobileChat(true);
     } catch {}
     setLoading(false);
   };
@@ -72,7 +74,7 @@ export default function StaffChat() {
   return (
     <div className="flex h-full bg-white rounded-2xl shadow overflow-hidden border border-gray-100">
       {/* Conversation list */}
-      <div className="w-72 border-r flex flex-col shrink-0">
+      <div className={`w-full md:w-72 border-r flex-col shrink-0 ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
         <div className="px-4 py-3.5 border-b bg-gray-50">
           <h2 className="font-bold text-gray-800">Hội thoại</h2>
           <p className="text-xs text-gray-400 mt-0.5">{conversations.length} đang mở</p>
@@ -116,12 +118,13 @@ export default function StaffChat() {
       </div>
 
       {/* Chat panel */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex-col min-w-0 ${showMobileChat ? 'flex' : 'hidden md:flex'}`}>
         {activeConvId ? (
           <>
             {/* Chat header */}
             <div className="px-5 py-3.5 border-b bg-gray-50 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">
+              <button onClick={() => setShowMobileChat(false)} className="md:hidden text-gray-400 hover:text-gray-600 p-1 -ml-1 shrink-0">←</button>
+              <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm shrink-0">
                 {activeConv?.customer?.fullName?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="flex-1">
@@ -175,7 +178,7 @@ export default function StaffChat() {
             <form onSubmit={handleSend} className="border-t bg-white px-4 py-3 flex items-center gap-2">
               <input value={text} onChange={e => setText(e.target.value)}
                 placeholder="Nhập tin nhắn..."
-                className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                className="flex-1 text-base bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-blue-400" />
               <button type="submit" disabled={!text.trim()}
                 className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-40 shrink-0">
                 <FiSend size={16} />

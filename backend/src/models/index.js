@@ -32,6 +32,9 @@ const Notification = require('./Notification');
 const ChatConversation = require('./ChatConversation');
 const ChatMessage = require('./ChatMessage');
 const Wishlist = require('./Wishlist');
+const SaleEvent = require('./SaleEvent');
+const SaleEventRun = require('./SaleEventRun');
+const SaleEventRunProduct = require('./SaleEventRunProduct');
 // Role <-> User
 Role.hasMany(User, { foreignKey: 'roleId' });
 User.belongsTo(Role, { foreignKey: 'roleId' });
@@ -117,6 +120,7 @@ User.hasMany(ReturnRequest, { foreignKey: 'userId' });
 ReturnRequest.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(ReturnRequest, { foreignKey: 'handledBy', as: 'handledReturns' });
 ReturnRequest.belongsTo(User, { foreignKey: 'handledBy', as: 'handler' });
+ReturnRequest.belongsTo(Product, { foreignKey: 'exchangeProductId', as: 'ExchangeProduct' });
 
 // ContactMessage
 User.hasMany(ContactMessage, { foreignKey: 'repliedBy' });
@@ -153,6 +157,16 @@ Wishlist.belongsTo(User, { foreignKey: 'userId' });
 Product.hasMany(Wishlist, { foreignKey: 'productId' });
 Wishlist.belongsTo(Product, { foreignKey: 'productId' });
 
+// SaleEvent
+User.hasMany(SaleEvent, { foreignKey: 'createdBy', as: 'saleEvents' });
+SaleEvent.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
+SaleEvent.hasMany(Product, { foreignKey: 'saleEventId', as: 'products' });
+Product.belongsTo(SaleEvent, { foreignKey: 'saleEventId', as: 'saleEvent' });
+SaleEvent.hasMany(SaleEventRun, { foreignKey: 'saleEventId', as: 'runs' });
+SaleEventRun.belongsTo(SaleEvent, { foreignKey: 'saleEventId' });
+SaleEventRun.hasMany(SaleEventRunProduct, { foreignKey: 'runId', as: 'runProducts' });
+SaleEventRunProduct.belongsTo(SaleEventRun, { foreignKey: 'runId' });
+
 // Chat
 User.hasMany(ChatConversation, { foreignKey: 'customerId', as: 'customerConversations' });
 ChatConversation.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
@@ -175,5 +189,5 @@ module.exports = {
   ReturnRequest, Banner, SiteContent, SystemLog,
   WalletTransaction, WalletTopup, Notification,
   ChatConversation, ChatMessage,
-  Wishlist,
+  Wishlist, SaleEvent, SaleEventRun, SaleEventRunProduct,
 };

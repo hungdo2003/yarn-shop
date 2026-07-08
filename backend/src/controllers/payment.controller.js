@@ -5,6 +5,13 @@ const { notify, notifyByRole } = require('../services/notificationService');
 const { calcPointsEarned } = require('../utils/loyalty');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const RETURN_PAYOS_OFFSET = 5_000_000;
+
+let returnCtrl;
+const getReturnCtrl = () => {
+  if (!returnCtrl) returnCtrl = require('./return.controller');
+  return returnCtrl;
+};
 
 // Shared helper — marks an order as paid and decrements stock
 async function confirmPayment(orderId, transactionId = null) {
@@ -153,6 +160,15 @@ exports.handleWebhook = async (req, res) => {
     if (topup) {
       if (isPaid) await creditWalletFromTopup(topup, webhookData.reference);
       else await topup.update({ status: 'failed' });
+      return res.json({ success: true });
+    }
+
+    // Return payment (orderCode = returnId + RETURN_PAYOS_OFFSET)
+    if (orderCode > RETURN_PAYOS_OFFSET && orderCode < 1_000_000_000) {
+      const returnId = orderCode - RETURN_PAYOS_OFFSET;
+      const ctrl = getReturnCtrl();
+      if (isPaid) await ctrl.confirmReturnPayment(returnId, webhookData.reference);
+      else await ctrl.cancelReturnPayment(returnId);
       return res.json({ success: true });
     }
 

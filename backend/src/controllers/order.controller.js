@@ -2,6 +2,7 @@ const { sequelize, Order, OrderDetail, Payment, Shipment, Cart, CartItem, Produc
 const { notify, notifyByRole } = require('../services/notificationService');
 const { generateCode, paginate, paginateResult } = require('../utils/helpers');
 const { calcPointsEarned, calcMaxRedeemable, calcPointsDiscount } = require('../utils/loyalty');
+const { getTier } = require('../utils/membership');
 const { Op } = require('sequelize');
 const { log } = require('./log.controller');
 
@@ -297,6 +298,24 @@ const updateStatus = async (req, res) => {
           `Đơn hàng của bạn ${msg}.`,
           { orderId: order.id, orderCode: order.orderCode, status }
         );
+      }
+
+      // Check tier upgrade when order is delivered
+      if (status === 'delivered') {
+        const DONE = ['delivered', 'completed'];
+        const oldTotal = await Order.sum('total', {
+          where: { userId: order.userId, status: { [Op.in]: DONE }, id: { [Op.ne]: order.id } }
+        }) || 0;
+        const newTotal = oldTotal + parseFloat(order.total);
+        const oldTier = getTier(oldTotal);
+        const newTier = getTier(newTotal);
+        if (oldTier.name !== newTier.name) {
+          await notify(order.userId, 'tier_upgrade',
+            `Chúc mừng! Bạn đã thăng hạng ${newTier.emoji}`,
+            `Tổng chi tiêu đạt ${newTotal.toLocaleString('vi-VN')}đ. Hạng thành viên của bạn đã nâng lên hạng ${newTier.label}!`,
+            { newTier: newTier.name, oldTier: oldTier.name, newTierLabel: newTier.label, newTierEmoji: newTier.emoji, totalSpent: newTotal }
+          );
+        }
       }
     }
 

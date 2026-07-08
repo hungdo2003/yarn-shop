@@ -19,7 +19,11 @@ const Product = sequelize.define('Product', {
   reviewCount: { type: DataTypes.INTEGER, defaultValue: 0 },
   thumbnailImage: { type: DataTypes.STRING(255) },
   status: { type: DataTypes.ENUM('active', 'inactive', 'out_of_stock'), defaultValue: 'active' },
-  isCustomizable: { type: DataTypes.BOOLEAN, defaultValue: false }
+  isCustomizable: { type: DataTypes.BOOLEAN, defaultValue: false },
+  saleStartDate: { type: DataTypes.DATE },
+  saleEndDate: { type: DataTypes.DATE },
+  terminatedAt: { type: DataTypes.DATE, allowNull: true },
+  saleEventId: { type: DataTypes.INTEGER, allowNull: true },
 });
 
 module.exports = Product;

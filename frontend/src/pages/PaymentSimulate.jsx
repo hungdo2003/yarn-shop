@@ -47,12 +47,18 @@ export default function PaymentSimulate() {
     }
   };
 
+  const methods = [
+    { icon: '🏦', label: 'Chuyển khoản ngân hàng', sub: 'Vietcombank, BIDV, Techcombank...' },
+    { icon: '💳', label: 'Thẻ ATM / Debit', sub: 'Napas' },
+    { icon: '📱', label: 'Ví điện tử', sub: 'MoMo, ZaloPay, VNPay' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="max-w-sm w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm">
 
         {/* Header — looks like a payment gateway */}
-        <div className="bg-white rounded-t-2xl px-6 py-4 border-b flex items-center justify-between shadow-sm">
+        <div className="bg-white rounded-t-2xl px-5 xs:px-6 py-4 border-b flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
             <span className="text-2xl">💳</span>
             <span className="font-bold text-gray-800">PayOS</span>
@@ -62,40 +68,52 @@ export default function PaymentSimulate() {
 
         <div className="bg-white rounded-b-2xl shadow-xl overflow-hidden">
           {step === 'confirm' && (
-            <div className="p-6 space-y-5">
+            <div className="p-5 xs:p-6 space-y-5">
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{isTopup ? 'Giao dịch' : 'Đơn hàng'}</p>
-                <p className="font-bold text-gray-800 text-lg">{isTopup ? `Nạp ví #${topupId}` : `#${orderCode}`}</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
+                  {isTopup ? 'Giao dịch' : 'Đơn hàng'}
+                </p>
+                <p className="font-bold text-gray-800 text-lg min-w-0 break-words">
+                  {isTopup ? `Nạp ví #${topupId}` : `#${orderCode}`}
+                </p>
               </div>
 
               <div className="bg-blue-50 rounded-xl p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">Số tiền thanh toán</p>
-                <p className="text-3xl font-bold text-blue-700">{formatCurrency(amount)}</p>
+                <p className="text-2xl xs:text-3xl font-bold text-blue-700">{formatCurrency(amount)}</p>
               </div>
 
               {/* Fake bank selection */}
               <div>
                 <p className="text-xs text-gray-500 mb-2 font-medium">Chọn phương thức</p>
-                {[
-                  { icon: '🏦', label: 'Chuyển khoản ngân hàng', sub: 'Vietcombank, BIDV, Techcombank...' },
-                  { icon: '💳', label: 'Thẻ ATM / Debit', sub: 'Napas' },
-                  { icon: '📱', label: 'Ví điện tử', sub: 'MoMo, ZaloPay, VNPay' },
-                ].map((m, i) => (
-                  <label key={i} className={`flex items-center gap-3 border rounded-xl px-4 py-3 mb-2 cursor-pointer transition ${i === 0 ? 'border-blue-400 bg-blue-50' : 'border-gray-200'}`}>
-                    <input type="radio" name="method" defaultChecked={i === 0} className="accent-blue-500" />
-                    <span className="text-xl">{m.icon}</span>
-                    <div>
+                {methods.map((m, i) => (
+                  <label
+                    key={i}
+                    className={`flex items-center gap-3 border rounded-xl px-4 py-3.5 mb-2 cursor-pointer transition active:scale-95 ${
+                      i === 0 ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    <input type="radio" name="method" defaultChecked={i === 0} className="accent-blue-500 shrink-0" />
+                    <span className="text-xl shrink-0">{m.icon}</span>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800">{m.label}</p>
-                      <p className="text-xs text-gray-400">{m.sub}</p>
+                      <p className="text-xs text-gray-400 truncate">{m.sub}</p>
                     </div>
                   </label>
                 ))}
               </div>
 
-              <button onClick={handlePay} className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition text-sm">
-                Xác nhận thanh toán {formatCurrency(amount)}
+              <button
+                onClick={handlePay}
+                disabled={paying}
+                className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 active:scale-95 transition text-sm disabled:opacity-60"
+              >
+                {`Xác nhận thanh toán ${formatCurrency(amount)}`}
               </button>
-              <button onClick={handleCancel} className="w-full text-gray-400 text-sm hover:text-gray-600 transition py-1">
+              <button
+                onClick={handleCancel}
+                className="w-full min-h-[44px] text-gray-400 text-sm hover:text-gray-600 active:scale-95 transition py-2"
+              >
                 Hủy và quay lại
               </button>
             </div>

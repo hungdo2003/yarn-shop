@@ -23,14 +23,14 @@ const EditModal = ({ user, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-80 p-6">
+      <div className="bg-white rounded-2xl w-80 p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="font-bold mb-4">Edit User: {user.fullName}</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div><label className="text-sm font-medium">Full Name</label><input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} className="input mt-1" /></div>
-          <div><label className="text-sm font-medium">Phone</label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input mt-1" /></div>
+          <div><label className="text-sm font-medium">Full Name</label><input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} className="input mt-1 text-base" /></div>
+          <div><label className="text-sm font-medium">Phone</label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input mt-1 text-base" /></div>
           <div>
             <label className="text-sm font-medium">Role</label>
-            <select value={form.roleId} onChange={e => setForm(f => ({ ...f, roleId: parseInt(e.target.value) }))} className="input mt-1">
+            <select value={form.roleId} onChange={e => setForm(f => ({ ...f, roleId: parseInt(e.target.value) }))} className="input mt-1 text-base">
               <option value={1}>Admin</option>
               <option value={2}>Customer</option>
               <option value={3}>Staff</option>
@@ -70,9 +70,9 @@ const UserManagement = () => {
   return (
     <div className="p-6">
       <h1 className="mb-6">User Management</h1>
-      <div className="card mb-4 flex gap-3">
-        <input placeholder="Search name or email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input flex-1" />
-        <select value={roleId} onChange={e => { setRoleId(e.target.value); setPage(1); }} className="border border-gray-300 rounded-lg px-3 text-sm">
+      <div className="card mb-4 flex flex-col sm:flex-row gap-3">
+        <input placeholder="Search name or email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="input flex-1 text-base" />
+        <select value={roleId} onChange={e => { setRoleId(e.target.value); setPage(1); }} className="border border-gray-300 rounded-lg px-3 py-2 text-base">
           <option value="">All Roles</option>
           <option value="1">Admin</option>
           <option value="2">Customer</option>
@@ -83,8 +83,11 @@ const UserManagement = () => {
         <div className="card overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
-              <tr>{['User', 'Email', 'Phone', 'Role', 'Status', 'Joined', 'Actions'].map(h => (
-                <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
+              <tr>{[
+                ['User', ''], ['Email', 'hidden md:table-cell'], ['Phone', 'hidden sm:table-cell'],
+                ['Role', ''], ['Status', ''], ['Joined', 'hidden md:table-cell'], ['Actions', '']
+              ].map(([h, cls]) => (
+                <th key={h} className={`text-left px-4 py-3 font-semibold text-gray-600 ${cls}`}>{h}</th>
               ))}</tr>
             </thead>
             <tbody className="divide-y">
@@ -98,15 +101,15 @@ const UserManagement = () => {
                       <span className="font-medium">{u.fullName}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{u.email}</td>
-                  <td className="px-4 py-3 text-gray-500">{u.phone || '-'}</td>
+                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{u.email}</td>
+                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{u.phone || '-'}</td>
                   <td className="px-4 py-3"><span className={`badge ${ROLE_COLORS[u.Role?.name]}`}>{u.Role?.name}</span></td>
                   <td className="px-4 py-3"><span className={`badge ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{formatDate(u.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button onClick={() => setModal(u)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg"><FiEdit2 size={15} /></button>
-                      {u.isActive && <button onClick={() => handleDeactivate(u.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><FiUserX size={15} /></button>}
+                      <button onClick={() => setModal(u)} className="w-11 h-11 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg"><FiEdit2 size={15} /></button>
+                      {u.isActive && <button onClick={() => handleDeactivate(u.id)} className="w-11 h-11 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg"><FiUserX size={15} /></button>}
                     </div>
                   </td>
                 </tr>

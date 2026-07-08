@@ -7,40 +7,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 
-const REG_STATUS = {
-  pending_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-700' },
-  paid:            { label: 'Đã thanh toán',   color: 'bg-blue-100 text-blue-700' },
-  confirmed:       { label: 'Đã xác nhận',     color: 'bg-indigo-100 text-indigo-700' },
-  preparing:       { label: 'Đang chuẩn bị',   color: 'bg-purple-100 text-purple-700' },
-  shipping:        { label: 'Đang giao',        color: 'bg-cyan-100 text-cyan-700' },
-  delivered:       { label: 'Đã giao',          color: 'bg-green-100 text-green-700' },
-  cancelled:       { label: 'Đã hủy',           color: 'bg-red-100 text-red-700' },
-};
-
-const CUS_STATUS = {
-  submitted:     { label: 'Mới gửi',      color: 'bg-gray-100 text-gray-600' },
-  reviewing:     { label: 'Đang xét',     color: 'bg-blue-100 text-blue-700' },
-  quoted:        { label: 'Chờ thanh toán', color: 'bg-amber-100 text-amber-700' },
-  deposit_paid:  { label: 'Đã đặt cọc',   color: 'bg-indigo-100 text-indigo-700' },
-  in_production: { label: 'Đang làm',     color: 'bg-purple-100 text-purple-700' },
-  completed:     { label: 'Hoàn thành',   color: 'bg-teal-100 text-teal-700' },
-  delivered:     { label: 'Đã giao',      color: 'bg-green-100 text-green-700' },
-  remaining_paid:{ label: 'Thanh toán xong', color: 'bg-green-100 text-green-700' },
-  cancelled:     { label: 'Đã hủy',       color: 'bg-red-100 text-red-700' },
-};
-
 const StatusBadge = ({ status, map }) => {
   const cfg = map[status] || { label: status, color: 'bg-gray-100 text-gray-600' };
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>{cfg.label}</span>;
 };
 
 const DateRangeFilter = ({ from, to, onFrom, onTo, onClear }) => (
-  <div className="flex items-center gap-1.5">
+  <div className="flex flex-wrap items-center gap-1.5">
     <input type="date" value={from} onChange={e => onFrom(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 min-w-0" />
     <span className="text-gray-300 text-xs">—</span>
     <input type="date" value={to} onChange={e => onTo(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300 min-w-0" />
     {(from || to) && (
       <button onClick={onClear} className="text-xs text-gray-400 hover:text-rose-500 transition">✕</button>
     )}
@@ -60,6 +38,28 @@ const StatCard = ({ title, value, icon, color, sub }) => (
 
 const OrdersSection = () => {
   const [tab, setTab] = useState('regular');
+
+  const REG_STATUS = {
+    pending_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-700' },
+    paid:            { label: 'Đã thanh toán',  color: 'bg-blue-100 text-blue-700' },
+    confirmed:       { label: 'Đã xác nhận',    color: 'bg-indigo-100 text-indigo-700' },
+    preparing:       { label: 'Đang chuẩn bị',  color: 'bg-purple-100 text-purple-700' },
+    shipping:        { label: 'Đang giao hàng', color: 'bg-cyan-100 text-cyan-700' },
+    delivered:       { label: 'Đã giao hàng',   color: 'bg-green-100 text-green-700' },
+    cancelled:       { label: 'Đã hủy',         color: 'bg-red-100 text-red-700' },
+  };
+
+  const CUS_STATUS = {
+    submitted:      { label: 'Đã gửi yêu cầu',   color: 'bg-gray-100 text-gray-600' },
+    reviewing:      { label: 'Đang xem xét',      color: 'bg-blue-100 text-blue-700' },
+    quoted:         { label: 'Đã báo giá',        color: 'bg-amber-100 text-amber-700' },
+    deposit_paid:   { label: 'Đã thanh toán cọc', color: 'bg-indigo-100 text-indigo-700' },
+    in_production:  { label: 'Đang sản xuất',     color: 'bg-purple-100 text-purple-700' },
+    completed:      { label: 'Hoàn thành',        color: 'bg-teal-100 text-teal-700' },
+    delivered:      { label: 'Đã giao hàng',      color: 'bg-green-100 text-green-700' },
+    remaining_paid: { label: 'Đã thanh toán đủ',  color: 'bg-green-100 text-green-700' },
+    cancelled:      { label: 'Đã hủy',            color: 'bg-red-100 text-red-700' },
+  };
 
   const [regPage, setRegPage] = useState(1);
   const [regStatus, setRegStatus] = useState('');
@@ -91,12 +91,12 @@ const OrdersSection = () => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-5 pt-5 pb-3 border-b">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h3 className="font-semibold text-gray-800">Đơn hàng</h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {[['regular', '🛒 Đơn thường'], ['custom', '✂️ Đơn tùy chỉnh']].map(([v, l]) => (
               <button key={v} onClick={() => setTab(v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${tab === v ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${tab === v ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {l}
               </button>
             ))}
@@ -106,7 +106,7 @@ const OrdersSection = () => {
         {tab === 'regular' && (
           <div className="flex flex-wrap gap-2 items-center">
             <select value={regStatus} onChange={e => { setRegStatus(e.target.value); setRegPage(1); }}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
               <option value="">Tất cả trạng thái</option>
               {Object.entries(REG_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -120,7 +120,7 @@ const OrdersSection = () => {
         {tab === 'custom' && (
           <div className="flex flex-wrap gap-2 items-center">
             <select value={cusStatus} onChange={e => { setCusStatus(e.target.value); setCusPage(1); }}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300">
               <option value="">Tất cả trạng thái</option>
               {Object.entries(CUS_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -139,8 +139,11 @@ const OrdersSection = () => {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã đơn', 'Khách hàng', 'SĐT', 'Tổng tiền', 'Trạng thái', 'Ngày đặt'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã đơn', ''], ['Khách hàng', ''], ['SĐT', 'hidden md:table-cell'],
+                      ['Tổng tiền', ''], ['Trạng thái', ''], ['Ngày đặt', 'hidden sm:table-cell']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -151,10 +154,10 @@ const OrdersSection = () => {
                       <tr key={o.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3"><code className="text-xs font-mono text-rose-600">{o.orderCode}</code></td>
                         <td className="px-4 py-3 font-medium text-gray-800 max-w-[140px] truncate">{o.shippingName}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">{o.shippingPhone}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{o.shippingPhone}</td>
                         <td className="px-4 py-3 font-semibold text-gray-800">{formatCurrency(o.total)}</td>
                         <td className="px-4 py-3"><StatusBadge status={o.status} map={REG_STATUS} /></td>
-                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">{formatDate(o.createdAt)}</td>
                       </tr>
                     ))
                   }
@@ -175,8 +178,11 @@ const OrdersSection = () => {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã đơn', 'Khách hàng', 'Mô tả', 'Báo giá', 'Trạng thái', 'Ngày gửi'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã đơn', ''], ['Khách hàng', ''], ['Mô tả', 'hidden md:table-cell'],
+                      ['Báo giá', ''], ['Trạng thái', ''], ['Ngày gửi', 'hidden sm:table-cell']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -187,12 +193,12 @@ const OrdersSection = () => {
                       <tr key={o.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3"><code className="text-xs font-mono text-violet-600">{o.code}</code></td>
                         <td className="px-4 py-3 font-medium text-gray-800 max-w-[120px] truncate">{o.User?.fullName || '—'}</td>
-                        <td className="px-4 py-3 text-gray-500 text-xs max-w-[200px] truncate">{o.description}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs max-w-[200px] truncate hidden md:table-cell">{o.description}</td>
                         <td className="px-4 py-3 font-semibold text-gray-800">
                           {o.quotedPrice ? formatCurrency(o.quotedPrice) : <span className="text-gray-400 text-xs italic">Chưa có</span>}
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={o.status} map={CUS_STATUS} /></td>
-                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">{formatDate(o.createdAt)}</td>
                       </tr>
                     ))
                   }
@@ -229,6 +235,15 @@ const ManagerDashboard = () => {
 
   if (loading) return <div className="flex-1 flex items-center justify-center min-h-[400px]"><Spinner size="lg" /></div>;
 
+  const QUICK_ACCESS = [
+    { label: 'Quản lý sản phẩm',   link: '/manager/products',      icon: '🧶' },
+    { label: 'Đơn hàng',           link: '/manager/orders',        icon: '📦' },
+    { label: 'Kho hàng',           link: '/manager/inventory',     icon: '📊' },
+    { label: 'Voucher',            link: '/manager/vouchers',      icon: '🎟️' },
+    { label: 'Đặt hàng tùy chỉnh', link: '/manager/custom-orders', icon: '✨' },
+    { label: 'Báo cáo',            link: '/manager/reports',       icon: '📈' },
+  ];
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -245,7 +260,7 @@ const ManagerDashboard = () => {
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Doanh thu theo tháng ({new Date().getFullYear()})</h3>
+          <h3 className="font-semibold text-gray-800 mb-4">{`Doanh thu theo tháng (${new Date().getFullYear()})`}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenue}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -268,7 +283,7 @@ const ManagerDashboard = () => {
                   : <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-base">🧶</div>}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 line-clamp-1">{p.name}</p>
-                  <p className="text-xs text-gray-400">Đã bán: {p.sold}</p>
+                  <p className="text-xs text-gray-400">{`Đã bán: ${p.sold}`}</p>
                 </div>
                 <p className="text-sm font-semibold text-rose-500 shrink-0">{formatCurrency(p.price)}</p>
               </div>
@@ -282,14 +297,7 @@ const ManagerDashboard = () => {
       <div>
         <h3 className="font-semibold text-gray-800 mb-3">Truy cập nhanh</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[
-            { label: 'Quản lý sản phẩm', link: '/manager/products', icon: '🧶' },
-            { label: 'Đơn hàng', link: '/manager/orders', icon: '📦' },
-            { label: 'Kho hàng', link: '/manager/inventory', icon: '📊' },
-            { label: 'Voucher', link: '/manager/vouchers', icon: '🎟️' },
-            { label: 'Đặt hàng tùy chỉnh', link: '/manager/custom-orders', icon: '✨' },
-            { label: 'Báo cáo', link: '/manager/reports', icon: '📈' },
-          ].map((item) => (
+          {QUICK_ACCESS.map((item) => (
             <Link key={item.link} to={item.link} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center hover:shadow-md hover:border-rose-200 transition-all group">
               <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{item.icon}</div>
               <p className="font-medium text-sm text-gray-700 group-hover:text-rose-600">{item.label}</p>

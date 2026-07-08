@@ -7,7 +7,11 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiTruck, FiCreditCard, FiMapPin, FiPackage, FiStar } from 'react-icons/fi';
 
-const SHIPPING_METHOD_LABEL = { standard: 'Tiêu chuẩn (2-4 ngày)', express: 'Nhanh (1-2 ngày)', economy: 'Tiết kiệm (4-7 ngày)' };
+const SHIPPING_METHOD_LABEL = {
+  standard: 'Tiêu chuẩn (2-4 ngày)',
+  express:  'Nhanh (1-2 ngày)',
+  economy:  'Tiết kiệm (4-7 ngày)',
+};
 
 export default function OrderDetail() {
   const { id } = useParams();
@@ -66,8 +70,8 @@ export default function OrderDetail() {
           <h1 className="text-xl font-bold text-gray-800">Đơn #{order.orderCode}</h1>
           <p className="text-gray-400 text-sm mt-0.5">{formatDateTime(order.createdAt)}</p>
         </div>
-        <span className={`text-sm px-3 py-1 rounded-full font-semibold ${ORDER_STATUS_COLOR[order.status]}`}>
-          {ORDER_STATUS_LABEL[order.status]}
+        <span className={`text-sm px-3 py-1 rounded-full font-semibold shrink-0 ${ORDER_STATUS_COLOR[order.status]}`}>
+          {ORDER_STATUS_LABEL[order.status] || order.status}
         </span>
       </div>
 
@@ -77,24 +81,24 @@ export default function OrderDetail() {
           <div className="text-4xl mb-2">💳</div>
           <h3 className="font-bold text-orange-700 text-lg mb-1">Chờ thanh toán</h3>
           <p className="text-orange-600 text-sm mb-4">Vui lòng hoàn thành thanh toán để chúng tôi xử lý đơn hàng của bạn</p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col xs:flex-row gap-3 justify-center">
             <button onClick={handlePay} disabled={paying}
-              className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition disabled:opacity-60">
+              className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-60">
               {paying ? 'Đang xử lý...' : `Thanh toán ${formatCurrency(order.total)}`}
             </button>
             <button onClick={handleCancel} disabled={cancelling}
-              className="border border-gray-300 text-gray-600 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 transition text-sm disabled:opacity-60">
+              className="border border-gray-300 text-gray-600 px-5 py-3 rounded-xl font-medium hover:bg-gray-50 active:scale-95 transition-all text-sm disabled:opacity-60">
               Hủy đơn
             </button>
           </div>
         </div>
       )}
 
-      {/* Progress tracker — Shopee style */}
+      {/* Progress tracker */}
       {!isCancelled && !isPendingPayment && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5 overflow-x-auto">
           <h3 className="font-semibold text-gray-700 mb-4 text-sm">Tiến trình đơn hàng</h3>
-          <div className="flex items-start">
+          <div className="flex items-start min-w-[380px] sm:min-w-0">
             {ORDER_STEPS.map((step, i) => (
               <div key={step.key} className="flex items-center flex-1 min-w-0">
                 <div className="flex flex-col items-center shrink-0">
@@ -181,7 +185,7 @@ export default function OrderDetail() {
           <p className="text-gray-500 text-sm mt-1">{order.shippingAddress}</p>
           {order.shippingMethod && (
             <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
-              <FiTruck size={11} /> {SHIPPING_METHOD_LABEL[order.shippingMethod]}
+              <FiTruck size={11} /> {SHIPPING_METHOD_LABEL[order.shippingMethod] || order.shippingMethod}
             </div>
           )}
           {order.Shipment?.trackingCode && (
@@ -227,7 +231,7 @@ export default function OrderDetail() {
         </div>
       </div>
 
-      {/* Cancel for non-cancellable statuses only */}
+      {/* Cancel button for certain statuses */}
       {!isCancelled && !isPendingPayment && ['paid', 'confirmed'].includes(order.status) && (
         <button onClick={handleCancel} disabled={cancelling}
           className="w-full border border-red-200 text-red-500 py-3 rounded-xl font-medium hover:bg-red-50 transition text-sm disabled:opacity-60">

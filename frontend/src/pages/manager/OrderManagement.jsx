@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import Pagination from '../../components/common/Pagination';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, ORDER_STATUS_LABEL, CUSTOM_STATUS_LABEL } from '../../utils/formatters';
+
+const PAYMENT_STATUS_LABEL = {
+  paid: 'Đã thanh toán',
+  unpaid: 'Chưa thanh toán',
+  refunded: 'Đã hoàn tiền',
+  failed: 'Thất bại',
+  cancelled: 'Đã hủy',
+};
+
+const SHIP_LABEL = { standard: 'Tiêu chuẩn', express: 'Hỏa tốc', economy: 'Tiết kiệm' };
 
 const REG_COLOR = {
   pending_payment: 'bg-orange-100 text-orange-700',
@@ -11,10 +21,6 @@ const REG_COLOR = {
   shipping: 'bg-cyan-100 text-cyan-700',
   delivered: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700',
-};
-const REG_LABEL = {
-  pending_payment: 'Chờ thanh toán', paid: 'Đã thanh toán', confirmed: 'Đã xác nhận',
-  preparing: 'Đang chuẩn bị', shipping: 'Đang giao', delivered: 'Đã giao', cancelled: 'Đã hủy',
 };
 const CUS_COLOR = {
   submitted: 'bg-gray-100 text-gray-600',
@@ -27,20 +33,14 @@ const CUS_COLOR = {
   remaining_paid: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700',
 };
-const CUS_LABEL = {
-  submitted: 'Mới gửi', reviewing: 'Đang xét', quoted: 'Chờ thanh toán',
-  deposit_paid: 'Đã đặt cọc', in_production: 'Đang làm', completed: 'Hoàn thành',
-  delivered: 'Đã giao', remaining_paid: 'Thanh toán xong', cancelled: 'Đã hủy',
-};
-const SHIP_LABEL = { standard: 'Tiêu chuẩn', express: 'Hỏa tốc', economy: 'Tiết kiệm' };
 
 const DateFilter = ({ from, to, onFrom, onTo, onClear }) => (
   <div className="flex items-center gap-1.5">
     <input type="date" value={from} onChange={e => onFrom(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
     <span className="text-gray-300 text-xs">—</span>
     <input type="date" value={to} onChange={e => onTo(e.target.value)}
-      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
+      className="border border-gray-200 rounded-lg px-2 py-1.5 text-base text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-300" />
     {(from || to) && (
       <button onClick={onClear} className="text-gray-400 hover:text-rose-500 text-xs transition">✕</button>
     )}
@@ -126,24 +126,26 @@ export default function OrderMonitor() {
       {tab === 'regular' && (
         <>
           {/* Status pills */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <button onClick={() => { setRegStatus(''); setRegPage(1); }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${regStatus === '' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              Tất cả ({regTotal})
-            </button>
-            {REG_STATUS_PILLS.map(s => (
-              <button key={s} onClick={() => { setRegStatus(s); setRegPage(1); }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${regStatus === s ? 'bg-gray-800 text-white' : `${REG_COLOR[s]} hover:opacity-80`}`}>
-                {REG_LABEL[s]}
+          <div className="overflow-x-auto pb-1">
+            <div className="flex gap-2 items-center min-w-max">
+              <button onClick={() => { setRegStatus(''); setRegPage(1); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${regStatus === '' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {`Tất cả (${regTotal})`}
               </button>
-            ))}
+              {REG_STATUS_PILLS.map(s => (
+                <button key={s} onClick={() => { setRegStatus(s); setRegPage(1); }}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${regStatus === s ? 'bg-gray-800 text-white' : `${REG_COLOR[s]} hover:opacity-80`}`}>
+                  {ORDER_STATUS_LABEL[s] || s}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Search + date */}
           <div className="bg-white rounded-xl shadow p-4 flex flex-wrap gap-3 items-center">
             <input placeholder="Tìm mã đơn, tên khách, SĐT..."
               value={regSearch} onChange={e => { setRegSearch(e.target.value); setRegPage(1); }}
-              className="flex-1 min-w-[200px] border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200" />
+              className="flex-1 min-w-[200px] border rounded-lg px-3 py-1.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-200" />
             <DateFilter from={regFrom} to={regTo}
               onFrom={v => { setRegFrom(v); setRegPage(1); }}
               onTo={v => { setRegTo(v); setRegPage(1); }}
@@ -158,8 +160,12 @@ export default function OrderMonitor() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã ĐH', 'Khách hàng', 'SĐT', 'Vận chuyển', 'Tổng tiền', 'Thanh toán', 'Trạng thái', ''].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã ĐH', ''], ['Khách hàng', ''], ['SĐT', 'hidden md:table-cell'],
+                      ['Vận chuyển', 'hidden md:table-cell'], ['Tổng tiền', ''],
+                      ['Thanh toán', 'hidden md:table-cell'], ['Trạng thái', ''], ['', '']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -172,17 +178,17 @@ export default function OrderMonitor() {
                         <tr key={o.id} className="border-t hover:bg-gray-50">
                           <td className="px-4 py-3"><code className="text-xs font-mono text-rose-600">{o.orderCode}</code></td>
                           <td className="px-4 py-3 font-medium text-gray-800 max-w-[140px] truncate">{o.shippingName || o.User?.fullName}</td>
-                          <td className="px-4 py-3 text-gray-500">{o.shippingPhone}</td>
-                          <td className="px-4 py-3 text-xs text-gray-500">{SHIP_LABEL[o.shippingMethod]}</td>
+                          <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{o.shippingPhone}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{SHIP_LABEL[o.shippingMethod] || o.shippingMethod}</td>
                           <td className="px-4 py-3 font-semibold">{formatCurrency(o.total)}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 hidden md:table-cell">
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${o.Payment?.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                               {o.Payment?.status === 'paid' ? 'Đã TT' : 'Chưa TT'}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${REG_COLOR[o.status] || 'bg-gray-100 text-gray-600'}`}>
-                              {REG_LABEL[o.status] || o.status}
+                              {ORDER_STATUS_LABEL[o.status] || o.status}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -205,17 +211,19 @@ export default function OrderMonitor() {
       {tab === 'custom' && (
         <>
           {/* Status pills */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <button onClick={() => { setCusStatus(''); setCusPage(1); }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${cusStatus === '' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              Tất cả ({cusTotal})
-            </button>
-            {CUS_STATUS_PILLS.map(s => (
-              <button key={s} onClick={() => { setCusStatus(s); setCusPage(1); }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${cusStatus === s ? 'bg-gray-800 text-white' : `${CUS_COLOR[s]} hover:opacity-80`}`}>
-                {CUS_LABEL[s]}
+          <div className="overflow-x-auto pb-1">
+            <div className="flex gap-2 items-center min-w-max">
+              <button onClick={() => { setCusStatus(''); setCusPage(1); }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${cusStatus === '' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {`Tất cả (${cusTotal})`}
               </button>
-            ))}
+              {CUS_STATUS_PILLS.map(s => (
+                <button key={s} onClick={() => { setCusStatus(s); setCusPage(1); }}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${cusStatus === s ? 'bg-gray-800 text-white' : `${CUS_COLOR[s]} hover:opacity-80`}`}>
+                  {CUSTOM_STATUS_LABEL[s] || s}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Date filter */}
@@ -235,8 +243,11 @@ export default function OrderMonitor() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Mã đơn', 'Khách hàng', 'Mô tả', 'Báo giá', 'Trạng thái', 'Ngày gửi', ''].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
+                    {[
+                      ['Mã đơn', ''], ['Khách hàng', ''], ['Mô tả', 'hidden md:table-cell'],
+                      ['Báo giá', ''], ['Trạng thái', ''], ['Ngày gửi', 'hidden sm:table-cell'], ['', '']
+                    ].map(([h, cls]) => (
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap ${cls}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -252,7 +263,7 @@ export default function OrderMonitor() {
                             <p className="font-medium text-gray-800">{o.User?.fullName}</p>
                             <p className="text-xs text-gray-400">{o.User?.phone}</p>
                           </td>
-                          <td className="px-4 py-3 max-w-[200px]">
+                          <td className="px-4 py-3 max-w-[200px] hidden md:table-cell">
                             <p className="text-xs text-gray-600 line-clamp-2">{o.description}</p>
                           </td>
                           <td className="px-4 py-3 font-semibold">
@@ -260,10 +271,10 @@ export default function OrderMonitor() {
                           </td>
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CUS_COLOR[o.status] || 'bg-gray-100 text-gray-600'}`}>
-                              {CUS_LABEL[o.status] || o.status}
+                              {CUSTOM_STATUS_LABEL[o.status] || o.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDate(o.createdAt)}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap hidden sm:table-cell">{formatDate(o.createdAt)}</td>
                           <td className="px-4 py-3">
                             <button onClick={() => setCusSelected(o)} className="text-xs text-blue-600 hover:underline">Xem</button>
                           </td>
@@ -295,13 +306,13 @@ export default function OrderMonitor() {
               <div>
                 <p className="text-xs text-gray-400">Trạng thái</p>
                 <span className={`inline-block mt-0.5 text-xs px-2 py-0.5 rounded-full font-medium ${REG_COLOR[selected.status] || ''}`}>
-                  {REG_LABEL[selected.status] || selected.status}
+                  {ORDER_STATUS_LABEL[selected.status] || selected.status}
                 </span>
               </div>
               <div>
                 <p className="text-xs text-gray-400">Thanh toán</p>
                 <span className={`inline-block mt-0.5 text-xs px-2 py-0.5 rounded-full font-medium ${selected.Payment?.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                  {selected.Payment?.status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                  {PAYMENT_STATUS_LABEL[selected.Payment?.status || 'unpaid']}
                 </span>
               </div>
               <div><p className="text-xs text-gray-400">Phí ship</p><p className="font-medium">{formatCurrency(selected.shippingFee || 0)}</p></div>
@@ -333,13 +344,13 @@ export default function OrderMonitor() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 mb-10">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-gray-800">Đơn tùy chỉnh <code className="text-violet-600">{cusSelected.code}</code></h2>
+                <h2 className="text-lg font-bold text-gray-800">✂️ Đơn tùy chỉnh <code className="text-violet-600">{cusSelected.code}</code></h2>
                 <p className="text-sm text-gray-400 mt-0.5">{cusSelected.User?.fullName} · {cusSelected.User?.phone}</p>
               </div>
               <button onClick={() => setCusSelected(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-2 mb-4">
-              <p className="font-semibold text-gray-700">Yêu cầu</p>
+              <p className="font-semibold text-gray-700">Mô tả</p>
               <p className="text-gray-600 leading-relaxed">{cusSelected.description}</p>
               <div className="flex flex-wrap gap-3 text-xs text-gray-500 pt-1">
                 {cusSelected.yarnColor && <span>🎨 {cusSelected.yarnColor}</span>}
@@ -358,15 +369,15 @@ export default function OrderMonitor() {
                 <p className="font-semibold text-purple-700">Báo giá</p>
                 <div className="flex justify-between"><span className="text-gray-600">Giá:</span><span className="font-bold text-purple-700">{formatCurrency(cusSelected.quotedPrice)}</span></div>
                 {cusSelected.depositAmount && <div className="flex justify-between"><span className="text-gray-600">Đặt cọc:</span><span>{formatCurrency(cusSelected.depositAmount)}</span></div>}
-                {cusSelected.estimatedDays && <div className="flex justify-between"><span className="text-gray-600">Dự kiến:</span><span>{cusSelected.estimatedDays} ngày</span></div>}
+                {cusSelected.estimatedDays && <div className="flex justify-between"><span className="text-gray-600">Dự kiến:</span><span>{cusSelected.estimatedDays}</span></div>}
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${CUS_COLOR[cusSelected.status]}`}>{CUS_LABEL[cusSelected.status]}</span>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${CUS_COLOR[cusSelected.status]}`}>{CUSTOM_STATUS_LABEL[cusSelected.status] || cusSelected.status}</span>
               <span className="text-xs text-gray-400">{formatDate(cusSelected.createdAt)}</span>
             </div>
             <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
-              ℹ️ Chỉ nhân viên mới có thể xử lý đơn tùy chỉnh này.
+              ℹ️ Chỉ nhân viên mới có thể xử lý đơn hàng này.
             </div>
           </div>
         </div>

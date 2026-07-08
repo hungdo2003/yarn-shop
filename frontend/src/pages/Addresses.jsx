@@ -64,7 +64,7 @@ export default function Addresses() {
                   <p className="text-sm text-gray-500">{a.phone}</p>
                   <p className="text-sm text-gray-600 mt-1">{[a.address, a.ward, a.district, a.province].filter(Boolean).join(', ')}</p>
                 </div>
-                <div className="flex gap-2 shrink-0 ml-4">
+                <div className="flex flex-wrap gap-2 shrink-0 ml-4">
                   {!a.isDefault && <button onClick={() => setDefault(a.id)} className="text-xs text-gray-500 border rounded px-2 py-1 hover:bg-gray-50">Đặt mặc định</button>}
                   <button onClick={() => openEdit(a)} className="text-xs text-blue-600 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50">Sửa</button>
                   <button onClick={() => del(a.id)} className="text-xs text-red-500 border border-red-200 rounded px-2 py-1 hover:bg-red-50">Xóa</button>
@@ -77,35 +77,35 @@ export default function Addresses() {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-5">{editing ? 'Sửa địa chỉ' : 'Thêm địa chỉ mới'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Họ tên *</label>
-                  <input required value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input required value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Điện thoại *</label>
-                  <input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input required value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
               </div>
               <div>
                 <label className="text-sm text-gray-600 block mb-1">Địa chỉ *</label>
-                <input required value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Số nhà, tên đường..." className="w-full border rounded-lg px-3 py-2 text-sm" />
+                <input required value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Số nhà, tên đường..." className="w-full border rounded-lg px-3 py-2 text-base" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-3 gap-3">
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Tỉnh/TP</label>
-                  <input value={form.province} onChange={e => setForm({ ...form, province: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input value={form.province} onChange={e => setForm({ ...form, province: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Quận/Huyện</label>
-                  <input value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">Phường/Xã</label>
-                  <input value={form.ward} onChange={e => setForm({ ...form, ward: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  <input value={form.ward} onChange={e => setForm({ ...form, ward: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-base" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">

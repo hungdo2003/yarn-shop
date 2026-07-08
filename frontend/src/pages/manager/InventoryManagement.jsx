@@ -6,15 +6,16 @@ import Pagination from '../../components/common/Pagination';
 import toast from 'react-hot-toast';
 import { FiArrowUp, FiSettings, FiAlertTriangle, FiSearch } from 'react-icons/fi';
 
-const TX_TYPE = {
-  import:     { label: 'Nhập hàng',    color: 'bg-green-100 text-green-700',  icon: '📦' },
-  adjustment: { label: 'Điều chỉnh',   color: 'bg-blue-100 text-blue-700',    icon: '⚙️' },
-  sale:       { label: 'Bán hàng',     color: 'bg-rose-100 text-rose-700',    icon: '🛒' },
+const TX_COLOR = {
+  import:     'bg-green-100 text-green-700',
+  adjustment: 'bg-blue-100 text-blue-700',
+  sale:       'bg-rose-100 text-rose-700',
 };
 
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const InventoryManagement = () => {
+  const TX_ICON = { import: '📦', adjustment: '⚙️', sale: '🛒' };
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState('products');
   const [importModal, setImportModal] = useState(null);
@@ -55,22 +56,22 @@ const InventoryManagement = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h1>Quản lý Kho hàng</h1>
         {lowCount > 0 && (
           <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-2 rounded-xl text-sm font-semibold">
             <FiAlertTriangle size={15} />
-            {lowCount} sản phẩm sắp hết hàng
+            {`${lowCount} sản phẩm sắp hết hàng`}
             <button onClick={() => { setFilterLow(true); setTab('products'); }}
               className="ml-1 text-orange-800 underline text-xs">Xem ngay</button>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
-        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô'], ['history', 'Lịch sử']].map(([t, l]) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        {[['products', 'Tồn kho sản phẩm'], ['materials', 'Nguyên liệu thô'], ['history', 'Lịch sử']].map(([tabId, l]) => (
+          <button key={tabId} onClick={() => setTab(tabId)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${tab === tabId ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
             {l}
           </button>
         ))}
@@ -80,10 +81,10 @@ const InventoryManagement = () => {
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium ${filterLow ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
               <FiAlertTriangle size={14} /> Sắp hết hàng {lowCount > 0 && `(${lowCount})`}
             </button>
-            <div className="relative ml-auto">
+            <div className="relative sm:ml-auto w-full sm:w-auto">
               <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-base w-full sm:w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
             </div>
           </>
         )}
@@ -92,10 +93,11 @@ const InventoryManagement = () => {
       {tab === 'products' && (
         loading ? <Spinner /> : (
           <div className="card overflow-hidden p-0">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
-                <tr>{['Product', 'Code', 'In Stock', 'Min Level', 'Last Restock', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
+                <tr>{[['Product', ''], ['Code', 'hidden md:table-cell'], ['In Stock', ''], ['Min Level', 'hidden md:table-cell'], ['Last Restock', 'hidden md:table-cell'], ['Actions', '']].map(([h, cls]) => (
+                  <th key={h} className={`text-left px-4 py-3 font-semibold text-gray-600 ${cls}`}>{h}</th>
                 ))}</tr>
               </thead>
               <tbody className="divide-y">
@@ -104,25 +106,26 @@ const InventoryManagement = () => {
                   : data.items.map(p => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium">{p.name}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{p.code}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{p.code}</td>
                     <td className="px-4 py-3">
                       <span className={`font-bold ${p.Inventory?.quantity <= p.Inventory?.minStockLevel ? 'text-red-600' : 'text-gray-900'}`}>
                         {p.Inventory?.quantity || 0}
                       </span>
                       {p.Inventory?.quantity <= p.Inventory?.minStockLevel && <span className="badge bg-red-100 text-red-600 ml-2 text-xs">Low</span>}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{p.Inventory?.minStockLevel}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{p.Inventory?.lastRestockedAt ? new Date(p.Inventory.lastRestockedAt).toLocaleDateString() : '-'}</td>
+                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{p.Inventory?.minStockLevel}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{p.Inventory?.lastRestockedAt ? new Date(p.Inventory.lastRestockedAt).toLocaleDateString() : '-'}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button onClick={() => setImportModal(p)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Import Stock"><FiArrowUp size={15} /></button>
-                        <button onClick={() => setAdjustModal(p)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Adjust"><FiSettings size={15} /></button>
+                      <div className="flex gap-1">
+                        <button onClick={() => setImportModal(p)} className="w-11 h-11 flex items-center justify-center text-green-600 hover:bg-green-50 rounded-lg" title="Import Stock"><FiArrowUp size={15} /></button>
+                        <button onClick={() => setAdjustModal(p)} className="w-11 h-11 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg" title="Adjust"><FiSettings size={15} /></button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
             <Pagination pagination={data?.pagination} onPageChange={setPage} />
           </div>
         )
@@ -167,23 +170,25 @@ const InventoryManagement = () => {
             <div className="relative ml-auto">
               <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input value={histSearch} onChange={e => { setHistSearch(e.target.value); setHistPage(1); }}
-                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+                placeholder="Tìm sản phẩm..." className="pl-8 pr-3 py-2 border border-gray-200 rounded-lg text-base w-52 focus:outline-none focus:ring-2 focus:ring-rose-300" />
             </div>
           </div>
 
           {histLoading ? <Spinner /> : (
             <div className="card overflow-hidden p-0">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
-                  <tr>{['Thời gian', 'Loại', 'Sản phẩm', 'Trước', 'Thay đổi', 'Sau', 'Ghi chú', 'Người thực hiện'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">{h}</th>
+                  <tr>{[['Thời gian', ''], ['Loại', ''], ['Sản phẩm', ''], ['Trước', 'hidden md:table-cell'], ['Thay đổi', ''], ['Sau', 'hidden md:table-cell'], ['Ghi chú', 'hidden md:table-cell'], ['Người thực hiện', 'hidden md:table-cell']].map(([h, cls]) => (
+                    <th key={h} className={`text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap ${cls}`}>{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y">
                   {!histData?.items?.length
                     ? <tr><td colSpan={8} className="text-center py-12 text-gray-400">Chưa có lịch sử</td></tr>
                     : histData.items.map(tx => {
-                      const cfg = TX_TYPE[tx.type] || { label: tx.type, color: 'bg-gray-100 text-gray-600', icon: '•' };
+                      const txLabelMap = { import: 'Nhập hàng', adjustment: 'Điều chỉnh', sale: 'Bán hàng' };
+                      const cfg = { label: txLabelMap[tx.type] || tx.type, color: TX_COLOR[tx.type] || 'bg-gray-100 text-gray-600', icon: TX_ICON[tx.type] || '•' };
                       const isPos = tx.quantity > 0;
                       return (
                         <tr key={tx.id} className="hover:bg-gray-50">
@@ -197,21 +202,22 @@ const InventoryManagement = () => {
                             <p className="font-medium text-gray-800 max-w-[160px] truncate">{tx.Product?.name}</p>
                             <p className="text-xs text-gray-400">{tx.Product?.code}</p>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 text-center">{tx.quantityBefore ?? '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-center hidden md:table-cell">{tx.quantityBefore ?? '—'}</td>
                           <td className="px-4 py-3 text-center">
                             <span className={`font-bold ${isPos ? 'text-green-600' : 'text-red-500'}`}>
                               {isPos ? '+' : ''}{tx.quantity}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-800 font-medium text-center">{tx.quantityAfter ?? '—'}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs max-w-[140px] truncate">{tx.note || '—'}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{tx.performer?.fullName || '—'}</td>
+                          <td className="px-4 py-3 text-gray-800 font-medium text-center hidden md:table-cell">{tx.quantityAfter ?? '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs max-w-[140px] truncate hidden md:table-cell">{tx.note || '—'}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{tx.performer?.fullName || '—'}</td>
                         </tr>
                       );
                     })
                   }
                 </tbody>
               </table>
+              </div>
               <div className="px-4 pb-2">
                 <Pagination pagination={histData?.pagination} onPageChange={setHistPage} />
               </div>
@@ -223,12 +229,12 @@ const InventoryManagement = () => {
       {importModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <form onSubmit={handleImport} className="bg-white rounded-2xl w-80 p-6 space-y-4">
-            <h3 className="font-bold">Import Stock: {importModal.name}</h3>
-            <div><label className="text-sm font-medium">Quantity *</label><input name="quantity" type="number" min="1" required className="input mt-1" /></div>
-            <div><label className="text-sm font-medium">Note</label><input name="note" className="input mt-1" /></div>
+            <h3 className="font-bold">{`Import Stock: ${importModal.name}`}</h3>
+            <div><label className="text-sm font-medium">Số lượng *</label><input name="quantity" type="number" min="1" required className="input mt-1 text-base" /></div>
+            <div><label className="text-sm font-medium">Ghi chú</label><input name="note" className="input mt-1 text-base" /></div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setImportModal(null)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" className="btn-primary flex-1">Import</button>
+              <button type="button" onClick={() => setImportModal(null)} className="btn-secondary flex-1">Hủy</button>
+              <button type="submit" className="btn-primary flex-1">Nhập hàng</button>
             </div>
           </form>
         </div>
@@ -237,13 +243,13 @@ const InventoryManagement = () => {
       {adjustModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <form onSubmit={handleAdjust} className="bg-white rounded-2xl w-80 p-6 space-y-4">
-            <h3 className="font-bold">Adjust Stock: {adjustModal.name}</h3>
-            <p className="text-sm text-gray-500">Current: {adjustModal.Inventory?.quantity}</p>
-            <div><label className="text-sm font-medium">New Quantity *</label><input name="quantity" type="number" min="0" required defaultValue={adjustModal.Inventory?.quantity} className="input mt-1" /></div>
-            <div><label className="text-sm font-medium">Reason</label><input name="note" required className="input mt-1" /></div>
+            <h3 className="font-bold">{`Adjust Stock: ${adjustModal.name}`}</h3>
+            <p className="text-sm text-gray-500">{`Hiện tại: ${adjustModal.Inventory?.quantity}`}</p>
+            <div><label className="text-sm font-medium">Số lượng mới *</label><input name="quantity" type="number" min="0" required defaultValue={adjustModal.Inventory?.quantity} className="input mt-1 text-base" /></div>
+            <div><label className="text-sm font-medium">Lý do</label><input name="note" required className="input mt-1 text-base" /></div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setAdjustModal(null)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" className="btn-primary flex-1">Adjust</button>
+              <button type="button" onClick={() => setAdjustModal(null)} className="btn-secondary flex-1">Hủy</button>
+              <button type="submit" className="btn-primary flex-1">Điều chỉnh</button>
             </div>
           </form>
         </div>

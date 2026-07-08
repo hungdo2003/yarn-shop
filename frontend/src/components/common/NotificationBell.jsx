@@ -6,6 +6,7 @@ import { useNotifications } from '../../context/NotificationContext';
 const TYPE_ICON = {
   order_paid: '💳', order_status: '📦', order_cancelled: '❌',
   wallet_topup: '⬆️', wallet_payment: '💰', wallet_refund: '↩️', system: '🔔',
+  tier_upgrade: '🏆',
 };
 
 const TYPE_LINK = {
@@ -16,19 +17,12 @@ const TYPE_LINK = {
   wallet_payment: (data) => `/orders/${data?.orderId}`,
   wallet_refund: () => '/wallet',
   system: () => null,
+  tier_upgrade: () => '/profile',
 };
 
 // Staff version: always navigate to staff orders
 const STAFF_TYPE_LINK = {
-  order_paid: (data) => `/staff/orders`,
-};
-
-const fmtTime = (d) => {
-  const diff = (Date.now() - new Date(d)) / 1000;
-  if (diff < 60) return 'Vừa xong';
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  return new Date(d).toLocaleDateString('vi-VN');
+  order_paid: () => `/staff/orders`,
 };
 
 export default function NotificationBell({ isStaff = false, light = false, openRight = false }) {
@@ -36,6 +30,14 @@ export default function NotificationBell({ isStaff = false, light = false, openR
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+
+  const fmtTime = (d) => {
+    const diff = (Date.now() - new Date(d)) / 1000;
+    if (diff < 60) return 'Vừa xong';
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    return new Date(d).toLocaleDateString('vi-VN');
+  };
 
   // Close on outside click
   useEffect(() => {

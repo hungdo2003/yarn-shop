@@ -6,8 +6,21 @@ import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiMapPin, FiStar, FiRefreshCw, FiGift, FiTrendingUp } from 'react-icons/fi';
 import TierBadge from '../components/common/TierBadge';
 
-const roleLabel = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' };
 const roleBg = { admin: 'bg-red-100 text-red-700', staff: 'bg-blue-100 text-blue-700', customer: 'bg-rose-100 text-rose-700' };
+
+const roleLabel = { admin: 'Quản trị viên', staff: 'Nhân viên', customer: 'Khách hàng' };
+
+const TABS = [
+  { id: 'profile',  icon: FiUser, label: 'Thông tin' },
+  { id: 'password', icon: FiLock, label: 'Mật khẩu' },
+];
+
+const TIER_LIST = [
+  { name: 'bronze', emoji: '🥉', label: 'Đồng',  min: '0đ' },
+  { name: 'silver', emoji: '🥈', label: 'Bạc',   min: '1M' },
+  { name: 'gold',   emoji: '🥇', label: 'Vàng',  min: '5M' },
+  { name: 'VIP',    emoji: '💎', label: 'VIP',   min: '20M' },
+];
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -44,9 +57,9 @@ const Profile = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword.length < 6) return toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) return toast.error('Mật khẩu xác nhận không khớp');
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) return toast.error('Mật khẩu không khớp');
     setLoading(true);
-    const tid = toast.loading('Đang đổi mật khẩu...');
+    const tid = toast.loading('Đang đổi...');
     try {
       await api.put('/auth/change-password', { currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
       toast.dismiss(tid);
@@ -63,11 +76,6 @@ const Profile = () => {
     } finally { setLoading(false); }
   };
 
-  const TABS = [
-    { id: 'profile', icon: FiUser, label: 'Thông tin' },
-    { id: 'password', icon: FiLock, label: 'Mật khẩu' },
-  ];
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Tài Khoản Của Tôi</h1>
@@ -81,7 +89,7 @@ const Profile = () => {
           <p className="text-xl font-bold truncate">{user?.fullName}</p>
           <p className="text-rose-100 text-sm">{user?.email}</p>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white`}>{roleLabel[role] || role}</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white">{roleLabel[role] || role}</span>
             {role === 'customer' && membership?.tier && (
               <TierBadge tier={membership.tier} size="sm" />
             )}
@@ -98,19 +106,19 @@ const Profile = () => {
       {role === 'customer' && (
         <>
           <div className="grid grid-cols-4 gap-3 mb-6">
-            <Link to="/orders" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+            <Link to="/orders" className="bg-white rounded-xl shadow-sm p-3 xs:p-4 text-center hover:shadow-md active:scale-95 transition-all group">
               <div className="text-2xl mb-1">📦</div>
               <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đơn hàng</p>
             </Link>
-            <Link to="/wishlist" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+            <Link to="/wishlist" className="bg-white rounded-xl shadow-sm p-3 xs:p-4 text-center hover:shadow-md active:scale-95 transition-all group">
               <div className="text-2xl mb-1">❤️</div>
               <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Yêu thích</p>
             </Link>
-            <Link to="/addresses" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+            <Link to="/addresses" className="bg-white rounded-xl shadow-sm p-3 xs:p-4 text-center hover:shadow-md active:scale-95 transition-all group">
               <FiMapPin className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
               <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Địa chỉ</p>
             </Link>
-            <Link to="/returns" className="bg-white rounded-xl shadow-sm p-4 text-center hover:shadow-md transition group">
+            <Link to="/returns" className="bg-white rounded-xl shadow-sm p-3 xs:p-4 text-center hover:shadow-md active:scale-95 transition-all group">
               <FiRefreshCw className="mx-auto mb-1 text-gray-400 group-hover:text-rose-500" size={22} />
               <p className="text-xs font-medium text-gray-700 group-hover:text-rose-600">Đổi trả</p>
             </Link>
@@ -139,9 +147,7 @@ const Profile = () => {
                 <p className="text-xs text-amber-100">Giá trị quy đổi</p>
               </div>
             </div>
-            <p className="text-xs text-amber-100 mt-3 text-center">
-              Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng
-            </p>
+            <p className="text-xs text-amber-100 mt-3 text-center">Sử dụng điểm khi thanh toán — tối đa 20% giá trị đơn hàng</p>
           </div>
 
           {/* Membership Tier Card */}
@@ -156,9 +162,9 @@ const Profile = () => {
               </div>
               <div className="mb-3">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Tổng chi tiêu: <b>{membership.totalSpent.toLocaleString('vi-VN')}đ</b></span>
+                  <span>Tổng chi tiêu: <b>{membership.totalSpent.toLocaleString('vi-VN')}</b></span>
                   {membership.nextTier && (
-                    <span>Còn <b>{membership.remaining.toLocaleString('vi-VN')}đ</b> lên hạng {membership.nextTier.emoji || ''} {membership.nextTier.label}</span>
+                    <span>Còn <b>{membership.remaining.toLocaleString('vi-VN')}</b> lên hạng {membership.nextTier.emoji || ''} {membership.nextTier.label}</span>
                   )}
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
@@ -166,17 +172,12 @@ const Profile = () => {
                     style={{ width: `${membership.progress}%`, backgroundColor: membership.tier.color }} />
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                {[
-                  { name: 'bronze', emoji: '🥉', label: 'Đồng', min: '0đ' },
-                  { name: 'silver', emoji: '🥈', label: 'Bạc',  min: '1M' },
-                  { name: 'gold',   emoji: '🥇', label: 'Vàng', min: '5M' },
-                  { name: 'VIP',    emoji: '💎', label: 'VIP',  min: '20M' },
-                ].map(t => (
-                  <div key={t.name} className={`rounded-xl py-2 ${membership.tier.name === t.name ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
-                    <p className="text-base">{t.emoji}</p>
-                    <p className={`font-semibold ${membership.tier.name === t.name ? 'text-purple-700' : 'text-gray-500'}`}>{t.label}</p>
-                    <p className="text-gray-400">{t.min}</p>
+              <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 text-center text-xs">
+                {TIER_LIST.map(tier => (
+                  <div key={tier.name} className={`rounded-xl py-2 ${membership.tier.name === tier.name ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
+                    <p className="text-base">{tier.emoji}</p>
+                    <p className={`font-semibold ${membership.tier.name === tier.name ? 'text-purple-700' : 'text-gray-500'}`}>{tier.label}</p>
+                    <p className="text-gray-400">{tier.min}</p>
                   </div>
                 ))}
               </div>
@@ -189,10 +190,10 @@ const Profile = () => {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-2">
         {TABS.map(({ id, icon: Icon, label }) => (
           <button key={id} onClick={() => setTab(id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === id ? 'bg-rose-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap active:scale-95 transition-all shrink-0 ${tab === id ? 'bg-rose-500 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}>
             <Icon size={15} /> {label}
           </button>
         ))}
@@ -202,22 +203,22 @@ const Profile = () => {
         <form onSubmit={handleProfileSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Họ và tên</label>
-            <input value={profileForm.fullName} onChange={e => setProfileForm(f => ({ ...f, fullName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none" />
+            <input value={profileForm.fullName} onChange={e => setProfileForm(f => ({ ...f, fullName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-            <input value={user?.email} disabled className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm bg-gray-50 text-gray-400 cursor-not-allowed" />
+            <input value={user?.email} disabled className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-base bg-gray-50 text-gray-400 cursor-not-allowed" />
             <p className="text-xs text-gray-400 mt-1">Email không thể thay đổi</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
-            <input value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="0901 234 567" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none" />
+            <input value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="0901 234 567" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Địa chỉ mặc định</label>
-            <textarea value={profileForm.address} onChange={e => setProfileForm(f => ({ ...f, address: e.target.value }))} rows={2} placeholder="Địa chỉ của bạn..." className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none resize-none" />
+            <textarea value={profileForm.address} onChange={e => setProfileForm(f => ({ ...f, address: e.target.value }))} rows={2} placeholder="Địa chỉ của bạn..." className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none resize-none" />
           </div>
-          <button type="submit" disabled={loading} className="bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 transition disabled:opacity-60">
+          <button type="submit" disabled={loading} className="bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto">
             {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </form>
@@ -227,18 +228,18 @@ const Profile = () => {
         <form onSubmit={handlePasswordSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu hiện tại</label>
-            <input type="password" value={passwordForm.currentPassword} onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))} required className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none" />
+            <input type="password" value={passwordForm.currentPassword} onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))} required className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu mới</label>
-            <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))} required placeholder="Tối thiểu 6 ký tự" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none" />
+            <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))} required placeholder="Tối thiểu 6 ký tự" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Xác nhận mật khẩu mới</label>
-            <input type="password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))} required className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none ${passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword ? 'border-red-300' : 'border-gray-200'}`} />
+            <input type="password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))} required className={`w-full border rounded-xl px-4 py-2.5 text-base focus:ring-2 focus:ring-rose-300 focus:outline-none ${passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword ? 'border-red-300' : 'border-gray-200'}`} />
             {passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword && <p className="text-red-500 text-xs mt-1">Mật khẩu không khớp</p>}
           </div>
-          <button type="submit" disabled={loading} className="bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 transition disabled:opacity-60">
+          <button type="submit" disabled={loading} className="bg-rose-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto">
             {loading ? 'Đang đổi...' : 'Đổi mật khẩu'}
           </button>
         </form>

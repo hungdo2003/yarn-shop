@@ -12,19 +12,46 @@ const GEMINI_TOOLS = [{
   functionDeclarations: [
     {
       name: 'search_products',
-      description: 'Tìm kiếm sản phẩm len/sợi/phụ kiện theo tên, màu sắc, hoặc từ khóa. Trả về danh sách sản phẩm phù hợp kèm giá và tồn kho.',
+      description: 'Tìm kiếm sản phẩm len/sợi/phụ kiện theo tên, màu sắc, chất liệu hoặc từ khóa bất kỳ. Dùng khi khách hỏi về sản phẩm cụ thể.',
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Từ khóa tìm kiếm (tên sản phẩm, màu sắc, chất liệu...)' },
-          limit: { type: 'number', description: 'Số lượng kết quả tối đa (mặc định 5)' },
+          query: { type: 'string', description: 'Từ khóa tìm kiếm (tên, màu, chất liệu, kích thước...)' },
+          limit: { type: 'number', description: 'Số kết quả tối đa (mặc định 5, tối đa 10)' },
         },
         required: ['query'],
       },
     },
     {
+      name: 'filter_products',
+      description: 'Lọc sản phẩm theo nhiều tiêu chí: giá, tồn kho, đang sale, đánh giá, bán chạy. Dùng khi khách hỏi "len rẻ nhất", "dưới 50k", "còn hàng", "đang giảm giá", "đánh giá cao", "bán chạy nhất".',
+      parameters: {
+        type: 'object',
+        properties: {
+          maxPrice:     { type: 'number', description: 'Giá tối đa (đồng)' },
+          minPrice:     { type: 'number', description: 'Giá tối thiểu (đồng)' },
+          inStockOnly:  { type: 'boolean', description: 'Chỉ lấy sản phẩm còn hàng' },
+          onSaleOnly:   { type: 'boolean', description: 'Chỉ lấy sản phẩm đang giảm giá' },
+          sortBy:       { type: 'string', description: 'Sắp xếp: price_asc, price_desc, best_seller, top_rated, newest' },
+          categoryName: { type: 'string', description: 'Tên danh mục để lọc (ví dụ: "len acrylic", "kim đan")' },
+          limit:        { type: 'number', description: 'Số kết quả tối đa (mặc định 5)' },
+        },
+      },
+    },
+    {
+      name: 'get_product_detail',
+      description: 'Lấy thông tin chi tiết một sản phẩm: mô tả đầy đủ, màu sắc, trọng lượng, kích thước, đánh giá sao, số lượng tồn, giá sale. Dùng khi khách hỏi chi tiết về một sản phẩm cụ thể.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Tên hoặc từ khóa của sản phẩm cần tra cứu chi tiết' },
+        },
+        required: ['name'],
+      },
+    },
+    {
       name: 'get_categories',
-      description: 'Lấy danh sách tất cả danh mục sản phẩm trong cửa hàng.',
+      description: 'Lấy danh sách tất cả danh mục sản phẩm. Dùng khi khách hỏi shop bán gì hoặc muốn xem phân loại sản phẩm.',
       parameters: { type: 'object', properties: {} },
     },
     {
@@ -53,10 +80,7 @@ const GEMINI_TOOLS = [{
       parameters: {
         type: 'object',
         properties: {
-          topic: {
-            type: 'string',
-            description: 'Chủ đề: shipping, return, payment, promotion, hoặc general',
-          },
+          topic: { type: 'string', description: 'Chủ đề: shipping, return, payment, promotion, general' },
         },
         required: ['topic'],
       },
@@ -74,6 +98,30 @@ const SHOP_INFO = {
   general: 'YarnShop là cửa hàng chuyên len, sợi, phụ kiện đan móc và sản phẩm handmade. Chúng tôi nhận đặt hàng thiết kế theo yêu cầu.',
 };
 
+// Format a product object for tool responses
+function fmtProduct(p) {
+  const now = new Date();
+  const saleActive = p.salePrice && p.saleEndDate && new Date(p.saleEndDate) > now;
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    category: p.Category?.name || null,
+    price: Number(p.price),
+    salePrice: saleActive ? Number(p.salePrice) : null,
+    effectivePrice: saleActive ? Number(p.salePrice) : Number(p.price),
+    discountPct: saleActive ? Math.round((1 - p.salePrice / p.price) * 100) : null,
+    color: p.color || null,
+    size: p.size || null,
+    weight: p.weight ? Number(p.weight) : null,
+    stock: p.stock,
+    inStock: p.stock > 0,
+    sold: p.sold || 0,
+    rating: p.averageRating ? Number(p.averageRating) : null,
+    reviewCount: p.reviewCount || 0,
+  };
+}
+
 async function executeTool(name, input, userId) {
   try {
     if (name === 'search_products') {
@@ -85,25 +133,77 @@ async function executeTool(name, input, userId) {
             { name: { [SeqOp.iLike]: `%${query}%` } },
             { description: { [SeqOp.iLike]: `%${query}%` } },
             { color: { [SeqOp.iLike]: `%${query}%` } },
+            { size: { [SeqOp.iLike]: `%${query}%` } },
           ],
         },
         include: [{ model: Category, attributes: ['name'] }],
+        order: [['sold', 'DESC']],
         limit: Math.min(limit, 10),
       });
       if (!products.length) return { found: false, message: 'Không tìm thấy sản phẩm phù hợp.' };
+      return { found: true, count: products.length, products: products.map(fmtProduct) };
+    }
+
+    if (name === 'filter_products') {
+      const { maxPrice, minPrice, inStockOnly, onSaleOnly, sortBy = 'best_seller', categoryName, limit = 5 } = input;
+      const where = { status: 'active' };
+      if (inStockOnly) where.stock = { [SeqOp.gt]: 0 };
+      if (onSaleOnly) {
+        const now = new Date();
+        where.salePrice = { [SeqOp.ne]: null };
+        where.saleEndDate = { [SeqOp.gt]: now };
+      }
+
+      // Price filter applies to effective price (salePrice if active, else price)
+      const priceField = 'price'; // simplified: filter on base price
+      if (maxPrice != null) where[priceField] = { ...(where[priceField] || {}), [SeqOp.lte]: maxPrice };
+      if (minPrice != null) where[priceField] = { ...(where[priceField] || {}), [SeqOp.gte]: minPrice };
+
+      const ORDER_MAP = {
+        price_asc:   [['price', 'ASC']],
+        price_desc:  [['price', 'DESC']],
+        best_seller: [['sold', 'DESC']],
+        top_rated:   [['averageRating', 'DESC']],
+        newest:      [['createdAt', 'DESC']],
+      };
+      const order = ORDER_MAP[sortBy] || ORDER_MAP.best_seller;
+
+      const includeOpts = [{ model: Category, attributes: ['name'] }];
+      if (categoryName) {
+        includeOpts[0].where = { name: { [SeqOp.iLike]: `%${categoryName}%` } };
+        includeOpts[0].required = true;
+      }
+
+      const products = await Product.findAll({ where, include: includeOpts, order, limit: Math.min(limit, 10) });
+      if (!products.length) return { found: false, message: 'Không có sản phẩm phù hợp với bộ lọc.' };
+      return { found: true, count: products.length, products: products.map(fmtProduct) };
+    }
+
+    if (name === 'get_product_detail') {
+      const { name: query } = input;
+      const product = await Product.findOne({
+        where: {
+          status: 'active',
+          [SeqOp.or]: [
+            { name: { [SeqOp.iLike]: `%${query}%` } },
+            { description: { [SeqOp.iLike]: `%${query}%` } },
+          ],
+        },
+        include: [{ model: Category, attributes: ['name', 'type'] }],
+        order: [['sold', 'DESC']],
+      });
+      if (!product) return { found: false, message: `Không tìm thấy sản phẩm "${query}".` };
+      const now = new Date();
+      const saleActive = product.salePrice && product.saleEndDate && new Date(product.saleEndDate) > now;
       return {
         found: true,
-        count: products.length,
-        products: products.map(p => ({
-          id: p.id,
-          name: p.name,
-          price: Number(p.price),
-          salePrice: p.salePrice ? Number(p.salePrice) : null,
-          stock: p.stock,
-          color: p.color || null,
-          category: p.Category?.name || null,
-          inStock: p.stock > 0,
-        })),
+        product: {
+          ...fmtProduct(product),
+          description: product.description || null,
+          isCustomizable: product.isCustomizable,
+          saleEndsAt: saleActive ? product.saleEndDate : null,
+          categoryType: product.Category?.type || null,
+        },
       };
     }
 
@@ -180,16 +280,34 @@ async function executeTool(name, input, userId) {
 
 // ── Gemini AI reply ───────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Bạn là YarnBot, trợ lý AI thông minh của YarnShop — cửa hàng chuyên len sợi và sản phẩm handmade.
-Bạn có thể tra cứu dữ liệu thực từ cơ sở dữ liệu cửa hàng qua các công cụ được cung cấp.
+const SYSTEM_PROMPT = `Bạn là YarnBot, trợ lý AI thông minh của YarnShop — cửa hàng chuyên len sợi, phụ kiện đan móc và sản phẩm handmade tại Việt Nam.
+Bạn có thể tra cứu dữ liệu THỰC TẾ từ cơ sở dữ liệu cửa hàng qua các công cụ được cung cấp.
 
-Hướng dẫn:
-- Trả lời bằng tiếng Việt, thân thiện, ngắn gọn (tối đa 5-8 dòng nếu không cần liệt kê)
-- Dùng emoji phù hợp để tăng tính thân thiện
-- Giá tiền: định dạng "123,456đ"
-- Nếu khách hỏi về đơn hàng cá nhân nhưng userId = null, nhắc đăng nhập
-- Không bịa thông tin; nếu không chắc hãy dùng công cụ để tra cứu
-- Khi liệt kê sản phẩm: hiển thị tên, giá, tình trạng tồn kho`;
+## Nguyên tắc trả lời:
+- Tiếng Việt, thân thiện, ngắn gọn (3-6 dòng nếu không cần liệt kê)
+- Emoji phù hợp, không lạm dụng
+- Giá: định dạng "123,456đ"; nếu có sale hiển thị "~~giá gốc~~ → giá sale"
+- **Không bịa thông tin** — luôn dùng tool để tra cứu trước khi trả lời về sản phẩm/đơn hàng
+- Nếu khách hỏi đơn hàng cá nhân mà userId = null → nhắc đăng nhập
+
+## Kiến thức về len:
+- **Chất liệu phổ biến**: acrylic (bền, rẻ, nhiều màu), cotton (mềm, thoáng), wool (ấm, xịn), bamboo (mát, kháng khuẩn), polyester (bền màu)
+- **Độ dày**: lace (siêu mảnh), fingering/sock (mảnh), DK (trung), worsted (dày), bulky (siêu dày)
+- **Trọng lượng** (weight field, đơn vị gram): cuộn nhỏ 50g, cuộn thường 100g, cuộn to 200g+
+- **Kích thước kim phù hợp** theo độ dày len: len mảnh dùng kim 2-3mm, len vừa 4-5mm, len dày 6mm+
+- **Tư vấn**: len acrylic phù hợp người mới, cotton cho đồ trẻ em, wool cho khăn/áo mùa đông
+
+## Khi liệt kê sản phẩm:
+- Hiển thị: tên, giá hiệu dụng (effectivePrice), % giảm nếu có, tồn kho, màu/trọng lượng nếu có
+- Luôn hỏi thêm nhu cầu nếu thông tin chưa đủ (ví dụ: đan cái gì, cho ai, ngân sách bao nhiêu)
+
+## Cách dùng tool:
+- search_products: khi khách hỏi về sản phẩm cụ thể theo tên/màu/chất liệu
+- filter_products: khi khách lọc theo giá, còn hàng, đang sale, bán chạy, đánh giá cao
+- get_product_detail: khi khách hỏi chi tiết 1 sản phẩm (mô tả, trọng lượng, kích thước, đánh giá)
+- get_categories: khi khách hỏi shop có những loại gì
+- Kết hợp nhiều tool nếu cần (ví dụ: search rồi detail)`;
+
 
 async function geminiReply(content, userId) {
   const model = genAI.getGenerativeModel({
@@ -247,11 +365,15 @@ async function searchProductsByTerms(terms, limit = 5) {
 }
 
 function formatProductList(products) {
+  const now = new Date();
   return products.map(p => {
-    const price = Number(p.salePrice || p.price).toLocaleString('vi-VN');
+    const saleActive = p.salePrice && p.saleEndDate && new Date(p.saleEndDate) > now;
+    const price = Number(saleActive ? p.salePrice : p.price).toLocaleString('vi-VN');
     const stock = p.stock > 0 ? `còn ${p.stock}` : '**hết hàng**';
-    const sale = p.salePrice ? ` 🏷️ sale còn ${price}đ` : ` — ${price}đ`;
-    return `• **${p.name}**${sale} (${stock})`;
+    const saleBadge = saleActive ? ` 🏷️` : '';
+    const ratingBadge = p.averageRating > 0 ? ` ⭐${Number(p.averageRating).toFixed(1)}` : '';
+    const weightBadge = p.weight ? ` · ${Number(p.weight)}g` : '';
+    return `• **${p.name}**${saleBadge} — ${price}đ${ratingBadge}${weightBadge} (${stock})`;
   }).join('\n');
 }
 
@@ -292,6 +414,105 @@ async function keywordReply(content, userId) {
         return `🔥 Sản phẩm bán chạy tại YarnShop:\n\n${formatProductList(products)}\n\nBạn muốn biết thêm về sản phẩm nào?`;
       }
     } catch {}
+  }
+
+  // ── Đang giảm giá / sale ──
+  if (q.includes('giảm giá') || q.includes('đang sale') || q.includes('đang giảm') || q.includes('khuyến mãi sản phẩm') || q.includes('flash sale') || q.includes('sale hôm nay')) {
+    try {
+      const now = new Date();
+      const products = await Product.findAll({
+        where: { status: 'active', salePrice: { [SeqOp.ne]: null }, saleEndDate: { [SeqOp.gt]: now } },
+        include: [{ model: Category, attributes: ['name'] }],
+        order: [['sold', 'DESC']],
+        limit: 6,
+      });
+      if (products.length) {
+        const list = products.map(p => {
+          const pct = Math.round((1 - p.salePrice / p.price) * 100);
+          const sp = Number(p.salePrice).toLocaleString('vi-VN');
+          const op = Number(p.price).toLocaleString('vi-VN');
+          const stock = p.stock > 0 ? `còn ${p.stock}` : '**hết hàng**';
+          return `• **${p.name}** — ~~${op}đ~~ → **${sp}đ** (-${pct}%) (${stock})`;
+        }).join('\n');
+        return `🏷️ Sản phẩm đang giảm giá tại YarnShop:\n\n${list}\n\nXem toàn bộ tại trang **Flash Sale** nhé!`;
+      }
+      return '😊 Hiện tại không có sản phẩm nào đang sale. Theo dõi trang **Flash Sale** để cập nhật ưu đãi mới nhé!';
+    } catch {}
+  }
+
+  // ── Sản phẩm rẻ nhất / theo giá ──
+  const priceMatch = q.match(/dưới\s*([\d,.]+)\s*k?/);
+  const cheapQuery = q.includes('rẻ nhất') || q.includes('rẻ nhất') || q.includes('giá thấp') || q.includes('tiết kiệm') || priceMatch;
+  if (cheapQuery) {
+    try {
+      const where = { status: 'active', stock: { [SeqOp.gt]: 0 } };
+      if (priceMatch) {
+        const raw = priceMatch[1].replace(/[,.]/g, '');
+        const threshold = Number(raw) * (q.includes('k') || Number(raw) < 10000 ? 1000 : 1);
+        if (threshold > 0) where.price = { [SeqOp.lte]: threshold };
+      }
+      const products = await Product.findAll({
+        where,
+        include: [{ model: Category, attributes: ['name'] }],
+        order: [['price', 'ASC']],
+        limit: 5,
+      });
+      if (products.length) {
+        return `💸 Sản phẩm giá rẻ tại YarnShop:\n\n${formatProductList(products)}\n\nBạn muốn tìm loại len nào cụ thể?`;
+      }
+    } catch {}
+  }
+
+  // ── Đánh giá cao nhất ──
+  if (q.includes('đánh giá cao') || q.includes('rating cao') || q.includes('được yêu thích') || q.includes('chất lượng tốt') || q.includes('tốt nhất')) {
+    try {
+      const products = await Product.findAll({
+        where: { status: 'active', stock: { [SeqOp.gt]: 0 }, reviewCount: { [SeqOp.gt]: 0 } },
+        include: [{ model: Category, attributes: ['name'] }],
+        order: [['averageRating', 'DESC'], ['reviewCount', 'DESC']],
+        limit: 5,
+      });
+      if (products.length) {
+        const list = products.map(p => {
+          const price = Number(p.salePrice || p.price).toLocaleString('vi-VN');
+          const stars = '⭐'.repeat(Math.round(Number(p.averageRating)));
+          return `• **${p.name}** — ${price}đ ${stars} (${p.reviewCount} đánh giá)`;
+        }).join('\n');
+        return `⭐ Sản phẩm được đánh giá cao:\n\n${list}\n\nBạn muốn tìm hiểu thêm về sản phẩm nào?`;
+      }
+    } catch {}
+  }
+
+  // ── Còn hàng / hết hàng ──
+  if (q.includes('còn hàng') || q.includes('còn không') || q.includes('hết hàng') || q.includes('tồn kho')) {
+    const terms = extractSearchTerms(q.replace(/còn hàng|còn không|hết hàng|tồn kho/g, '').trim());
+    if (terms.length) {
+      try {
+        const products = await searchProductsByTerms(terms, 5);
+        if (products.length) {
+          const list = products.map(p => {
+            const price = Number(p.salePrice || p.price).toLocaleString('vi-VN');
+            const stock = p.stock > 0 ? `✅ còn ${p.stock} sản phẩm` : '❌ hết hàng';
+            return `• **${p.name}** — ${price}đ — ${stock}`;
+          }).join('\n');
+          return `📦 Tình trạng tồn kho:\n\n${list}`;
+        }
+      } catch {}
+    }
+  }
+
+  // ── Tư vấn chọn len theo dự án ──
+  const projectKeywords = { 'khăn': 'worsted hoặc bulky', 'áo': 'DK hoặc worsted', 'đồ trẻ em': 'cotton hoặc acrylic mềm', 'thú bông': 'acrylic, sợi nhỏ', 'túi': 'cotton hoặc jute', 'chăn': 'bulky hoặc chunky' };
+  for (const [project, advice] of Object.entries(projectKeywords)) {
+    if (q.includes(project) && (q.includes('len') || q.includes('sợi') || q.includes('dùng') || q.includes('nên'))) {
+      try {
+        const terms = [project === 'đồ trẻ em' ? 'cotton' : advice.split(' ')[0]];
+        const products = await searchProductsByTerms(terms, 4);
+        const base = `🧶 Để đan **${project}**, bạn nên dùng **${advice}**.\n`;
+        if (products.length) return base + `\nMột số gợi ý:\n${formatProductList(products)}\n\nBạn cần bao nhiêu cuộn?`;
+        return base + '\nBạn có thể xem thêm tại trang Sản phẩm nhé!';
+      } catch {}
+    }
   }
 
   // ── Đơn hàng thường ──

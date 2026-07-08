@@ -1,4 +1,4 @@
-const { Product, ProductImage, Category, Inventory, Review, User } = require('../models');
+const { Product, ProductImage, Category, Inventory, Review, User, SaleEvent, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { paginate, paginateResult, generateCode, slugify } = require('../utils/helpers');
 const { fileUrl } = require('../middleware/upload.middleware');
@@ -8,7 +8,9 @@ const getAll = async (req, res) => {
   try {
     const { page, limit, offset } = paginate(req.query);
     const { search, categoryId, type, color, minPrice, maxPrice, minRating, status, sortBy, isNew, inStock } = req.query;
-    const where = { status: status || 'active' };
+    const where = {};
+    if (!status || status === 'active') where.status = 'active';
+    else if (status !== 'all') where.status = status;
     if (search) where.name = { [Op.iLike]: `%${search}%` };
     if (color) where.color = { [Op.iLike]: `%${color}%` };
     if (isNew === 'true') { const d = new Date(); d.setDate(d.getDate() - 30); where.createdAt = { [Op.gte]: d }; }
@@ -22,7 +24,8 @@ const getAll = async (req, res) => {
 
     const include = [
       { model: Category, where: type ? { type } : undefined },
-      { model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] }
+      { model: ProductImage, limit: 1, order: [['isPrimary', 'DESC']] },
+      { model: SaleEvent, as: 'saleEvent', attributes: ['id', 'name'], required: false },
     ];
     if (categoryId) include[0].where = { ...include[0].where, id: categoryId };
 
@@ -114,7 +117,10 @@ const getFeatured = async (req, res) => {
   try {
     const products = await Product.findAll({
       where: { status: 'active' },
-      include: [{ model: ProductImage, limit: 1 }],
+      include: [
+        { model: ProductImage, limit: 1 },
+        { model: Category, attributes: ['name'] },
+      ],
       order: [['sold', 'DESC']],
       limit: 8
     });
@@ -157,4 +163,46 @@ const getRelated = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-module.exports = { getAll, getBySlug, create, update, remove, getFeatured, getRelated };
+const bulkDiscount = async (req, res) => {
+  try {
+    const { name, productIds, selectAll, categoryId, discountPct, saleStartDate, saleEndDate, removeDiscount } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: 'Vui lòng đặt tên sự kiện' });
+
+    const where = { status: 'active' };
+    if (!selectAll && productIds?.length) where.id = { [Op.in]: productIds };
+    if (selectAll && categoryId) where.categoryId = categoryId;
+
+    const products = await Product.findAll({ where, attributes: ['id', 'price'] });
+    if (!products.length) return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào' });
+
+    await Promise.all(products.map(p => {
+      const upd = removeDiscount
+        ? { salePrice: null, saleStartDate: null, saleEndDate: null }
+        : {
+            ...(discountPct ? { salePrice: Math.round(parseFloat(p.price) * (1 - discountPct / 100)) } : {}),
+            saleStartDate: saleStartDate || null,
+            saleEndDate: saleEndDate || null,
+          };
+      return p.update(upd);
+    }));
+
+    await SaleEvent.create({
+      name: name.trim(),
+      discountPct: removeDiscount ? null : (discountPct || null),
+      saleStartDate: saleStartDate || null,
+      saleEndDate: saleEndDate || null,
+      productCount: products.length,
+      selectAll: !!selectAll,
+      productIds: selectAll ? null : products.map(p => p.id),
+      isRemoval: !!removeDiscount,
+      createdBy: req.user?.id,
+    });
+
+    const action = removeDiscount ? 'Đã xóa giảm giá' : `Đã áp dụng giảm giá ${discountPct}%`;
+    await log(req.user?.id, req.user?.email, 'BULK_DISCOUNT', 'SaleEvent', null,
+      { name, count: products.length, discountPct, saleStartDate, saleEndDate, removeDiscount }, req);
+    res.json({ message: `${action} cho ${products.length} sản phẩm`, updatedCount: products.length });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { getAll, getBySlug, create, update, remove, getFeatured, getRelated, bulkDiscount };

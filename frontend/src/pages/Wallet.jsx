@@ -8,14 +8,21 @@ const PER_PAGE = 10;
 const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 const fmtDate = d => new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+const TOPUP_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
+
 const TX_TYPE = {
-  topup:            { label: 'Nạp tiền',         color: 'text-green-600', bg: 'bg-green-50', icon: '⬆️' },
-  payment:          { label: 'Thanh toán đơn',   color: 'text-red-500',   bg: 'bg-red-50',   icon: '🛒' },
-  refund:           { label: 'Hoàn tiền',         color: 'text-blue-600',  bg: 'bg-blue-50',  icon: '↩️' },
-  admin_adjustment: { label: 'Điều chỉnh',        color: 'text-gray-500',  bg: 'bg-gray-50',  icon: '⚙️' },
+  topup:            { label: 'Nạp tiền',        color: 'text-green-600', bg: 'bg-green-50', icon: '⬆️' },
+  payment:          { label: 'Thanh toán đơn',  color: 'text-red-500',   bg: 'bg-red-50',   icon: '🛒' },
+  refund:           { label: 'Hoàn tiền',        color: 'text-blue-600',  bg: 'bg-blue-50',  icon: '↩️' },
+  admin_adjustment: { label: 'Điều chỉnh',       color: 'text-gray-500',  bg: 'bg-gray-50',  icon: '⚙️' },
 };
 
-const TOPUP_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
+const TABS = [
+  { key: 'all',     label: 'Tất cả' },
+  { key: 'topup',   label: 'Nạp tiền' },
+  { key: 'payment', label: 'Thanh toán' },
+  { key: 'refund',  label: 'Hoàn tiền' },
+];
 
 export default function Wallet() {
   const [balance, setBalance] = useState(0);
@@ -96,14 +103,14 @@ export default function Wallet() {
               onChange={e => setTopupAmount(e.target.value)}
               placeholder="Nhập số tiền khác..."
               min={10000}
-              className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-300 pr-10"
+              className="w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-300 pr-10"
             />
             <span className="absolute right-3 top-3 text-gray-400 text-sm">đ</span>
           </div>
           <button
             onClick={handleTopup}
             disabled={topping || !topupAmount}
-            className="px-6 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition disabled:opacity-50"
+            className="px-6 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition disabled:opacity-50 min-h-[44px] active:scale-95"
           >
             {topping ? '...' : 'Nạp ngay'}
           </button>
@@ -115,17 +122,12 @@ export default function Wallet() {
       <div className="bg-white rounded-2xl shadow overflow-hidden">
         <div className="px-5 pt-5 pb-3 border-b">
           <h2 className="font-bold text-gray-800 text-lg mb-3">Lịch sử giao dịch</h2>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { key: 'all', label: 'Tất cả' },
-              { key: 'topup', label: 'Nạp tiền' },
-              { key: 'payment', label: 'Thanh toán' },
-              { key: 'refund', label: 'Hoàn tiền' },
-            ].map(({ key, label }) => (
+          <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
+            {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => { setTab(key); setPage(1); }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition shrink-0 active:scale-95 ${
                   tab === key ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >

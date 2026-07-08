@@ -15,6 +15,7 @@ import OrderDetail from './pages/OrderDetail';
 import CustomOrder from './pages/CustomOrder';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Policies from './pages/Policies';
 import HowToBuy from './pages/HowToBuy';
@@ -28,7 +29,6 @@ import MyCustomOrders from './pages/MyCustomOrders';
 import CustomOrderDetail from './pages/CustomOrderDetail';
 import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
-import Wishlist from './pages/Wishlist';
 import FlashSale from './pages/FlashSale';
 
 import ManagerDashboard from './pages/manager/Dashboard';
@@ -45,11 +45,13 @@ import ComplaintManagement from './pages/staff/ComplaintManagement';
 import ContactManagement from './pages/staff/ContactManagement';
 import StaffChat from './pages/staff/StaffChat';
 import ChatWidget from './components/chat/ChatWidget';
+import TierUpgradeModal from './components/common/TierUpgradeModal';
 
 import UserManagement from './pages/admin/UserManagement';
 import BannerManagement from './pages/admin/BannerManagement';
 import ContentManagement from './pages/admin/ContentManagement';
 import SystemLogs from './pages/admin/SystemLogs';
+import SaleEventManagement from './pages/admin/SaleEventManagement';
 
 // Route guard
 const PrivateRoute = ({ roles }) => {
@@ -67,6 +69,7 @@ const PublicLayout = () => (
     <main className="flex-1"><Outlet /></main>
     <Footer />
     <ChatWidget />
+    <TierUpgradeModal />
   </div>
 );
 
@@ -89,6 +92,7 @@ const App = () => (
       <Route path="/products/:slug" element={<ProductDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/custom-order" element={<CustomOrder />} />
       <Route path="/policies" element={<Policies />} />
       <Route path="/how-to-buy" element={<HowToBuy />} />
@@ -105,7 +109,6 @@ const App = () => (
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
         <Route path="/returns" element={<Returns />} />
-        <Route path="/wishlist" element={<Wishlist />} />
       </Route>
 
       <Route path="/wallet/topup/result" element={<WalletTopupResult />} />
@@ -152,6 +155,7 @@ const App = () => (
         <Route path="/admin/banners" element={<BannerManagement />} />
         <Route path="/admin/content" element={<ContentManagement />} />
         <Route path="/admin/logs" element={<SystemLogs />} />
+        <Route path="/admin/sale-events" element={<SaleEventManagement />} />
       </Route>
     </Route>
 

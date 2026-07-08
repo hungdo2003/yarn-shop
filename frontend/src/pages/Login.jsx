@@ -48,14 +48,14 @@ const Login = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 bg-gradient-to-br from-rose-50 to-pink-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
+          <Link to="/" className="inline-block active:scale-95 transition-all">
             <div className="text-5xl mb-3">🧶</div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-800">Đăng Nhập</h1>
           <p className="text-gray-500 text-sm mt-1">Chào mừng bạn quay trở lại YarnShop</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-5 xs:p-8 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <input
@@ -64,12 +64,15 @@ const Login = () => {
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               required
               placeholder="email@example.com"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
+              <Link to="/forgot-password" className="text-xs text-rose-500 hover:underline active:scale-95 transition-all">Quên mật khẩu?</Link>
+            </div>
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
@@ -77,9 +80,9 @@ const Login = () => {
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 required
                 placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition pr-10"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition pr-12"
               />
-              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs w-11 h-11 flex items-center justify-center active:scale-95 transition-all">
                 {showPass ? 'Ẩn' : 'Hiện'}
               </button>
             </div>
@@ -88,14 +91,14 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-rose-500 text-white py-3 rounded-xl font-semibold hover:bg-rose-600 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
           </button>
 
           <div className="text-center text-sm text-gray-500">
             Chưa có tài khoản?{' '}
-            <Link to="/register" className="text-rose-500 font-semibold hover:underline">Đăng ký ngay</Link>
+            <Link to="/register" className="text-rose-500 font-semibold hover:underline active:scale-95 transition-all">Đăng ký ngay</Link>
           </div>
         </form>
 
@@ -109,11 +112,11 @@ const Login = () => {
             <button
               key={acc.role}
               type="button"
-              onClick={() => { setForm({ email: acc.email, password: acc.pass }); toast('Đã điền thông tin ' + acc.role, { icon: '✏️' }); }}
-              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-rose-50 hover:text-rose-700 transition flex justify-between"
+              onClick={() => { setForm({ email: acc.email, password: acc.pass }); toast(`Đã điền thông tin ${acc.role}`, { icon: '✏️' }); }}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-rose-50 hover:text-rose-700 active:scale-95 transition-all flex justify-between min-w-0 min-h-[44px]"
             >
-              <span className="font-medium">{acc.role}</span>
-              <span className="text-gray-400">{acc.email}</span>
+              <span className="font-medium shrink-0">{acc.role}</span>
+              <span className="text-gray-400 min-w-0 truncate ml-2">{acc.email}</span>
             </button>
           ))}
         </div>

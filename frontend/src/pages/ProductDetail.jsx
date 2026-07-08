@@ -3,20 +3,20 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useWishlist } from '../context/WishlistContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import Spinner from '../components/common/Spinner';
 import ProductCard from '../components/common/ProductCard';
 import toast from 'react-hot-toast';
 import {
-  FiShoppingCart, FiMinus, FiPlus, FiStar, FiHeart,
+  FiShoppingCart, FiMinus, FiPlus,
   FiChevronLeft, FiChevronRight, FiCamera, FiX, FiCheck,
   FiPackage, FiTruck, FiRefreshCw,
 } from 'react-icons/fi';
+import { SaleCountdownInline } from '../components/common/SaleCountdown';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-const STAR_LABELS = ['', 'Rất tệ', 'Không tốt', 'Bình thường', 'Tốt', 'Tuyệt vời'];
 const STAR_COLORS = ['', '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
+const STAR_LABELS = ['', 'Rất tệ', 'Không tốt', 'Bình thường', 'Tốt', 'Tuyệt vời'];
 
 function Stars({ rating, size = 14, className = '' }) {
   return (
@@ -34,6 +34,7 @@ function Stars({ rating, size = 14, className = '' }) {
 function InteractiveStars({ rating, onRate }) {
   const [hovered, setHovered] = useState(0);
   const active = hovered || rating;
+
   return (
     <div className="flex items-center gap-1">
       {[1,2,3,4,5].map(s => (
@@ -123,7 +124,7 @@ function ReviewForm({ productId, orderId, user, onSubmitted }) {
             maxLength={1000}
             rows={4}
             placeholder="Sản phẩm có đúng mô tả không? Chất lượng len như thế nào? Bạn sẽ giới thiệu cho bạn bè chứ?"
-            className="w-full border border-rose-200 focus:border-rose-400 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white transition-colors leading-relaxed"
+            className="w-full border border-rose-200 focus:border-rose-400 rounded-xl px-4 py-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white transition-colors leading-relaxed"
           />
           <p className="text-right text-xs text-gray-400 mt-1">{comment.length}/1000</p>
         </div>
@@ -241,7 +242,7 @@ function ReviewCard({ review }) {
             <div className="flex gap-2 mt-3 flex-wrap">
               {review.images.map((src, i) => (
                 <button key={i} onClick={() => setImgOpen(i)}
-                  className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 hover:opacity-90 hover:scale-105 transition-transform shadow-sm shrink-0">
+                  className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 hover:opacity-90 hover:scale-105 active:scale-95 transition-transform shadow-sm shrink-0">
                   <img src={src} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -253,16 +254,16 @@ function ReviewCard({ review }) {
       {/* Image lightbox */}
       {imgOpen !== null && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setImgOpen(null)}>
-          <button className="absolute top-4 right-4 text-white/70 hover:text-white"><FiX size={24} /></button>
+          <button className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center text-white/70 hover:text-white active:scale-95"><FiX size={24} /></button>
           <div className="flex items-center gap-4" onClick={e => e.stopPropagation()}>
             {review.images.length > 1 && (
               <button onClick={() => setImgOpen(i => (i - 1 + review.images.length) % review.images.length)}
-                className="text-white/70 hover:text-white"><FiChevronLeft size={32} /></button>
+                className="w-11 h-11 flex items-center justify-center text-white/70 hover:text-white active:scale-95"><FiChevronLeft size={32} /></button>
             )}
             <img src={review.images[imgOpen]} alt="" className="max-w-[80vw] max-h-[80vh] rounded-2xl object-contain shadow-2xl" />
             {review.images.length > 1 && (
               <button onClick={() => setImgOpen(i => (i + 1) % review.images.length)}
-                className="text-white/70 hover:text-white"><FiChevronRight size={32} /></button>
+                className="w-11 h-11 flex items-center justify-center text-white/70 hover:text-white active:scale-95"><FiChevronRight size={32} /></button>
             )}
           </div>
         </div>
@@ -277,7 +278,6 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { user, isRole } = useAuth();
-  const { toggle, isWishlisted } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -353,19 +353,14 @@ export default function ProductDetail() {
   );
 
   const images = product.ProductImages?.length ? product.ProductImages : [];
-  const price = product.salePrice || product.price;
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const now = new Date();
+  const saleActive = product.salePrice && product.salePrice < product.price
+    && (!product.saleStartDate || new Date(product.saleStartDate) <= now)
+    && (!product.saleEndDate || new Date(product.saleEndDate) > now);
+  const price = saleActive ? product.salePrice : product.price;
+  const hasDiscount = saleActive;
   const discountPct = hasDiscount ? Math.round((1 - product.salePrice / product.price) * 100) : 0;
   const stockLow = product.stock > 0 && product.stock <= 10;
-
-  const wishlisted = product ? isWishlisted(product.id) : false;
-
-  const handleWishlist = async () => {
-    if (!user) return toast.error('Vui lòng đăng nhập để lưu yêu thích');
-    if (!isRole('customer')) return;
-    const res = await toggle(product.id);
-    if (res) toast.success(res.message);
-  };
 
   const handleAddToCart = async () => {
     if (!user) { toast.error('Vui lòng đăng nhập để mua hàng', { icon: '🔒' }); return; }
@@ -415,9 +410,9 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-10">
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-400 flex items-center gap-1.5">
+      <nav className="text-sm text-gray-400 flex items-center flex-wrap gap-1.5">
         <Link to="/" className="hover:text-rose-500 transition-colors">Trang chủ</Link>
         <span>/</span>
         <Link to="/products" className="hover:text-rose-500 transition-colors">Sản phẩm</Link>
@@ -427,7 +422,7 @@ export default function ProductDetail() {
       </nav>
 
       {/* Product section */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
         {/* Gallery */}
         <div className="space-y-3">
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-gray-50 shadow-sm group">
@@ -450,11 +445,11 @@ export default function ProductDetail() {
             {images.length > 1 && (
               <>
                 <button onClick={() => setActiveImage(i => (i - 1 + images.length) % images.length)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow hover:bg-white transition opacity-0 group-hover:opacity-100">
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/90 rounded-full flex items-center justify-center shadow hover:bg-white transition active:scale-95 sm:opacity-0 sm:group-hover:opacity-100">
                   <FiChevronLeft size={18} />
                 </button>
                 <button onClick={() => setActiveImage(i => (i + 1) % images.length)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow hover:bg-white transition opacity-0 group-hover:opacity-100">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/90 rounded-full flex items-center justify-center shadow hover:bg-white transition active:scale-95 sm:opacity-0 sm:group-hover:opacity-100">
                   <FiChevronRight size={18} />
                 </button>
               </>
@@ -503,6 +498,14 @@ export default function ProductDetail() {
             )}
           </div>
 
+          {/* Discount badge + countdown on same row */}
+          {hasDiscount && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-white bg-rose-500 px-2.5 py-1 rounded-full">-{discountPct}%</span>
+              {product.saleEndDate && <SaleCountdownInline endDate={product.saleEndDate} />}
+            </div>
+          )}
+
           {/* Color swatches */}
           {product.color && (
             <div>
@@ -523,7 +526,7 @@ export default function ProductDetail() {
                           : 'border-gray-200 text-gray-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500'
                       }`}
                     >
-                      {v.color}{v.stock === 0 && <span className="ml-1 text-[10px]">(hết)</span>}
+                      {v.color}{v.stock === 0 && <span className="ml-1 text-[10px]">(Hết hàng)</span>}
                     </Link>
                   ))}
                 </div>
@@ -542,14 +545,14 @@ export default function ProductDetail() {
             <div className="flex gap-2">
               <span className="text-gray-500 w-24 shrink-0">Tình trạng</span>
               {product.stock > 0
-                ? <span className="font-semibold text-emerald-600">Còn hàng{stockLow && ` (chỉ còn ${product.stock}!)`}</span>
+                ? <span className="font-semibold text-emerald-600">{stockLow ? `Còn hàng (chỉ còn ${product.stock}!)` : 'Còn hàng'}</span>
                 : <span className="font-semibold text-red-500">Hết hàng</span>}
             </div>
           </div>
 
           {stockLow && product.stock > 0 && (
             <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-              <span>⚡</span> Chỉ còn {product.stock} sản phẩm — Đặt hàng sớm!
+              ⚡ Chỉ còn {product.stock} sản phẩm — Đặt hàng sớm!
             </div>
           )}
 
@@ -557,35 +560,29 @@ export default function ProductDetail() {
             <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
           )}
 
-          {/* Add to cart */}
+          {/* Add to cart / out of stock */}
           {product.stock > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-2.5 hover:bg-gray-50 transition-colors">
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-11 h-11 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all">
                     <FiMinus size={15} />
                   </button>
                   <span className="w-10 text-center font-bold text-sm">{qty}</span>
-                  <button onClick={() => setQty(q => Math.min(product.stock, q + 1))} className="px-3 py-2.5 hover:bg-gray-50 transition-colors">
+                  <button onClick={() => setQty(q => Math.min(product.stock, q + 1))} className="w-11 h-11 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all">
                     <FiPlus size={15} />
                   </button>
                 </div>
                 <span className="text-xs text-gray-400">Còn {product.stock} sản phẩm</span>
-                <button onClick={handleWishlist}
-                  className={`ml-auto p-3 rounded-xl border-2 transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'}`}
-                  title={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
-                >
-                  <FiHeart size={20} className={wishlisted ? 'fill-rose-500' : ''} />
-                </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={handleAddToCart} disabled={addingToCart}
-                  className="bg-white border-2 border-rose-500 hover:bg-rose-50 active:scale-[.98] text-rose-500 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60">
+                  className="bg-white border-2 border-rose-500 hover:bg-rose-50 active:scale-95 text-rose-500 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-60">
                   <FiShoppingCart size={17} />
                   {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
                 </button>
                 <button onClick={handleBuyNow}
-                  className="bg-rose-500 hover:bg-rose-600 active:scale-[.98] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-rose-200">
+                  className="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-rose-200">
                   <span>⚡</span>
                   Mua ngay
                 </button>
@@ -596,19 +593,17 @@ export default function ProductDetail() {
               </Link>
             </div>
           ) : (
-            <button onClick={handleWishlist}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold transition-all ${wishlisted ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-500 hover:border-rose-300 hover:text-rose-400'}`}>
-              <FiHeart size={18} className={wishlisted ? 'fill-rose-500' : ''} />
-              {wishlisted ? 'Đã lưu vào yêu thích' : 'Lưu vào yêu thích'}
-            </button>
+            <div className="w-full flex items-center justify-center py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-semibold">
+              Hết hàng
+            </div>
           )}
 
           {/* Trust badges */}
-          <div className="grid grid-cols-3 gap-3 pt-2">
+          <div className="grid grid-cols-3 gap-2 xs:gap-3 pt-2">
             {[
-              { icon: FiTruck, label: 'Giao hàng nhanh', sub: 'Toàn quốc' },
-              { icon: FiRefreshCw, label: 'Đổi trả 7 ngày', sub: 'Dễ dàng' },
-              { icon: FiPackage, label: 'Hàng chính hãng', sub: '100%' },
+              { icon: FiTruck,      label: 'Giao hàng nhanh',  sub: 'Toàn quốc' },
+              { icon: FiRefreshCw,  label: 'Đổi trả 7 ngày',   sub: 'Dễ dàng' },
+              { icon: FiPackage,    label: 'Hàng chính hãng',  sub: '100%' },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex flex-col items-center text-center gap-1 p-3 bg-gray-50 rounded-xl">
                 <Icon size={16} className="text-rose-500" />
@@ -640,18 +635,15 @@ export default function ProductDetail() {
             />
             <div className="flex items-center gap-2 flex-wrap">
               <button onClick={() => handleRatingFilter(0)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${ratingFilter === 0 ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`px-3 py-2 rounded-full text-xs font-semibold transition active:scale-95 ${ratingFilter === 0 ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 Tất cả
               </button>
               {[5, 4, 3, 2, 1].map(s => (
                 <button key={s} onClick={() => handleRatingFilter(ratingFilter === s ? 0 : s)}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition ${ratingFilter === s ? 'bg-yellow-400 text-white' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-700'}`}>
+                  className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold transition active:scale-95 ${ratingFilter === s ? 'bg-yellow-400 text-white' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-700'}`}>
                   {s} ★
                 </button>
               ))}
-              {ratingFilter > 0 && (
-                <span className="text-xs text-gray-400 ml-1">{reviewMeta.total} kết quả</span>
-              )}
             </div>
           </div>
         )}
@@ -701,7 +693,7 @@ export default function ProductDetail() {
               <div className="flex justify-center gap-2 pt-4">
                 {Array.from({ length: reviewMeta.pagination.totalPages }, (_, i) => i + 1).map(p => (
                   <button key={p} onClick={() => setReviewPage(p)}
-                    className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${reviewPage === p ? 'bg-rose-500 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                    className={`w-11 h-11 rounded-xl text-sm font-bold transition-all active:scale-95 ${reviewPage === p ? 'bg-rose-500 text-white shadow-sm' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                     {p}
                   </button>
                 ))}

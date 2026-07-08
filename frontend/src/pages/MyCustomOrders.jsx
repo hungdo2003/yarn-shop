@@ -19,24 +19,24 @@ const STEPS = [
   { key: 'remaining_paid' },
 ];
 
-const FILTER_TABS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'submitted', label: 'Mới gửi' },
-  { value: 'reviewing', label: 'Đang xét' },
-  { value: 'quoted', label: 'Cần thanh toán' },
-  { value: 'deposit_paid', label: 'Đã cọc' },
-  { value: 'in_production', label: 'Đang làm' },
-  { value: 'delivered', label: 'Đã nhận' },
-  { value: 'remaining_paid', label: 'Hoàn tất' },
-  { value: 'cancelled', label: 'Đã hủy' },
-];
-
 export default function MyCustomOrders() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const { data, loading } = useFetch('/custom-orders/my', { status: statusFilter, page, limit: PER_PAGE });
   const orders = data?.items || [];
   const pagination = data?.pagination;
+
+  const FILTER_TABS = [
+    { value: '', label: 'Tất cả' },
+    { value: 'submitted', label: 'Mới gửi' },
+    { value: 'reviewing', label: 'Đang xét' },
+    { value: 'quoted', label: 'Cần thanh toán' },
+    { value: 'deposit_paid', label: 'Đã cọc' },
+    { value: 'in_production', label: 'Đang làm' },
+    { value: 'delivered', label: 'Đã nhận' },
+    { value: 'remaining_paid', label: 'Hoàn tất' },
+    { value: 'cancelled', label: 'Đã hủy' },
+  ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -46,7 +46,7 @@ export default function MyCustomOrders() {
           <p className="text-gray-500 text-sm mt-1">Theo dõi các yêu cầu handmade của bạn</p>
         </div>
         <Link to="/custom-order"
-          className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-600 transition">
+          className="flex items-center gap-2 bg-rose-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-600 active:scale-95 transition-all">
           <FiPlus size={15} /> Đặt mới
         </Link>
       </div>
@@ -84,7 +84,7 @@ export default function MyCustomOrders() {
                     <p className="font-bold text-gray-800">#{order.code}</p>
                     <p className="text-xs text-gray-400">{formatDate(order.createdAt)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {needsPayment && (
                       <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold animate-pulse">
                         Cần thanh toán
@@ -119,7 +119,7 @@ export default function MyCustomOrders() {
                     ? <p className="text-sm font-bold text-rose-500">{formatCurrency(order.quotedPrice)}</p>
                     : <p className="text-xs text-gray-400">Chưa có báo giá</p>}
                   <Link to={`/custom-orders/${order.id}`}
-                    className="flex items-center gap-1.5 text-rose-500 text-sm font-medium hover:underline">
+                    className="flex items-center gap-1.5 text-rose-500 text-sm font-medium hover:underline min-h-[44px] active:scale-95 transition-all">
                     <FiEye size={14} /> {needsPayment || needsRemainingPayment ? 'Thanh toán ngay' : 'Chi tiết'}
                   </Link>
                 </div>
