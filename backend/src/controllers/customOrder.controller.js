@@ -107,17 +107,20 @@ const updateStatus = async (req, res) => {
 
     if (status === 'quoted' && quotedPrice) {
       notify(order.userId, 'custom_order_quoted', 'Báo giá đơn thiết kế',
-        `Đơn #${order.code} đã được báo giá ${Number(quotedPrice).toLocaleString('vi-VN')}đ. Vui lòng thanh toán để tiến hành sản xuất.`
+        `Đơn #${order.code} đã được báo giá ${Number(quotedPrice).toLocaleString('vi-VN')}đ. Vui lòng thanh toán để tiến hành sản xuất.`,
+        { customOrderId: order.id }
       );
     }
     if (status === 'in_production') {
       notify(order.userId, 'custom_order_production', 'Đơn đang sản xuất',
-        `Đơn thiết kế #${order.code} đang được sản xuất.`
+        `Đơn thiết kế #${order.code} đang được sản xuất.`,
+        { customOrderId: order.id }
       );
     }
     if (status === 'delivered') {
       notify(order.userId, 'custom_order_delivered', 'Đã giao hàng',
-        `Đơn thiết kế #${order.code} đã được giao hàng thành công!`
+        `Đơn thiết kế #${order.code} đã được giao hàng thành công!`,
+        { customOrderId: order.id }
       );
     }
 
@@ -174,11 +177,13 @@ const payCustomOrder = async (req, res) => {
 
     if (order.handledBy) {
       notify(order.handledBy, 'custom_order_paid', 'Khách đã thanh toán',
-        `Khách hàng đã thanh toán đơn thiết kế #${order.code} (${payAmount.toLocaleString('vi-VN')}đ). Có thể bắt đầu sản xuất.`
+        `Khách hàng đã thanh toán đơn thiết kế #${order.code} (${payAmount.toLocaleString('vi-VN')}đ). Có thể bắt đầu sản xuất.`,
+        { customOrderId: order.id }
       );
     } else {
       notifyByRole('staff', 'custom_order_paid', 'Khách đã thanh toán',
-        `Khách hàng đã thanh toán đơn thiết kế #${order.code} (${payAmount.toLocaleString('vi-VN')}đ).`
+        `Khách hàng đã thanh toán đơn thiết kế #${order.code} (${payAmount.toLocaleString('vi-VN')}đ).`,
+        { customOrderId: order.id }
       );
     }
 
@@ -242,11 +247,13 @@ const payRemainingCustomOrder = async (req, res) => {
 
     if (order.handledBy) {
       notify(order.handledBy, 'custom_order_paid', 'Khách đã thanh toán phần còn lại',
-        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}. Đơn hàng đã hoàn tất.`
+        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}. Đơn hàng đã hoàn tất.`,
+        { customOrderId: order.id }
       );
     } else {
       notifyByRole('staff', 'custom_order_paid', 'Khách đã thanh toán phần còn lại',
-        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}.`
+        `Khách hàng đã thanh toán ${remaining.toLocaleString('vi-VN')}đ còn lại của đơn thiết kế #${order.code}.`,
+        { customOrderId: order.id }
       );
     }
 
