@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 const ChatContext = createContext({});
 export const useChat2 = () => useContext(ChatContext);
@@ -9,6 +10,7 @@ const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://
 
 export const ChatProvider = ({ children }) => {
   const { user } = useAuth();
+  const { fetchNotifications } = useNotifications();
   const token = localStorage.getItem('token');
   const socketRef = useRef(null);
   const [connected, setConnected] = useState(false);
@@ -39,6 +41,7 @@ export const ChatProvider = ({ children }) => {
     });
 
     socket.on('conversation:closed', () => setIsClosed(true));
+    socket.on('notification:new', fetchNotifications);
   }, [user, token]);
 
   useEffect(() => {
