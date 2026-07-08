@@ -4,16 +4,20 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const QUICK = [
-  'Có những sản phẩm len nào?',
+  'Len nào đang giảm giá?',
+  'Len rẻ nhất hiện tại?',
+  'Nên dùng len gì để đan khăn?',
   'Phí giao hàng bao nhiêu?',
-  'Chính sách đổi trả?',
-  'Hình thức thanh toán?',
 ];
 
-const renderContent = (text) =>
-  text.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
-    p.startsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>
-  );
+const renderContent = (text) => {
+  const parts = text.split(/(\*\*[^*]+\*\*|~~[^~]+~~)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>;
+    if (p.startsWith('~~') && p.endsWith('~~')) return <s key={i} className="opacity-60">{p.slice(2, -2)}</s>;
+    return <span key={i}>{p}</span>;
+  });
+};
 
 const fmtTime = (d) => new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
