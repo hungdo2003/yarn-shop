@@ -29,7 +29,6 @@ import MyCustomOrders from './pages/MyCustomOrders';
 import CustomOrderDetail from './pages/CustomOrderDetail';
 import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
-import Wishlist from './pages/Wishlist';
 import FlashSale from './pages/FlashSale';
 
 import ManagerDashboard from './pages/manager/Dashboard';
@@ -46,6 +45,7 @@ import ComplaintManagement from './pages/staff/ComplaintManagement';
 import ContactManagement from './pages/staff/ContactManagement';
 import StaffChat from './pages/staff/StaffChat';
 import ChatWidget from './components/chat/ChatWidget';
+import TierUpgradeModal from './components/common/TierUpgradeModal';
 
 import UserManagement from './pages/admin/UserManagement';
 import BannerManagement from './pages/admin/BannerManagement';
@@ -69,6 +69,7 @@ const PublicLayout = () => (
     <main className="flex-1"><Outlet /></main>
     <Footer />
     <ChatWidget />
+    <TierUpgradeModal />
   </div>
 );
 
@@ -108,7 +109,6 @@ const App = () => (
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
         <Route path="/returns" element={<Returns />} />
-        <Route path="/wishlist" element={<Wishlist />} />
       </Route>
 
       <Route path="/wallet/topup/result" element={<WalletTopupResult />} />
