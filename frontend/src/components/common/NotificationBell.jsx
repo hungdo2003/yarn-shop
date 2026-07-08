@@ -7,22 +7,29 @@ const TYPE_ICON = {
   order_paid: '💳', order_status: '📦', order_cancelled: '❌',
   wallet_topup: '⬆️', wallet_payment: '💰', wallet_refund: '↩️', system: '🔔',
   tier_upgrade: '🏆',
+  custom_order_quoted: '📋', custom_order_production: '🏭',
+  custom_order_delivered: '🎁', custom_order_paid: '💳',
 };
 
 const TYPE_LINK = {
   order_paid: (data) => `/orders/${data?.orderId}`,
-  order_status: (data) => `/orders/${data?.orderId}`,
-  order_cancelled: (data) => `/orders/${data?.orderId}`,
+  order_status: (data) => data?.returnId ? '/returns' : `/orders/${data?.orderId}`,
+  order_cancelled: (data) => data?.returnId ? '/returns' : `/orders/${data?.orderId}`,
   wallet_topup: () => '/wallet',
-  wallet_payment: (data) => `/orders/${data?.orderId}`,
+  wallet_payment: (data) => data?.orderId ? `/orders/${data.orderId}` : '/wallet',
   wallet_refund: () => '/wallet',
-  system: () => null,
+  system: (data) => data?.livestreamId ? `/livestream/${data.livestreamId}` : null,
   tier_upgrade: () => '/profile',
+  custom_order_quoted: (data) => `/custom-orders/${data?.customOrderId}`,
+  custom_order_production: (data) => `/custom-orders/${data?.customOrderId}`,
+  custom_order_delivered: (data) => `/custom-orders/${data?.customOrderId}`,
+  custom_order_paid: (data) => `/custom-orders/${data?.customOrderId}`,
 };
 
-// Staff version: always navigate to staff orders
+// Staff version: navigate to staff-side pages
 const STAFF_TYPE_LINK = {
-  order_paid: () => `/staff/orders`,
+  order_paid: () => '/staff/orders',
+  custom_order_paid: () => '/staff/custom-orders',
 };
 
 export default function NotificationBell({ isStaff = false, light = false, openRight = false }) {
