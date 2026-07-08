@@ -120,6 +120,7 @@ User.hasMany(ReturnRequest, { foreignKey: 'userId' });
 ReturnRequest.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(ReturnRequest, { foreignKey: 'handledBy', as: 'handledReturns' });
 ReturnRequest.belongsTo(User, { foreignKey: 'handledBy', as: 'handler' });
+ReturnRequest.belongsTo(Product, { foreignKey: 'exchangeProductId', as: 'ExchangeProduct' });
 
 // ContactMessage
 User.hasMany(ContactMessage, { foreignKey: 'repliedBy' });
