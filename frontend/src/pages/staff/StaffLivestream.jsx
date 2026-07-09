@@ -117,6 +117,7 @@ export default function StaffLivestream() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', scheduledAt: '' });
   const [creating, setCreating] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   const socketRef    = useRef(null);
   const localVideoRef = useRef(null);
@@ -218,6 +219,8 @@ export default function StaffLivestream() {
   };
 
   const handleStartLive = async (stream) => {
+    if (starting) return;
+    setStarting(true);
     try {
       const media = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       localStreamRef.current = media;
@@ -232,6 +235,7 @@ export default function StaffLivestream() {
     } catch (err) {
       if (err.name === 'NotAllowedError') toast.error('Vui lòng cho phép truy cập camera/microphone');
       else toast.error('Không thể bắt đầu stream');
+      setStarting(false);
     }
   };
 
@@ -437,9 +441,9 @@ export default function StaffLivestream() {
                       )}
                     </div>
                   </div>
-                  <button onClick={() => handleStartLive(stream)}
-                    className="flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition shrink-0">
-                    <FiRadio size={14} /> Bắt đầu
+                  <button onClick={() => handleStartLive(stream)} disabled={starting}
+                    className="flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <FiRadio size={14} /> {starting ? 'Đang bắt đầu...' : 'Bắt đầu'}
                   </button>
                 </div>
               </div>

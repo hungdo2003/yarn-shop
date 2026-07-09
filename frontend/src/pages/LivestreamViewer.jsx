@@ -66,6 +66,7 @@ export default function LivestreamViewer() {
       if (videoRef.current && e.streams[0]) {
         videoRef.current.srcObject = e.streams[0];
         setHasVideo(true);
+        videoRef.current.play().catch(() => {});
       }
     };
 
@@ -78,7 +79,9 @@ export default function LivestreamViewer() {
     return pc;
   }, []);
 
-  // Socket connection
+  // Socket connection — guestName intentionally excluded from deps:
+  // it's sent per-comment, so reconnecting on every keystroke would break WebRTC.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (loading) return;
 
@@ -129,7 +132,7 @@ export default function LivestreamViewer() {
       socket.disconnect();
       if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
     };
-  }, [id, loading, guestName]);
+  }, [id, loading]); // guestName excluded — see comment above
 
   const handleSend = (e) => {
     e.preventDefault();
