@@ -57,6 +57,7 @@ app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/wishlist', require('./routes/wishlist.routes'));
 app.use('/api/loyalty', require('./routes/loyalty.routes'));
 app.use('/api/sale-events', require('./routes/saleEvent.routes'));
+app.use('/api/livestreams', require('./routes/livestream.routes'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 

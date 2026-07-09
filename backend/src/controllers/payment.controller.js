@@ -1,7 +1,7 @@
 const payos = require('../config/payos');
 const { Order, OrderDetail, Payment, Product, InventoryTransaction, User, WalletTransaction, WalletTopup, sequelize } = require('../models');
 const { creditWalletFromTopup } = require('./wallet.controller');
-const { notify, notifyByRole } = require('../services/notificationService');
+const { notify, notifyByRole, checkTierUpgrade } = require('../services/notificationService');
 const { calcPointsEarned } = require('../utils/loyalty');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -76,6 +76,9 @@ async function confirmPayment(orderId, transactionId = null) {
       `Đơn hàng ${order.orderCode} vừa được thanh toán. Vui lòng xác nhận.`,
       { orderId: order.id, orderCode: order.orderCode }
     );
+    if (order.userId) {
+      await checkTierUpgrade(order.userId, order.id, order.total);
+    }
     return true;
   } catch (err) {
     await t.rollback();

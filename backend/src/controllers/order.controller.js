@@ -1,5 +1,5 @@
 const { sequelize, Order, OrderDetail, Payment, Shipment, Cart, CartItem, Product, Inventory, InventoryTransaction, Voucher, User, WalletTransaction } = require('../models');
-const { notify, notifyByRole } = require('../services/notificationService');
+const { notify, notifyByRole, checkTierUpgrade } = require('../services/notificationService');
 const { generateCode, paginate, paginateResult } = require('../utils/helpers');
 const { calcPointsEarned, calcMaxRedeemable, calcPointsDiscount } = require('../utils/loyalty');
 const { getTier } = require('../utils/membership');
@@ -176,6 +176,7 @@ const placeOrder = async (req, res) => {
         `Đơn hàng ${order.orderCode} vừa được thanh toán qua ví. Vui lòng xác nhận.`,
         { orderId: order.id, orderCode: order.orderCode }
       );
+      await checkTierUpgrade(req.user.id, order.id, order.total);
     }
 
     await log(req.user?.id, req.user?.email || guestEmail, 'PLACE_ORDER', 'Order', order.id, { orderCode: order.orderCode, total, paymentMethod }, req);
@@ -300,22 +301,9 @@ const updateStatus = async (req, res) => {
         );
       }
 
-      // Check tier upgrade when order is delivered
+      // Check tier upgrade when order is delivered (covers COD orders)
       if (status === 'delivered') {
-        const DONE = ['delivered', 'completed'];
-        const oldTotal = await Order.sum('total', {
-          where: { userId: order.userId, status: { [Op.in]: DONE }, id: { [Op.ne]: order.id } }
-        }) || 0;
-        const newTotal = oldTotal + parseFloat(order.total);
-        const oldTier = getTier(oldTotal);
-        const newTier = getTier(newTotal);
-        if (oldTier.name !== newTier.name) {
-          await notify(order.userId, 'tier_upgrade',
-            `Chúc mừng! Bạn đã thăng hạng ${newTier.emoji}`,
-            `Tổng chi tiêu đạt ${newTotal.toLocaleString('vi-VN')}đ. Hạng thành viên của bạn đã nâng lên hạng ${newTier.label}!`,
-            { newTier: newTier.name, oldTier: oldTier.name, newTierLabel: newTier.label, newTierEmoji: newTier.emoji, totalSpent: newTotal }
-          );
-        }
+        await checkTierUpgrade(order.userId, order.id, order.total);
       }
     }
 

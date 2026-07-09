@@ -35,6 +35,8 @@ const Wishlist = require('./Wishlist');
 const SaleEvent = require('./SaleEvent');
 const SaleEventRun = require('./SaleEventRun');
 const SaleEventRunProduct = require('./SaleEventRunProduct');
+const Livestream = require('./Livestream');
+const LivestreamComment = require('./LivestreamComment');
 // Role <-> User
 Role.hasMany(User, { foreignKey: 'roleId' });
 User.belongsTo(Role, { foreignKey: 'roleId' });
@@ -177,6 +179,14 @@ ChatMessage.belongsTo(ChatConversation, { foreignKey: 'conversationId' });
 ChatMessage.belongsTo(User, { foreignKey: 'senderId' });
 User.hasMany(ChatMessage, { foreignKey: 'senderId' });
 
+// Livestream
+User.hasMany(Livestream, { foreignKey: 'staffId', as: 'livestreams' });
+Livestream.belongsTo(User, { foreignKey: 'staffId', as: 'staff' });
+Livestream.hasMany(LivestreamComment, { foreignKey: 'livestreamId' });
+LivestreamComment.belongsTo(Livestream, { foreignKey: 'livestreamId' });
+LivestreamComment.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(LivestreamComment, { foreignKey: 'userId' });
+
 module.exports = {
   sequelize,
   Role, User, Category, Product, ProductImage,
@@ -190,4 +200,5 @@ module.exports = {
   WalletTransaction, WalletTopup, Notification,
   ChatConversation, ChatMessage,
   Wishlist, SaleEvent, SaleEventRun, SaleEventRunProduct,
+  Livestream, LivestreamComment,
 };

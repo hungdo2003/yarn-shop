@@ -68,9 +68,8 @@ const deleteUser = async (req, res) => {
 
 const getMembership = async (req, res) => {
   try {
-    const DONE = ['delivered', 'completed'];
     const total = await Order.sum('total', {
-      where: { userId: req.user.id, status: { [Op.in]: DONE } }
+      where: { userId: req.user.id, status: { [Op.notIn]: ['pending_payment', 'cancelled'] } }
     }) || 0;
 
     const tier = getTier(total);
