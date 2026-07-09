@@ -26,6 +26,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [flashSale, setFlashSale] = useState(null);
+  const [liveStreams, setLiveStreams] = useState([]);
   const navigate = useNavigate();
   const timerRef = useRef(null);
 
@@ -93,12 +94,23 @@ export default function Home() {
       api.get('/products/featured'),
       api.get('/products', { params: { isNew: 'true', limit: 8 } }),
       api.get('/vouchers/flash-sale'),
-    ]).then(([f, n, fs]) => {
+      api.get('/livestreams', { params: { status: 'live' } }),
+    ]).then(([f, n, fs, ls]) => {
       setFeatured(f.data || []);
       setNewArrivals(n.data?.items || []);
       const fsData = fs.data;
       if (fsData.vouchers?.length > 0 || fsData.products?.length > 0) setFlashSale(fsData);
+      setLiveStreams(ls.data || []);
     }).finally(() => setLoading(false));
+  }, []);
+
+  // Poll live streams every 30s
+  useEffect(() => {
+    const t = setInterval(() =>
+      api.get('/livestreams', { params: { status: 'live' } })
+        .then(r => setLiveStreams(r.data || [])).catch(() => {}),
+    30000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -183,6 +195,57 @@ export default function Home() {
           className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white w-11 h-11 rounded-full flex items-center justify-center text-xl transition"
         >›</button>
       </section>
+
+      {/* ── LIVE BANNER ── */}
+      {liveStreams.length > 0 && (
+        <section className="bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 relative overflow-hidden">
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-[linear-gradient(105deg,transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)] animate-[shimmer_2.5s_infinite]" />
+          <div className="max-w-7xl mx-auto px-4 py-3 xs:py-4 flex items-center gap-3 xs:gap-5 flex-wrap">
+            {/* LIVE badge */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
+              </span>
+              <span className="text-white font-black text-sm xs:text-base tracking-widest uppercase">Live</span>
+            </div>
+
+            <div className="h-5 w-px bg-white/30 hidden xs:block shrink-0" />
+
+            {/* Stream cards */}
+            <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
+              {liveStreams.slice(0, 2).map(s => (
+                <Link
+                  key={s.id}
+                  to={`/livestream/${s.id}`}
+                  className="flex items-center gap-2 bg-white/15 hover:bg-white/25 active:scale-95 transition-all rounded-full px-3 py-1.5 min-w-0 max-w-[260px]"
+                >
+                  <div className="w-6 h-6 rounded-full bg-white/20 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                    {s.staff?.fullName?.[0]?.toUpperCase() || 'S'}
+                  </div>
+                  <span className="text-white text-xs xs:text-sm font-semibold truncate">{s.title}</span>
+                  <span className="text-white/70 text-xs shrink-0 flex items-center gap-0.5">
+                    👁 {s.viewerCount || 0}
+                  </span>
+                </Link>
+              ))}
+              {liveStreams.length > 2 && (
+                <Link to="/livestream" className="text-white/80 text-xs hover:text-white transition">
+                  +{liveStreams.length - 2} stream khác
+                </Link>
+              )}
+            </div>
+
+            <Link
+              to="/livestream"
+              className="ml-auto shrink-0 bg-white text-red-600 font-bold text-xs xs:text-sm px-3 xs:px-4 py-1.5 rounded-full hover:bg-red-50 active:scale-95 transition-all shadow-sm"
+            >
+              Xem ngay →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ── TRUST BADGES ── */}
       <section className="bg-rose-50 border-y border-rose-100">

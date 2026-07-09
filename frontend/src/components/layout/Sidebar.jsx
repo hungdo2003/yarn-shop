@@ -6,7 +6,7 @@ import {
   FiHome, FiPackage, FiShoppingBag, FiUsers, FiBarChart2,
   FiTag, FiGrid, FiList, FiTool, FiFileText,
   FiMessageSquare, FiImage, FiActivity, FiLogOut, FiRefreshCw, FiMessageCircle,
-  FiMenu, FiX, FiStar
+  FiMenu, FiX, FiStar, FiRadio
 } from 'react-icons/fi';
 import NotificationBell from '../common/NotificationBell';
 import api from '../../services/api';
@@ -88,6 +88,12 @@ const Sidebar = () => {
           { label: 'Chat trực tiếp', icon: FiMessageCircle, to: '/staff/chat' },
           { label: 'Đổi trả / Khiếu nại', icon: FiRefreshCw, to: '/staff/complaints' },
           { label: 'Tin nhắn liên hệ', icon: FiMessageSquare, to: '/staff/contacts' },
+        ]
+      },
+      {
+        title: 'Livestream',
+        items: [
+          { label: 'Phát sóng trực tiếp', icon: FiRadio, to: '/staff/livestream' },
         ]
       }
     ]

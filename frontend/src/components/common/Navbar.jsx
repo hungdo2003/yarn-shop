@@ -16,6 +16,7 @@ const Navbar = () => {
   const [search, setSearch] = useState('');
   const [walletBalance, setWalletBalance] = useState(null);
   const [tier, setTier] = useState(null);
+  const [liveCount, setLiveCount] = useState(0);
 
   useEffect(() => {
     if (user && isRole('customer')) {
@@ -23,6 +24,14 @@ const Navbar = () => {
       api.get('/users/membership').then(r => setTier(r.data.tier)).catch(() => {});
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchLive = () => api.get('/livestreams', { params: { status: 'live' } })
+      .then(r => setLiveCount(r.data?.length || 0)).catch(() => {});
+    fetchLive();
+    const t = setInterval(fetchLive, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -47,12 +56,27 @@ const Navbar = () => {
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-5 text-sm">
             <Link to="/products" className="text-gray-600 hover:text-rose-600 transition-colors font-medium">Shop</Link>
-            <Link to="/flash-sale" className="flex items-center gap-1 font-bold text-orange-500 hover:text-orange-600 transition-colors relative">
+            <Link to="/flash-sale" className="flex items-center gap-1 font-bold text-orange-500 hover:text-orange-600 transition-colors">
               <span className="animate-pulse">⚡</span> Flash Sale
-              <span className="absolute -top-1.5 -right-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
             </Link>
             <Link to="/promotions" className="text-gray-600 hover:text-rose-600 transition-colors flex items-center gap-1">
               <FiTag size={14} /> Khuyến mãi
+            </Link>
+            <Link to="/livestream" className="relative flex items-center gap-1.5 font-bold transition-colors text-red-500 hover:text-red-600">
+              {liveCount > 0 ? (
+                <>
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                  </span>
+                  LIVE
+                  <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">{liveCount}</span>
+                </>
+              ) : (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-gray-300" /> Live
+                </>
+              )}
             </Link>
             <div className="relative group">
               <button className="text-gray-600 hover:text-rose-600 transition-colors">Hỗ trợ ▾</button>
@@ -194,6 +218,7 @@ const Navbar = () => {
             ['/', 'Trang chủ'],
             ['/products', 'Shop'],
             ['/flash-sale', '⚡ Flash Sale'],
+            ['/livestream', '🔴 Livestream'],
             ['/promotions', 'Khuyến mãi'],
             ['/how-to-buy', 'Hướng dẫn mua'],
             ['/policies', 'Chính sách'],

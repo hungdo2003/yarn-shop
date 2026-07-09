@@ -30,6 +30,9 @@ import CustomOrderDetail from './pages/CustomOrderDetail';
 import Wallet from './pages/Wallet';
 import WalletTopupResult from './pages/WalletTopupResult';
 import FlashSale from './pages/FlashSale';
+import LivestreamList from './pages/LivestreamList';
+import LivestreamViewer from './pages/LivestreamViewer';
+import StaffLivestream from './pages/staff/StaffLivestream';
 
 import ManagerDashboard from './pages/manager/Dashboard';
 import ProductManagement from './pages/manager/ProductManagement';
@@ -99,6 +102,8 @@ const App = () => (
       <Route path="/contact" element={<Contact />} />
       <Route path="/promotions" element={<Promotions />} />
       <Route path="/flash-sale" element={<FlashSale />} />
+      <Route path="/livestream" element={<LivestreamList />} />
+      <Route path="/livestream/:id" element={<LivestreamViewer />} />
       <Route path="/checkout/guest" element={<Checkout guest />} />
       <Route path="/payment/result" element={<PaymentResult />} />
       <Route path="/payment/simulate" element={<PaymentSimulate />} />
@@ -146,6 +151,7 @@ const App = () => (
         <Route path="/staff/complaints" element={<ComplaintManagement />} />
         <Route path="/staff/contacts" element={<ContactManagement />} />
         <Route path="/staff/chat" element={<StaffChat />} />
+        <Route path="/staff/livestream" element={<StaffLivestream />} />
       </Route>
 
       {/* ── ADMIN DASHBOARD ── */}
